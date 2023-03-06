@@ -1,1 +1,1 @@
-# The-Databricks-Lakehouse-In-Action-
+# The Databricks Lakehouse In Action
