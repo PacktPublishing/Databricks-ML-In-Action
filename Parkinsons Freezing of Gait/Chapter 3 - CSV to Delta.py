@@ -44,4 +44,24 @@ display(df)
 
 # COMMAND ----------
 
-dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train')
+dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog')
+
+# COMMAND ----------
+
+df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog/', sep=',', decimal='.')
+display(df)
+df.to_table("parkinsons_defog_train")
+
+# COMMAND ----------
+
+dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/')
+
+# COMMAND ----------
+
+df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/notype/', sep=',', decimal='.')
+display(df)
+#df.to_table("parkinsons_notype_train")
+
+# COMMAND ----------
+
+
