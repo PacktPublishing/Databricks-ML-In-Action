@@ -44,23 +44,51 @@ display(df)
 
 # COMMAND ----------
 
-dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog')
+dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/')
 
 # COMMAND ----------
 
 df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog/', sep=',', decimal='.')
 display(df)
-df.to_table("parkinsons_defog_train")
-
-# COMMAND ----------
-
-dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/')
+df.to_table("parkinsons_train_defog")
 
 # COMMAND ----------
 
 df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/notype/', sep=',', decimal='.')
 display(df)
-#df.to_table("parkinsons_notype_train")
+df.to_table("parkinsons_train_notype")
+
+# COMMAND ----------
+
+df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/tdcsfog/', sep=',', decimal='.')
+display(df)
+df.to_table("parkinsons_train_tdcsfog")
+
+# COMMAND ----------
+
+dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/')
+
+# COMMAND ----------
+
+df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/tdcsfog/', sep=',', decimal='.')
+display(df)
+df.to_table("parkinsons_test_tdcsfog")
+
+# COMMAND ----------
+
+df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/defog/', sep=',', decimal='.')
+display(df)
+df.to_table("parkinsons_test_defog")
+
+# COMMAND ----------
+
+dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/')
+
+# COMMAND ----------
+
+df = ps.read_parquet(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/')
+display(df)
+df.to_table("parkinsons_unlabeled")
 
 # COMMAND ----------
 

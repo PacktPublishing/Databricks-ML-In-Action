@@ -57,8 +57,9 @@ else:
 
 #Try to use the UC catalog when possible. If not will fallback to hive_metastore
 catalog = dbutils.widgets.get("catalog")
+
 db = dbutils.widgets.get("db")
-if len(catalog) == 0:
+if len(catalog) == 0 or catalog == 'hive_metastore':
   dbName = "lakehouse_in_action"
 elif len(db)==0:
   dbName = project_name
