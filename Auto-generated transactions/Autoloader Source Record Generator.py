@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Generate a JSON dataset for the Autoloader to pick up
+# MAGIC ## Generate a JSON dataset for the Autoloader to pick up
 
 # COMMAND ----------
 
@@ -10,7 +10,7 @@ nIDs = 10
 dbutils.widgets.text("stemFilePath",  "s3://oetrta/ss-2-fs/stephanie.rivera")
 tempPath = "{}/temp".format(dbutils.widgets.get("stemFilePath"))
 destinationPath = "{}/autoloaderinput/".format(dbutils.widgets.get("stemFilePath"))
-sleepIntervalSeconds = 1
+sleepIntervalSeconds = 3 
 
 # COMMAND ----------
 
@@ -36,10 +36,10 @@ def returnCustomerID(nIDs):
 def returnValue():
   return round(random.uniform(2.11, 399.99), 2)
 
-# Method to return a string of random characters - hard-coded to length of 15
+# Method to return a Product string
 def returnString():
   letters = string.ascii_letters
-  return ('Store ' + ''.join(random.choice(letters.upper()) for i in range(1)) )
+  return ('Product ' + ''.join(random.choice(letters.upper()) for i in range(1)) )
 
 def returnTransactionTimestamp():
   currentDateTime = datetime.now()
@@ -59,12 +59,11 @@ def generateRecordSet(recordCount, nIDs):
 # Generate a set of data, convert it to a Dataframe, write it out as one json file in a temp location, 
 # move the json file to the desired location that the autoloader will be watching and then delete the temp location
 def writeJsonFile(recordCount, nIDs, tempPath, destinationPath):
-  recordColumns = ["CustomerID", "Source", "Amount", "TransactionTimestamp"]
+  recordColumns = ["CustomerID", "Product", "Amount", "TransactionTimestamp"]
   recordSet = generateRecordSet(recordCount,nIDs)
   recordDf = spark.createDataFrame(data=recordSet, schema=recordColumns)
   
-  # Write out the json file with Spark in a temp location - this will create a directory with the file we want the autoloader to
-  # pick up underneath it
+  # Write out the json file with Spark in a temp location - this will create a directory with the file we want
   recordDf.coalesce(1).write.format("json").save(tempPath)
   
   # Grab the file from the temp location, write it to the location we want and then delete the temp directory
@@ -75,9 +74,8 @@ def writeJsonFile(recordCount, nIDs, tempPath, destinationPath):
 # COMMAND ----------
 
 # DBTITLE 1,Loop for Generating Data
-nIDs = 5
 t=1
-while(t<200):
+while(t<20):
   writeJsonFile(recordCount, nIDs, tempPath, destinationPath)
   t = t+1
   time.sleep(sleepIntervalSeconds)
