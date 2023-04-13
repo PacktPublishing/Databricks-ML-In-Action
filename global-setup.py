@@ -53,7 +53,12 @@ data_path = dbutils.widgets.get('data_path')
 if len(data_path) == 0:
   cloud_storage_path = f"/Users/{current_user}/lakehouse_in_action/{project_name}"
 else:
-  cloud_storage_path = data_path
+  cloud_storage_path = f"{data_path}{project_name}"
+
+try:
+  dbutils.fs.ls(cloud_storage_path)
+except:
+  dbutils.fs.mkdirs(cloud_storage_path)
 
 #Try to use the UC catalog when possible. If not will fallback to hive_metastore
 catalog = dbutils.widgets.get("catalog")
