@@ -11,10 +11,10 @@
 # DBTITLE 1,Define Record Count, Temporary Location, Autoloader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-dbutils.widgets.text("stem_file_path",  cloud_storage_path)
-temp_path = "{}/temp".format(dbutils.widgets.get("stem_file_path"))
-destination_path = "{}/autoloader".format(dbutils.widgets.get("stem_file_path"))
-sleepIntervalSeconds = 3 
+stem_file_path = spark_storage_path
+temp_path = "{}/temp".format(stem_file_path)
+destination_path = "{}/autoloader".format(stem_file_path)
+sleepIntervalSeconds = 2
 
 # COMMAND ----------
 
@@ -79,7 +79,7 @@ def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-while(t<50):
+while(t<100):
   writeJsonFile(recordCount, nIDs, temp_path, destination_path)
   t = t+1
   time.sleep(sleepIntervalSeconds)
