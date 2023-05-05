@@ -9,7 +9,6 @@
 # COMMAND ----------
 
 import pandas as pd
-import pyspark.pandas as ps
 
 spark_data_path = 'dbfs:/FileStore/LakehouseInAction/store-sales-time-series-forecasting/'
 cloud_data_path = '/dbfs/FileStore/LakehouseInAction/store-sales-time-series-forecasting/'
@@ -23,7 +22,7 @@ dbutils.fs.ls(spark_data_path)
 # DBTITLE 1,Transforming CSV to Delta
 df = pd.read_csv(f'{cloud_data_path}holidays_events.csv', sep=',', decimal='.')
 df['date'] = pd.to_datetime(df['date'])
-spark.createDataFrame(df).write.saveAsTable("favorita_holiday_events")
+#spark.createDataFrame(df).write.saveAsTable("favorita_holiday_events")
 display(df)
 
 # COMMAND ----------
@@ -36,52 +35,29 @@ display(df)
 # COMMAND ----------
 
 df = pd.read_csv(f'{cloud_data_path}stores.csv', sep=',', decimal='.')
-#spark.createDataFrame(df).write.saveAsTable("favorita_stores)
+#spark.createDataFrame(df).write.saveAsTable("favorita_stores")
 display(df)
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog/', sep=',', decimal='.')
+df = pd.read_csv(f'{cloud_data_path}test.csv', sep=',', decimal='.')
+df['date'] = pd.to_datetime(df['date'])
+#spark.createDataFrame(df).write.option("mode","overwrite").saveAsTable("favorita_test_set")
 display(df)
-df.to_table("parkinsons_train_defog")
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/notype/', sep=',', decimal='.')
+df = pd.read_csv(f'{cloud_data_path}train.csv', sep=',', decimal='.')
+df['date'] = pd.to_datetime(df['date'])
+#spark.createDataFrame(df).write.saveAsTable("favorita_train_set")
 display(df)
-df.to_table("parkinsons_train_notype")
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/tdcsfog/', sep=',', decimal='.')
+df = pd.read_csv(f'{cloud_data_path}transactions.csv', sep=',', decimal='.')
+df['date'] = pd.to_datetime(df['date'])
+#spark.createDataFrame(df).write.saveAsTable("favorita_transactions")
 display(df)
-df.to_table("parkinsons_train_tdcsfog")
-
-# COMMAND ----------
-
-dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/')
-
-# COMMAND ----------
-
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/tdcsfog/', sep=',', decimal='.')
-display(df)
-df.to_table("parkinsons_test_tdcsfog")
-
-# COMMAND ----------
-
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/defog/', sep=',', decimal='.')
-display(df)
-df.to_table("parkinsons_test_defog")
-
-# COMMAND ----------
-
-dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/')
-
-# COMMAND ----------
-
-df = ps.read_parquet(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/')
-display(df)
-df.to_table("parkinsons_unlabeled")
 
 # COMMAND ----------
 

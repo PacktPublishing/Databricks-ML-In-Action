@@ -40,18 +40,13 @@ def returnCustomerID(nIDs):
 def returnValue():
   return round(random.uniform(2.11, 399.99), 2)
 
-# Method to return a Product string
-def returnString():
-  letters = string.ascii_letters
-  return ('Product ' + ''.join(random.choice(letters.upper()) for i in range(1)) )
-
 def returnTransactionTimestamp():
   currentDateTime = datetime.now()
   return currentDateTime.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 # Generate a record
 def generateRecord(nIDs):
-  return (returnCustomerID(nIDs), returnString(), returnValue(), returnTransactionTimestamp())
+  return (returnCustomerID(nIDs), returnValue(), returnTransactionTimestamp())
   
 # Generate a list of records
 def generateRecordSet(recordCount, nIDs):
@@ -63,7 +58,7 @@ def generateRecordSet(recordCount, nIDs):
 # Generate a set of data, convert it to a Dataframe, write it out as one json file in a temp location, 
 # move the json file to the desired location that the autoloader will be watching and then delete the temp location
 def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
-  recordColumns = ["CustomerID", "Product", "Amount", "TransactionTimestamp"]
+  recordColumns = ["CustomerID", "Amount", "TransactionTimestamp"]
   recordSet = generateRecordSet(recordCount,nIDs)
   recordDf = spark.createDataFrame(data=recordSet, schema=recordColumns)
   
