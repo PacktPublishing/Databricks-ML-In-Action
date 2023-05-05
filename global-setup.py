@@ -14,6 +14,7 @@ dbutils.widgets.text("db", "", "Database")
 
 dbutils.widgets.text("data_path", "", "Data Path")
 
+
 # COMMAND ----------
 
 # DBTITLE 1,Running checks
@@ -52,8 +53,10 @@ current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
 data_path = dbutils.widgets.get('data_path')
 if len(data_path) == 0:
   cloud_storage_path = f"/Users/{current_user}/lakehouse_in_action/{project_name}"
+  spark_storage_path = f"dbfs:/Users/{current_user}/lakehouse_in_action/{project_name}"
 else:
-  cloud_storage_path = f"{data_path}{project_name}"
+  cloud_storage_path = f"/dbfs{data_path}{project_name}"
+  spark_storage_path = f"dbfs:{data_path}{project_name}"
 
 try:
   dbutils.fs.ls(cloud_storage_path)
@@ -107,6 +110,7 @@ else:
     catalog = "hive_metastore"
 
 print(f"using cloud_storage_path {cloud_storage_path}")
+print(f"using spark_storage_path {spark_storage_path}")
 print(f"using catalog.database `{catalog}`.`{dbName}`")
 
 #with parallel execution this can fail the time of the initialization. add a few retry to fix these issues
@@ -136,3 +140,7 @@ if catalog != 'hive_metastore':
 
 # # os.environ['kaggle_key'] = 'YOUR KAGGLE KEY HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
 # os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
+
+# COMMAND ----------
+
+

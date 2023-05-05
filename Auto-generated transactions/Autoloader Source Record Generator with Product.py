@@ -11,10 +11,10 @@
 # DBTITLE 1,Define Record Count, Temporary Location, Autoloader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-dbutils.widgets.text("stem_file_path",  cloud_storage_path)
-temp_path = "{}/temp".format(dbutils.widgets.get("stem_file_path"))
-destination_path = "{}/autoloader".format(dbutils.widgets.get("stem_file_path"))
-sleepIntervalSeconds = 3 
+stem_file_path = spark_storage_path
+temp_path = "{}/temp".format(stem_file_path)
+destination_path = "{}/autoloader".format(stem_file_path)
+sleepIntervalSeconds = 2
 
 # COMMAND ----------
 
@@ -40,26 +40,37 @@ def returnCustomerID(nIDs):
 def returnValue():
   return round(random.uniform(2.11, 399.99), 2)
 
+# Method to return a Product string
+def returnString():
+  letters = string.ascii_letters
+  return ('Product ' + ''.join(random.choice(letters.upper()) for i in range(1)) )
+
 def returnTransactionTimestamp():
   currentDateTime = datetime.now()
   return currentDateTime.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 # Generate a record
-def generateRecord(nIDs):
-  return (returnCustomerID(nIDs), returnValue(), returnTransactionTimestamp())
+def generateRecord(nIDs, includeProduct):
+  if includeProduct:
+    return (returnCustomerID(nIDs), returnString(), returnValue(), returnTransactionTimestamp())
+  else:
+    return (returnCustomerID(nIDs), returnValue(), returnTransactionTimestamp())
   
 # Generate a list of records
-def generateRecordSet(recordCount, nIDs):
+def generateRecordSet(recordCount, nIDs, includeProduct):
   recordSet = []
   for x in range(recordCount):
-    recordSet.append(generateRecord(nIDs))
+    recordSet.append(generateRecord(nIDs, includeProduct))
   return recordSet
 
 # Generate a set of data, convert it to a Dataframe, write it out as one json file in a temp location, 
 # move the json file to the desired location that the autoloader will be watching and then delete the temp location
-def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
-  recordColumns = ["CustomerID", "Amount", "TransactionTimestamp"]
-  recordSet = generateRecordSet(recordCount,nIDs)
+def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path):
+  if includeProduct:
+    recordColumns = ["CustomerID", "Product", "Amount", "TransactionTimestamp"]
+  else:
+    recordColumns = ["CustomerID", "Amount", "TransactionTimestamp"]
+  recordSet = generateRecordSet(recordCount,nIDs,includeProduct)
   recordDf = spark.createDataFrame(data=recordSet, schema=recordColumns)
   
   # Write out the json file with Spark in a temp location - this will create a directory with the file we want
@@ -74,9 +85,13 @@ def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-while(t<50):
-  writeJsonFile(recordCount, nIDs, temp_path, destination_path)
+total = 25
+includeProduct = False
+while(t<total):
+  writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
   t = t+1
+  if t > total/2: 
+    includeProduct = True
   time.sleep(sleepIntervalSeconds)
 
 # COMMAND ----------
@@ -85,6 +100,14 @@ while(t<50):
 df = spark.read.format("json").load(destination_path)
 usercounts = df.groupBy("CustomerID").count()
 display(usercounts.orderBy("CustomerID"))
+
+
+# COMMAND ----------
+
+# DBTITLE 1,Count of Transactions per Product
+df = spark.read.format("json").load(destination_path)
+prodcounts = df.groupBy("Product").count()
+display(prodcounts)
 
 
 # COMMAND ----------
