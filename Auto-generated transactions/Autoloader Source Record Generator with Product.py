@@ -96,23 +96,8 @@ while(t<total):
 
 # COMMAND ----------
 
-# DBTITLE 1,Count of Transactions per User
-df = spark.read.format("json").load(destination_path)
-usercounts = df.groupBy("CustomerID").count()
-display(usercounts.orderBy("CustomerID"))
-
-
-# COMMAND ----------
-
-# DBTITLE 1,Count of Transactions per Product
-df = spark.read.format("json").load(destination_path)
-prodcounts = df.groupBy("Product").count()
-display(prodcounts)
-
-
-# COMMAND ----------
-
 # DBTITLE 1,Display the Data Generated
+df = spark.read.format("json").load(destination_path)
 display(df)
 
 # COMMAND ----------
