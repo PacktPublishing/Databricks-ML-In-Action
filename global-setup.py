@@ -68,31 +68,31 @@ catalog = dbutils.widgets.get("catalog")
 
 db = dbutils.widgets.get("db")
 if len(catalog) == 0 or catalog == 'hive_metastore':
-  dbName = "lakehouse_in_action"
+  database_name = "lakehouse_in_action"
 elif len(db)==0:
-  dbName = project_name
+  database_name = project_name
 else:
-  dbName = db
+  database_name = db
 
-def use_and_create_db(catalog, dbName, cloud_storage_path = None):
+def use_and_create_db(catalog, database_name, cloud_storage_path = None):
   print(f"USE CATALOG `{catalog}`")
   spark.sql(f"USE CATALOG `{catalog}`")
   if cloud_storage_path == None or catalog != 'hive_metastore':
-    spark.sql(f"""create database if not exists `{dbName}` """)
+    spark.sql(f"""create database if not exists `{database_name}` """)
   else:
-    spark.sql(f"""create database if not exists `{dbName}` LOCATION '{cloud_storage_path}/tables' """)
+    spark.sql(f"""create database if not exists `{database_name}` LOCATION '{cloud_storage_path}/tables' """)
 
   
 #If the catalog is defined, we force it to the given value and throw exception if not.
 if catalog == 'hive_metastore':
-  use_and_create_db(catalog, dbName)
+  use_and_create_db(catalog, database_name)
 elif len(catalog) > 0:
   current_catalog = spark.sql("select current_catalog()").collect()[0]['current_catalog()']
   if current_catalog != catalog:
     catalogs = [r['catalog'] for r in spark.sql("SHOW CATALOGS").collect()]
     if catalog not in catalogs:
       spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog}")
-  use_and_create_db(catalog, dbName)
+  use_and_create_db(catalog, database_name)
 else:
   #otherwise we'll try to set the catalog to lakehouse_in_action and create the database here.
   try:
@@ -104,19 +104,19 @@ else:
       if "lakehouse_in_action" not in catalogs:
         spark.sql("CREATE CATALOG IF NOT EXISTS lakehouse_in_action")
         catalog = "lakehouse_in_action"
-    use_and_create_db(catalog, dbName)
+    use_and_create_db(catalog, database_name)
   except Exception as e:
     print(f"error with catalog {e}, not able to use UC. Using hive_metastore.")
     catalog = "hive_metastore"
 
 print(f"using cloud_storage_path {cloud_storage_path}")
 print(f"using spark_storage_path {spark_storage_path}")
-print(f"using catalog.database `{catalog}`.`{dbName}`")
+print(f"using catalog.database_name `{catalog}`.`{database_name}`")
 
 #with parallel execution this can fail the time of the initialization. add a few retry to fix these issues
 for i in range(10):
   try:
-    spark.sql(f"""USE `{catalog}`.`{dbName}`""")
+    spark.sql(f"""USE `{catalog}`.`{database_name}`""")
     break
   except Exception as e:
     time.sleep(1)
@@ -125,8 +125,8 @@ for i in range(10):
     
 if catalog != 'hive_metastore':
   try:
-    spark.sql(f"GRANT CREATE, USAGE on DATABASE {catalog}.{dbName} TO `account users`")
-    spark.sql(f"ALTER SCHEMA {catalog}.{dbName} OWNER TO `account users`")
+    spark.sql(f"GRANT CREATE, USAGE on DATABASE {catalog}.{database_name} TO `account users`")
+    spark.sql(f"ALTER SCHEMA {catalog}.{database_name} OWNER TO `account users`")
   except Exception as e:
     print("Couldn't grant access to the database for all users:"+str(e))
   

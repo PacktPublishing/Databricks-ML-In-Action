@@ -1,6 +1,5 @@
 # Databricks notebook source
 import dlt
-from pyspark.sql import functions as F
 
 # COMMAND ----------
 
