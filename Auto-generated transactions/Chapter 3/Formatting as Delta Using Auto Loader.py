@@ -3,7 +3,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # COMMAND ----------
 
-# MAGIC %run ./setup
+# MAGIC %run ./../setup
 
 # COMMAND ----------
 

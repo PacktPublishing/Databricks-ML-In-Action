@@ -4,12 +4,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./setup
-
-# COMMAND ----------
-
-#import bamboolib as bam
-import pandas as pd
+# MAGIC %run ./../setup
 
 # COMMAND ----------
 
@@ -19,8 +14,11 @@ import pandas as pd
 
 # COMMAND ----------
 
-#df = spark.table("hive_metastore.lakehouse_in_action.favorita_transactions").limit(100000).toPandas()
-#df
+import bamboolib as bam
+import pandas as pd
+
+df = spark.table("hive_metastore.lakehouse_in_action.favorita_transactions").sample(fraction=.2).toPandas()
+df
 
 # COMMAND ----------
 
@@ -62,6 +60,23 @@ lrct.fillna(0, inplace=True)
 # COMMAND ----------
 
 display(lrct)
+
+# COMMAND ----------
+
+from pyspark.sql.functions import col 
+favorita_holiday_events = sql("SELECT * FROM lakehouse_in_action.favorita_holiday_events")
+display(favorita_holiday_events.groupBy(["date","locale_name"]).count())
+display(favorita_holiday_events.select("*").where(col("date")=="2016-05-08"))
+
+# COMMAND ----------
+
+ddf = sql("SELECT * FROM lakehouse_in_action.favorita_train_set")
+display(ddf)
+
+# COMMAND ----------
+
+ddf = sql("SELECT * FROM lakehouse_in_action.favorita_transactions")
+display(ddf)
 
 # COMMAND ----------
 

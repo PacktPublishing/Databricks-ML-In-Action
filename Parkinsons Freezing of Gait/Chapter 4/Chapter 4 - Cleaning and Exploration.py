@@ -3,7 +3,7 @@
 
 # COMMAND ----------
 
-import pyspark.pandas as ps
+#import pyspark.pandas as ps
 
 # COMMAND ----------
 
@@ -28,9 +28,13 @@ import pyspark.pandas as ps
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC -- The tDCS FOG (tdcsfog) dataset, comprising data series collected in the lab, as subjects completed a FOG-provoking protocol.
-# MAGIC SELECT * FROM parkinsons_train_tdcsfog
+from pyspark.sql.functions import sum
+import matplotlib.pyplot as plt
+
+df = spark.read.table("parkinsons_train_tdcsfog")
+display(df)
+#plot(df.select(sum("StartHesitation"),sum("Turn"), sum("Walking")).collect())
+
 
 # COMMAND ----------
 
