@@ -4,12 +4,14 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./setup
+# MAGIC %run ./../setup
 
 # COMMAND ----------
 
 import pandas as pd
 import pyspark.pandas as ps
+from  pyspark.sql.functions import input_file_name, split
+
 
 # COMMAND ----------
 
@@ -131,21 +133,40 @@ dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog/', sep=',', decimal='.',inferSchema=True)
+df = spark.read.format("csv") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id')
+
 display(df)
-df.to_table("parkinsons_train_defog")
+df.write.mode("overwrite").saveAsTable("parkinsons_train_defog")
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/notype/', sep=',', decimal='.')
-display(df)
-df.to_table("parkinsons_train_notype")
+display(df.select('id').distinct())
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/tdcsfog/', sep=',', decimal='.')
+df = spark.read.format("csv") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/notype/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id')
+
 display(df)
-df.to_table("parkinsons_train_tdcsfog")
+df.write.mode("overwrite").saveAsTable("parkinsons_train_notype")
+
+# COMMAND ----------
+
+df = spark.read.format("csv") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/tdcsfog/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id')
+
+display(df)
+df.write.mode("overwrite").saveAsTable("parkinsons_train_tdcsfog")
 
 # COMMAND ----------
 
@@ -153,15 +174,26 @@ dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/tdcsfog/', sep=',', decimal='.')
+df = spark.read.format("csv") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/tdcsfog/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id')
+
 display(df)
-df.to_table("parkinsons_test_tdcsfog")
+df.write.mode("overwrite").saveAsTable("parkinsons_test_tdcsfog")
 
 # COMMAND ----------
 
-df = ps.read_csv(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/defog/', sep=',', decimal='.')
+
+df = spark.read.format("csv") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/test/defog/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id')
+
 display(df)
-df.to_table("parkinsons_test_defog")
+df.write.mode("overwrite").saveAsTable("parkinsons_test_defog")
 
 # COMMAND ----------
 
@@ -169,9 +201,14 @@ dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-
 
 # COMMAND ----------
 
-df = ps.read_parquet(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/')
+df = spark.read.format("parquet") \
+  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/', sep=',', decimal='.',header=True,inferType=True) \
+  .withColumn("file_id", input_file_name())
+
+df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[5]).drop('file_id')
+
 display(df)
-df.to_table("parkinsons_unlabeled")
+df.write.mode("overwrite").saveAsTable("parkinsons_unlabeled")
 
 # COMMAND ----------
 
