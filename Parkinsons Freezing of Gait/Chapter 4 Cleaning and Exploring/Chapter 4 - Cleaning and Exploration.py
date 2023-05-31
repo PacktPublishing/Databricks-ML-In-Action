@@ -3,6 +3,11 @@
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC DROP TABLE parkinsons_tiny_defog_metadata
+
+# COMMAND ----------
+
 # DBTITLE 1,Show Tables
 # MAGIC %sql
 # MAGIC
@@ -10,17 +15,102 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Joining datasets
+
+# COMMAND ----------
+
 # MAGIC %sql
 # MAGIC USE catalog hive_metastore;
 # MAGIC USE lakehouse_in_action;
 # MAGIC
-# MAGIC SELECT isnull(ddm.Id) as daily_defog_metadata, isnull(dm.Id) as defog_metadata, isnull(dt.Id) as defog_tasks, isnull(fe.Id) as fog_events, isnull(tm.Id) as tdcsfog_metadata, isnull(u.id) as unlabeled, isnull(td.Id) as train_defog, isnull(tnt.Id) as train_notype, count(1) FROM parkinsons_defog_daily_metadata ddm
-# MAGIC FULL OUTER JOIN parkinsons_defog_metadata dm ON ddm.Id = dm.Id
-# MAGIC FULL OUTER JOIN parkinsons_fog_events fe ON (fe.Id = dt.Id OR fe.Id = dm.Id OR fe.Id = ddm.Id)
-# MAGIC FULL OUTER JOIN parkinsons_tdcsfog_metadata tm ON (tm.Id = fe.Id OR tm.Id = dm.Id OR tm.Id = ddm.Id)
-# MAGIC FULL OUTER JOIN parkinsons_unlabeled u ON (u.id = tm.Id OR u.Id = fe.Id OR u.Id = dm.Id OR u.Id = ddm.Id)
-# MAGIC FULL OUTER JOIN parkinsons_train_defog td ON (td.id = tm.Id OR td.Id = fe.Id OR td.Id = dm.Id OR td.Id = ddm.Id)
-# MAGIC FULL OUTER JOIN parkinsons_train_notype tnt ON (tnt.id = tm.Id OR tnt.Id = fe.Id OR tnt.Id = dm.Id OR tnt.Id = ddm.Id)
+# MAGIC SELECT count(1) FROM parkinsons_defog_daily_metadata ddm
+# MAGIC INNER JOIN parkinsons_unlabeled other ON ddm.Id = other.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_train_tdcsfog ddm
+# MAGIC INNER JOIN parkinsons_tdcsfog_metadata other ON ddm.Id = other.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_test_tdcsfog ddm
+# MAGIC INNER JOIN parkinsons_tdcsfog_metadata other ON ddm.Id = other.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_train_defog a
+# MAGIC INNER JOIN parkinsons_defog_metadata b ON a.Id = b.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_fog_events ddm
+# MAGIC INNER JOIN parkinsons_train_notype other ON ddm.Id = other.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_defog_metadata ddm
+# MAGIC INNER JOIN parkinsons_train_notype other ON ddm.Id = other.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_fog_events a
+# MAGIC INNER JOIN parkinsons_train_defog b ON a.Id = b.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_fog_events a
+# MAGIC INNER JOIN parkinsons_train_tdcsfog b ON a.Id = b.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC
+# MAGIC SELECT count(1) FROM parkinsons_defog_tasks a
+# MAGIC INNER JOIN parkinsons_train_notype b ON a.Id = b.Id
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC
+# MAGIC SELECT isnull(a.Id) as tasks, isnull(b.Id) as defog_metadata, count(1) FROM parkinsons_defog_tasks a
+# MAGIC FULL JOIN parkinsons_defog_metadata b ON a.Id = b.Id
 # MAGIC GROUP BY ALL
 
 # COMMAND ----------
@@ -204,16 +294,97 @@ df_profile.to_file("parkinsons_unlabeled.html")
 
 # COMMAND ----------
 
-sub_id = "c432df"
-sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_subjects AS (SELECT * FROM parkinsons_subjects WHERE Subject = '{sub_id}')""")
-sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_defog_metadata AS (SELECT * FROM parkinsons_defog_metadata WHERE Subject = '{sub_id}')""")
-sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_tdcsfog_metadata AS (SELECT * FROM parkinsons_tdcsfog_metadata WHERE Subject = '{sub_id}')""")
-sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_defog_daily_metadata AS (SELECT * FROM parkinsons_defog_daily_metadata WHERE Subject = '{sub_id}')""")
+sub_id = "('c432df','e9d9d4')"
+sql(
+    f"""CREATE OR REPLACE TABLE parkinsons_tiny_subjects AS (SELECT * FROM parkinsons_subjects WHERE Subject IN {sub_id})"""
+)
+sql(
+    f"""CREATE OR REPLACE TABLE parkinsons_tiny_defog_metadata AS (SELECT * FROM parkinsons_defog_metadata WHERE Subject IN {sub_id})"""
+)
+sql(
+    f"""CREATE OR REPLACE TABLE parkinsons_tiny_tdcsfog_metadata AS (SELECT * FROM parkinsons_tdcsfog_metadata WHERE Subject IN {sub_id})"""
+)
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_tiny_defog_daily_metadata
+# MAGIC
+# MAGIC SELECT * from parkinsons_tiny_defog_metadata
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT * from parkinsons_tiny_tdcsfog_metadata
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE parkinsons_tiny_fe_n_metadata AS (
+# MAGIC   SELECT
+# MAGIC     fe.`Id`,
+# MAGIC     fe.Init,
+# MAGIC     fe.Completion,
+# MAGIC     fe.Kinetic,
+# MAGIC     fe.`Type`,
+# MAGIC     dm.Subject,
+# MAGIC     dm.Visit,
+# MAGIC     null as Test,
+# MAGIC     dm.Medication
+# MAGIC   from
+# MAGIC     parkinsons_fog_events fe
+# MAGIC     JOIN parkinsons_tiny_defog_metadata dm ON fe.Id = dm.Id
+# MAGIC   UNION
+# MAGIC   SELECT
+# MAGIC     fe.`Id`,
+# MAGIC     fe.Init,
+# MAGIC     fe.Completion,
+# MAGIC     fe.Kinetic,
+# MAGIC     fe.`Type`,
+# MAGIC     tm.Subject,
+# MAGIC     tm.Visit,
+# MAGIC     tm.Test,
+# MAGIC     tm.Medication
+# MAGIC   from
+# MAGIC     parkinsons_fog_events fe
+# MAGIC     JOIN parkinsons_tiny_tdcsfog_metadata tm ON fe.Id = tm.Id
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE parkinsons_tiny_event_ids AS (
+# MAGIC   SELECT
+# MAGIC     DISTINCT `Id`
+# MAGIC   FROM
+# MAGIC     parkinsons_tiny_fe_n_metadata
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE parkinsons_tiny_tasks AS (
+# MAGIC   SELECT
+# MAGIC     *
+# MAGIC   from
+# MAGIC     parkinsons_defog_tasks
+# MAGIC   WHERE
+# MAGIC     `Id` IN (SELECT * FROM parkinsons_tiny_event_ids)
+# MAGIC )
+
+# COMMAND ----------
+
+sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_defog_daily_metadata AS 
+    (SELECT `Id` as daily_id, Subject, Visit, RecordingStartTime FROM parkinsons_defog_daily_metadata WHERE Subject IN {sub_id})""")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE catalog hive_metastore;
+# MAGIC USE lakehouse_in_action;
+# MAGIC SELECT * FROM parkinsons_tiny_defog_daily_metadata
 
 # COMMAND ----------
 
@@ -228,89 +399,7 @@ sql(f"""CREATE OR REPLACE TABLE parkinsons_tiny_defog_daily_metadata AS (SELECT 
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
-# MAGIC
-# MAGIC SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_tiny_defog_metadata ev 
-# MAGIC left JOIN parkinsons_defog_tasks tdm ON ev.id = tdm.Id
 
-# COMMAND ----------
-
-dfa = sql("SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_tiny_defog_metadata")
-dfb = sql("SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_tiny_defog_daily_metadata")
-dfc = sql("SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_tiny_subjects")
-
-df1 = dfa.unionByName(dfb, allowMissingColumns=True)
-df1 = df1.join(dfc,['Subject','Visit'],'full')
-display(df1)
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
-# MAGIC
-# MAGIC SELECT *, row_number() OVER (PARTITION BY `Id` ORDER BY Init) TimeStep FROM parkinsons_fog_events WHERE `Id` IN ('48081794eb','ad8e83242a','60dfb26b2c')
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
-# MAGIC
-# MAGIC SELECT * FROM parkinsons_fog_events WHERE `Id` IN ('48081794eb','ad8e83242a','60dfb26b2c')
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
-# MAGIC
-# MAGIC SELECT * FROM parkinsons_defog_tasks WHERE `Id` IN ('48081794eb','ad8e83242a','60dfb26b2c')
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
-# MAGIC
-# MAGIC SELECT * FROM parkinsons_unlabeled WHERE `Id` IN ('48081794eb','ad8e83242a','60dfb26b2c')
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT
-# MAGIC   events.`Id`,
-# MAGIC   events.Init,
-# MAGIC   events.Completion,
-# MAGIC   events.`Type`,
-# MAGIC   events.Kinetic,
-# MAGIC   df.`Time`,
-# MAGIC   df.Walking,
-# MAGIC   df.Turn,
-# MAGIC   df.StartHesitation,
-# MAGIC   df.Valid,
-# MAGIC   df.Task,
-# MAGIC   df.AccV,
-# MAGIC   df.AccML,
-# MAGIC   df.AccAP
-# MAGIC FROM
-# MAGIC   hive_metastore.lakehouse_in_action.parkinsons_fog_events events
-# MAGIC JOIN hive_metastore.lakehouse_in_action.parkinsons_train_defog df ON events.Id = df.id
-# MAGIC WHERE df.id = 'da05ad7058' --IN ('48081794eb','ad8e83242a','60dfb26b2c')
 
 # COMMAND ----------
 
@@ -327,7 +416,6 @@ display(df1)
 # MAGIC FROM
 # MAGIC   hive_metastore.lakehouse_in_action.parkinsons_fog_events events
 # MAGIC JOIN hive_metastore.lakehouse_in_action.parkinsons_train_defog df ON events.Id = df.id
-# MAGIC WHERE df.
 # MAGIC GROUP BY ALL
 
 # COMMAND ----------
