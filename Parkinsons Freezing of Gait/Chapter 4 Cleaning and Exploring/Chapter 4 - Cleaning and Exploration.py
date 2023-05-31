@@ -3,11 +3,6 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC DROP TABLE parkinsons_tiny_defog_metadata
-
-# COMMAND ----------
-
 # DBTITLE 1,Show Tables
 # MAGIC %sql
 # MAGIC
