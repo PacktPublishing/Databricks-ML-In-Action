@@ -281,3 +281,19 @@ df_profile.to_file("parkinsons_unlabeled.html")
 
 # MAGIC %sql
 # MAGIC SELECT Subject, Visit, count(*) as count FROM hive_metastore.lakehouse_in_action.parkinsons_subjects GROUP BY Subject, Visit
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT StartHesitation, Turn, Walking, Valid, Task, COUNT(*) as cnt FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog GROUP BY ALL ORDER BY cnt DESC
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT int(`Time`) as Time, int(StartHesitation) as StartHesitation, int(Walking) as Walking, int(Turn) as Turn, `id` FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog
+
+# COMMAND ----------
+
+
