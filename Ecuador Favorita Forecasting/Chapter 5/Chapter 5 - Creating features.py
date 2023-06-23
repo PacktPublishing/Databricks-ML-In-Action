@@ -30,7 +30,8 @@ display(df)
 # COMMAND ----------
 
 df = sql("""
-SELECT t.*, o.dcoilwtico as oil_ten_day_lag, s.city, s.state,s.`cluster` as store_cluster,s.type as store_type FROM favorita_train_set t 
+SELECT t.*, o.dcoilwtico as oil_ten_day_lag, s.city, s.state, s.`cluster` as store_cluster, s.type as store_type 
+FROM favorita_train_set t 
 LEFT JOIN favorita_stores s ON t.store_nbr == s.store_nbr
 RIGHT JOIN favorita_oil o ON date(t.`date`) == (date(o.`date`)+10)
 """)
@@ -59,22 +60,50 @@ display(autoMLdf)
 
 # COMMAND ----------
 
-df = sql("""SELECT `date`, store_nbr, sum(sales) as aggSales FROM favorita_train_set GROUP BY `date`,store_nbr ORDER BY `date`""")
+df = sql(
+    """
+SELECT
+  `date`,
+  store_nbr,
+  sum(sales) as aggSales
+FROM
+  favorita_train_set
+GROUP BY
+  `date`,
+  store_nbr
+ORDER BY
+  `date`
+  """)
 df.createOrReplaceTempView("aggView")
 
-aggAutoML = sql("""SELECT t.*, o.dcoilwtico as oil_ten_day_lag, s.city, s.state,s.`cluster` as store_cluster,s.type as store_type FROM aggView t 
+aggAutoML = sql(
+    """SELECT t.*, o.dcoilwtico as oil_ten_day_lag, s.city, 
+        s.state,s.`cluster` as store_cluster,s.type as store_type FROM aggView t 
 LEFT JOIN favorita_stores s ON t.store_nbr == s.store_nbr
 RIGHT JOIN favorita_oil o ON date(t.`date`) == (date(o.`date`)+10)
-""")
+"""
+)
 
-aggAutoML = aggAutoML.where(aggAutoML.date >= '2016-01-01')
+aggAutoML = aggAutoML.where(aggAutoML.date >= "2016-01-01")
 print(aggAutoML.columns)
-aggAutoML.write.option("overwriteSchema", "true").mode("overwrite").saveAsTable("favorita_autoML_agg")
-
+aggAutoML.write.option("overwriteSchema", "true").mode("overwrite").saveAsTable(
+    "favorita_autoML_agg"
+)
 
 # COMMAND ----------
 
-
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   `date`,
+# MAGIC   store_nbr,
+# MAGIC   sum(sales) as aggSales
+# MAGIC FROM
+# MAGIC   favorita_train_set
+# MAGIC GROUP BY
+# MAGIC   `date`,
+# MAGIC   store_nbr
+# MAGIC ORDER BY
+# MAGIC   `date`
 
 # COMMAND ----------
 
