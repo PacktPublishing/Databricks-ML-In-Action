@@ -1,0 +1,7 @@
+experiment:
+  name: "dbfs:/databricks/mlflow-tracking/stephanie.rivera-pytorch_tdcs_starthesitation"
+model_registry:
+  model_name: "pytorch_tdcs_starthesitation_model"
+INGEST_CONFIG:
+  using: "spark_sql"
+  sql: "SELECT t.*, m.Subject FROM hive_metastore.lakehouse_in_action.parkinsons_train_tdcsfog t INNER JOIN hive_metastore.lakehouse_in_action.parkinsons_tdcsfog_metadata m ON t.id = m.Id"
