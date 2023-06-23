@@ -4,7 +4,7 @@ dbutils.widgets.text("min_dbr_version", "12.0", "Min required DBR version")
 
 #Empty value will try default: ?? with a fallback to hive_metastore
 #Specifying a value will not have fallback and fail if the catalog can't be used/created
-dbutils.widgets.text("catalog", "", "Catalog")
+dbutils.widgets.text("catalog", "hive_metastore", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
 dbutils.widgets.text("project_name", "", "Project Name")
@@ -12,7 +12,7 @@ dbutils.widgets.text("project_name", "", "Project Name")
 #Empty value will be set to a database scoped to the current user using project_name
 dbutils.widgets.text("db", "", "Database")
 
-dbutils.widgets.text("data_path", "", "Data Path")
+dbutils.widgets.text("data_path", "/dbfs/FileStore/LakehouseInAction/", "Data Path")
 
 
 # COMMAND ----------
