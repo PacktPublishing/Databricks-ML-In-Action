@@ -4,11 +4,11 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for the Autoloader to pick up
+# MAGIC ## Generate a JSON dataset for the Auto Loader to pick up
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Record Count, Temporary Location, Autoloader-Monitored Location and Sleep Interval Here
+# DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
 stem_file_path = spark_storage_path
@@ -25,14 +25,14 @@ dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
-# DBTITLE 1,Functions to generate a JSON dataset for the Autoloader to pick up
+# DBTITLE 1,Functions to generate a JSON dataset for Auto Loader to pick up
 import random
 import string
 from datetime import datetime
 import time
 import os
 
-# Method to return a random User ID between 1 and 5 (set low for testing some stateful streaming aggregations, higher for more variability)
+# Method to return a random User ID between 1 and nIDs (set low for testing some stateful streaming aggregations, higher for more variability)
 def returnCustomerID(nIDs):
   return random.randint(1, nIDs)
 

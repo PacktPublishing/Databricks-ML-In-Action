@@ -1,9 +1,10 @@
 # Databricks notebook source
-# DBTITLE 1,Passed variables
+# DBTITLE 1,Passed variables via Widgets
+# RUN TIME ARGUMENTS
+# Minimum Databricks Runtime version allowed for notebooks attaching to a cluster
 dbutils.widgets.text("min_dbr_version", "12.0", "Min required DBR version")
 
-#Empty value will try default: ?? with a fallback to hive_metastore
-#Specifying a value will not have fallback and fail if the catalog can't be used/created
+# Specifying a value will not have fallback and fail if the catalog can't be used/created
 dbutils.widgets.text("catalog", "hive_metastore", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
@@ -43,13 +44,15 @@ assert "ml" in version_tag.lower(), f"The Databricks ML runtime must be used. Cu
 
 # DBTITLE 1,Catalog and database setup
 # DATABASE SETUP -----------------------------------
+# Define a current user
 current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
 if current_user.rfind('@') > 0:
   current_user_no_at = current_user[:current_user.rfind('@')]
 else:
   current_user_no_at = current_user
 current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
-  
+
+# Define data paths in both formats  
 data_path = dbutils.widgets.get('data_path')
 if len(data_path) == 0:
   cloud_storage_path = f"/Users/{current_user}/lakehouse_in_action/{project_name}"
@@ -113,7 +116,7 @@ print(f"using cloud_storage_path {cloud_storage_path}")
 print(f"using spark_storage_path {spark_storage_path}")
 print(f"using catalog.database_name `{catalog}`.`{database_name}`")
 
-#with parallel execution this can fail the time of the initialization. add a few retry to fix these issues
+# With parallel execution this can fail the time of the initialization. add a few retry to fix these issues
 for i in range(10):
   try:
     spark.sql(f"""USE `{catalog}`.`{database_name}`""")
@@ -122,10 +125,11 @@ for i in range(10):
     time.sleep(1)
     if i >= 9:
       raise e
-    
+
+# Granting UC permissions to account users - change if you want your data private    
 if catalog != 'hive_metastore':
   try:
-    spark.sql(f"GRANT CREATE, USAGE on DATABASE {catalog}.{database_name} TO `account users`")
+    spark.sql(f"GRANT CREATE, USE on SCHEMA {catalog}.{database_name} TO `account users`")
     spark.sql(f"ALTER SCHEMA {catalog}.{database_name} OWNER TO `account users`")
   except Exception as e:
     print("Couldn't grant access to the database for all users:"+str(e))
