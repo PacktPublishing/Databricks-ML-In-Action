@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %run ./../setup
+# MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction
 
 # COMMAND ----------
 
@@ -17,8 +17,11 @@ from torch import nn
 from torch.nn import functional as F
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-from torchmetrics import Accuracy, F1Score
+from torchmetrics.classification import BinaryF1Score
 from pytorch_lightning import LightningModule, Trainer
+import mlflow
+
+mlflow.pytorch.autolog()
 
 # COMMAND ----------
 
@@ -32,89 +35,91 @@ target_col = "StartHesitation"
 ## __init__, __len__, __getitem__
 
 class FogDataset(Dataset):
-    def __init__(self,df,feature_cols, target_col):
+    def __init__(self, df, feature_cols, target_col):
         self.df = df
         # set label
-        self.df_label=self.df[[target_col]].astype(int)
-        self.df_features=self.df[feature_cols].astype(float)
+        self.df_label = self.df[[target_col]].astype(float)
+        self.df_features = self.df[feature_cols].astype(float)
         # convert to tensors
-        list_of_tensors = [torch.tensor(self.df_features[x].to_numpy()) for x in feature_cols]
-        self.dataset=torch.sum(torch.stack(list_of_tensors), dim=0)
-        self.label=torch.tensor(self.df_label.to_numpy().reshape(-1))
+        self.dataset = torch.tensor(self.df_features.to_numpy().reshape(-1, 3), dtype=torch.float32)
+        self.label = torch.tensor(self.df_label.to_numpy(), dtype=torch.float32).reshape(-1)
 
-    
     # This returns the total amount of samples in your Dataset
     def __len__(self):
         return len(self.dataset)
-    
+
     # This returns given an index the i-th sample and label
     def __getitem__(self, idx):
-        return self.dataset[idx],self.label[idx]
+        return self.dataset[idx], self.label[idx]
 
 # COMMAND ----------
 
 # Pytorch Lightning Model
 class FogModel(LightningModule):
-  def __init__(self,train,test):
+  def __init__(self,train,test,val):
     super().__init__()
     self.train_ds=train
-    self.val_ds=test
+    self.val_ds=val
     self.test_ds=test
     # Define PyTorch model
-    classes=2
-    features=3
-    self.BATCH_SIZE = 1024
-    self.model = torch.nn.Sequential(
-      torch.nn.Flatten(),
-      torch.nn.Linear(features, 128),
-      torch.nn.ReLU(),
-      torch.nn.Dropout(0.1),
-      torch.nn.Linear(128, 32),
-      torch.nn.ReLU(),
-      torch.nn.Dropout(0.1),
-      torch.nn.Linear(32, classes),
+    noutputs=1
+    nfeatures=3
+    self.model = nn.Sequential(
+      nn.Flatten(),
+      nn.Linear(nfeatures, 32),
+      nn.ReLU(),
+      nn.Dropout(0.1),
+      nn.Linear(32, 32), 
+      nn.ReLU(),
+      nn.Dropout(0.1),
+      nn.Linear(32, noutputs), 
+      nn.Sigmoid()
       )
-    self.accuracy = F1Score(task='binary')
+    self.F1 = BinaryF1Score()
+    self.criterion = nn.BCELoss()
     
   def forward(self, x):
     x = self.model(x)
-    return torch.nn.functional.log_softmax(x, dim=1)
+    return F.log_softmax(x, dim=1)
     
   def training_step(self, batch, batch_idx):
     x, y = batch
-    logits = self(x)
-    loss = torch.nn.functional.nll_loss(logits, y)    
+    target = y.unsqueeze(1)
+    logits = self.model(x)
+    logits = F.log_softmax(logits, dim=1)
+    loss = self.criterion(logits, target)
+    self.log("train_loss", loss, on_epoch=True)
+    f1 = self.F1(logits, target)
+    self.log(f"train_f1", f1, on_epoch=True)
     return loss
   
+  def test_step(self, batch, batch_idx, print_str='test'):
+    x, y = batch
+    target = y.unsqueeze(1)
+    logits = self.model(x)
+    loss = self.criterion(logits, target)
+    f1 = self.F1(logits, target)
+    # Calling self.log will surface up scalars for you in TensorBoard
+    self.log(f"{print_str}_loss", loss, on_epoch=True)
+    self.log(f"{print_str}_f1", f1, on_epoch=True)
+    return loss
+
   def validation_step(self, batch, batch_idx):
     # Here we just reuse the test_step for testing
     return self.test_step(batch, batch_idx,print_str='val')
-    
-  def test_step(self, batch, batch_idx, print_str='test'):
-    x, y = batch
-    logits = self(x)
-    loss = torch.nn.functional.nll_loss(logits, y)
-    preds = torch.argmax(logits, dim=1)
-    print(logits)      
-    self.accuracy(preds, y)
-
-    # Calling self.log will surface up scalars for you in TensorBoard
-    self.log(f"{print_str}_loss", loss, prog_bar=True)
-    self.log(f"{print_str}_acc", self.accuracy, prog_bar=True)
-    return loss
     
   def configure_optimizers(self):
     return torch.optim.Adam(self.parameters(), lr=0.001)
       
   # This will then directly be usable with Pytorch Lightning to make a super quick model
   def train_dataloader(self):
-    return DataLoader(self.train_ds, num_workers=4, batch_size=self.BATCH_SIZE,shuffle=False)
+    return DataLoader(self.train_ds, batch_size=2048, num_workers=4,shuffle=False)
 
   def test_dataloader(self):
-    return DataLoader(self.test_ds, num_workers=4, batch_size=self.BATCH_SIZE,shuffle=False)
+    return DataLoader(self.test_ds, batch_size=512, num_workers=4,shuffle=False)
   
   def val_dataloader(self):
-    return DataLoader(self.val_ds, num_workers=4,batch_size=self.BATCH_SIZE,shuffle=False)
+    return DataLoader(self.val_ds, batch_size=512, num_workers=4,shuffle=False)
 
 # COMMAND ----------
 
@@ -126,37 +131,70 @@ traindata = traindata.toPandas()
 
 
 sgkf = StratifiedGroupKFold(n_splits=8, random_state=416, shuffle=True)
-splits = sgkf.split(X=traindata['id'], y=traindata[target_col], groups=traindata['Subject'])
-for fold, (train_index, test_index) in enumerate(splits):
-    print(f"--- Fold = {fold} ---")
-    print(f"Training label distribution {traindata.loc[train_index].groupby([target_col]).size()/(1.0*len(train_index))*100}")
-    print(f"Testing label distribution {traindata.loc[test_index].groupby([target_col]).size()/(1.0*len(test_index))*100}")
-
-
+# splits = sgkf.split(X=traindata['id'], y=traindata[target_col], groups=traindata['Subject'])
+# for fold, (train_index_0, test_index) in enumerate(splits):
+#     print(f"--- Fold = {fold} ---")
+#     print(f"Training label distribution {traindata.loc[train_index_0].groupby([target_col]).size()/(1.0*len(train_index_0))*100}")
+#     print(f"Testing label distribution {traindata.loc[test_index].groupby([target_col]).size()/(1.0*len(test_index))*100}")
 
 # COMMAND ----------
 
 splits = sgkf.split(X=traindata['id'], y=traindata[target_col], groups=traindata['Subject'])
-for fold, (train_index, test_index) in enumerate(splits):
+for fold, (train_index_0, test_index) in enumerate(splits):
     if fold == 0:
       break
 
 # COMMAND ----------
 
-model_traindata = traindata.loc[train_index].reset_index(drop=True)
+model_traindata = traindata.loc[train_index_0].reset_index(drop=True)
 model_testdata = traindata.loc[test_index].reset_index(drop=True)
 
-model_traindata = FogDataset(model_traindata,feature_cols=measures,target_col=target_col)
-model_testdata = FogDataset(model_testdata,feature_cols=measures,target_col=target_col)
+# COMMAND ----------
 
-model = FogModel(model_traindata, model_testdata)
+# valsplits = sgkf.split(X=model_traindata['id'], y=model_traindata[target_col], groups=model_traindata['Subject'])
+# for fold, (train_index, val_index) in enumerate(valsplits):
+#     print(f"--- Fold = {fold} ---")
+#     print(f"Training label distribution {model_traindata.loc[train_index].groupby([target_col]).size()/(1.0*len(train_index))*100}")
+#     print(f"Testing label distribution {model_traindata.loc[val_index].groupby([target_col]).size()/(1.0*len(val_index))*100}")
+
+# COMMAND ----------
+
+valsplits = sgkf.split(X=model_traindata['id'], y=model_traindata[target_col], groups=model_traindata['Subject'])
+for fold, (train_index, val_index) in enumerate(valsplits):
+  if fold == 3:
+    break
+
+# COMMAND ----------
+
+from sklearn.preprocessing import StandardScaler
+ss = StandardScaler()
+
+#display(model_testdata[measures])
+ss.fit(model_traindata[measures])
+model_traindata[measures] = ss.transform(model_traindata[measures])
+model_testdata[measures] = ss.transform(model_testdata[measures])
+#display(model_testdata)
+
+model_valdata = model_traindata.loc[val_index].reset_index(drop=True)
+new_model_traindata = model_traindata.loc[train_index].reset_index(drop=True)
+
+
+# COMMAND ----------
+
+model_traindataset = FogDataset(new_model_traindata,feature_cols=measures,target_col=target_col)
+model_valdataset = FogDataset(model_valdata,feature_cols=measures,target_col=target_col)
+model_testdataset = FogDataset(model_testdata,feature_cols=measures,target_col=target_col)
 
 # COMMAND ----------
 
 # Start the Trainer
 trainer = Trainer(
-    max_epochs=10,
+  max_epochs=10,
 )
+
+# COMMAND ----------
+
+model = FogModel(model_traindataset, model_testdataset, model_valdataset)
 
 # COMMAND ----------
 
@@ -165,15 +203,7 @@ trainer.fit(model)
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-
+trainer.validate()
 
 # COMMAND ----------
 
