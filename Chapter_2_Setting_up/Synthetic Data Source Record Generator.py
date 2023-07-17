@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %run ../global-setup $project_name=transactional_data
+# MAGIC %run ../global-setup $project_name=synthetic_data
 
 # COMMAND ----------
 
@@ -11,10 +11,9 @@
 # DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-stem_file_path = spark_storage_path
-temp_path = "{}/temp".format(stem_file_path)
-destination_path = "{}/autoloader".format(stem_file_path)
-sleepIntervalSeconds = 2
+temp_path = "{}/temp".format(spark_storage_path)
+destination_path = "{}/data".format(spark_storage_path)
+sleepIntervalSeconds = 1
 
 # COMMAND ----------
 

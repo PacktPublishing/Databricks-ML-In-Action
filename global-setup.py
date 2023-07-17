@@ -13,7 +13,7 @@ dbutils.widgets.text("project_name", "", "Project Name")
 #Empty value will be set to a database scoped to the current user using project_name
 dbutils.widgets.text("db", "", "Database")
 
-dbutils.widgets.text("data_path", "/dbfs/FileStore/LakehouseInAction/", "Data Path")
+dbutils.widgets.text("data_path", "/FileStore/LakehouseInAction/", "Data Path")
 
 
 # COMMAND ----------
@@ -129,7 +129,7 @@ for i in range(10):
 # Granting UC permissions to account users - change if you want your data private    
 if catalog != 'hive_metastore':
   try:
-    spark.sql(f"GRANT CREATE, USE on SCHEMA {catalog}.{database_name} TO `account users`")
+    spark.sql(f"GRANT CREATE, USAGE on SCHEMA {catalog}.{database_name} TO `account users`")
     spark.sql(f"ALTER SCHEMA {catalog}.{database_name} OWNER TO `account users`")
   except Exception as e:
     print("Couldn't grant access to the database for all users:"+str(e))
