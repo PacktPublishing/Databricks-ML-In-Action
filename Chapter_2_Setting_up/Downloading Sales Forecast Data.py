@@ -5,8 +5,4 @@
 
 import opendatasets as od
 
-od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecasting/data",'/dbfs/FileStore/LakehouseInAction/')
-
-# COMMAND ----------
-
-
+od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecasting/data",cloud_storage_path)

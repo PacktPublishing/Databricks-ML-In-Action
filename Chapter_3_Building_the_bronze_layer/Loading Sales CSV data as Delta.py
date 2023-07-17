@@ -12,12 +12,12 @@
 
 import pandas as pd
 
-spark_data_path = 'dbfs:/FileStore/LakehouseInAction/store-sales-time-series-forecasting/'
-cloud_data_path = '/dbfs/FileStore/LakehouseInAction/store-sales-time-series-forecasting/'
+spark_data_path = spark_storage_path + '/store-sales-time-series-forecasting/'
+cloud_data_path = cloud_storage_path + '/store-sales-time-series-forecasting/'
 
 # COMMAND ----------
 
-dbutils.fs.ls(spark_data_path)
+display(dbutils.fs.ls(spark_data_path))
 
 # COMMAND ----------
 
