@@ -57,7 +57,3 @@ stream = spark.readStream \
 
 # DBTITLE 1,Viewing data in table while stream is running
 display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
-
-# COMMAND ----------
-
-

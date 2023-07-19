@@ -90,7 +90,3 @@ display(usercounts.orderBy("CustomerID"))
 
 # DBTITLE 1,Display the Data Generated
 display(df)
-
-# COMMAND ----------
-
-

@@ -6,7 +6,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction
+# MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -77,7 +77,7 @@ display(df)
 
 # COMMAND ----------
 
-display(dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/'))
+display(dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/train/defog'))
 
 # COMMAND ----------
 
