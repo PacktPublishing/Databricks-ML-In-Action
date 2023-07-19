@@ -1,14 +1,19 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC ## Synthetic Data
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=transactional_data
+# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
-table_name = "transactions"
-raw_data_location = f"{spark_storage_path}/autoloader/"
+table_name = "synthetic_transactions"
+raw_data_location = f"{spark_storage_path}/data"
 schema_location = f"{spark_storage_path}/{table_name}/schema"
 checkpoint_location = f"{spark_storage_path}/{table_name}/checkpoint"
 
@@ -29,6 +34,7 @@ spark.conf.set("spark.databricks.cloudFiles.schemaInference.sampleSize.numFiles"
 
 # COMMAND ----------
 
+# DBTITLE 1,Readstream and writestream
 stream = spark.readStream \
   .format("cloudFiles") \
   .option("cloudFiles.format", "json") \
@@ -44,16 +50,10 @@ stream = spark.readStream \
   .option("checkpointLocation", checkpoint_location) \
   .option("mergeSchema", "true") \
   .trigger(processingTime='10 seconds') \
-  .toTable(tableName=table_name)
+  .toTable(tableName=table_name)    
+  ##.trigger(availableNow=True) \
 
 # COMMAND ----------
 
-display(stream)
-
-# COMMAND ----------
-
+# DBTITLE 1,Viewing data in table while stream is running
 display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
-
-# COMMAND ----------
-
-

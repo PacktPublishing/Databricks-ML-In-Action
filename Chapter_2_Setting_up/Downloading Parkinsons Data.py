@@ -6,7 +6,3 @@
 import opendatasets as od
 
 od.download("https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/data",'/dbfs/FileStore/LakehouseInAction/')
-
-# COMMAND ----------
-
-

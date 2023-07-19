@@ -5,12 +5,10 @@ import dlt
 
 def build_autoloader_stream():
   raw_data_location = spark.conf.get('raw_data_location')
-  schema_location = spark.conf.get('schema_location')
   return spark.readStream.format('cloudFiles') \
       .option("cloudFiles.format", "json") \
       .option("cloudFiles.inferColumnTypes","true") \
       .option("cloudFiles.schemaEvolutionMode", "addNewColumns") \
-      .option("cloudFiles.schemaLocation", f"{schema_location}") \
       .option("cloudFiles.schemaHints","CustomerID bigint, Amount double, TransactionTimestamp timestamp") \
       .load(f"{raw_data_location}")
 
@@ -18,7 +16,7 @@ def build_autoloader_stream():
 
 def generate_table():
   table_name = spark.conf.get('table_name')
-  @dlt.table(name=f'{table_name}')
+  @dlt.table(name=f'{table_name}',table_properties={"quality":"bronze"})
   def create_table(): 
     return build_autoloader_stream()
 

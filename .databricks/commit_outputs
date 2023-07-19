@@ -1,0 +1,14 @@
+
+# .databricks/commit_outputs file is used to control whether a notebooks' output should be included when committing changes to Git.
+#
+# Reference:
+# each line in .databricks/commit_outputs represents a glob pattern
+# line starting with # represents a comment
+# notebook that matches a glob pattern will have output included
+# line starting with ! represents a exclusion pattern (i.e. !folder_a/\* will exclude output for all notebooks in folder_a)
+# if a notebook path matches multiple glob patterns, the last matching glob pattern will be used
+# note that glob patterns are case sensitive
+
+# Uncomment the following pattern to include output for all notebooks
+**
+ 
