@@ -116,7 +116,7 @@ print(f"using cloud_storage_path {cloud_storage_path}")
 print(f"using spark_storage_path {spark_storage_path}")
 print(f"using catalog.database_name `{catalog}`.`{database_name}`")
 
-# With parallel execution this can fail the time of the initialization. add a few retry to fix these issues
+# With parallel execution this can fail the time of the initialization. add a few retries to fix these issues
 for i in range(10):
   try:
     spark.sql(f"""USE `{catalog}`.`{database_name}`""")
@@ -139,7 +139,7 @@ if catalog != 'hive_metastore':
 
 # DBTITLE 1,Get Kaggle credentials using secrets
 # import os
-# # os.environ['kaggle_username'] = 'YOUR KAGGLE USERNAME HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
+# os.environ['kaggle_username'] = 'YOUR KAGGLE USERNAME HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
 # os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
 
 # # os.environ['kaggle_key'] = 'YOUR KAGGLE KEY HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
@@ -147,4 +147,8 @@ if catalog != 'hive_metastore':
 
 # COMMAND ----------
 
+# import os
 
+# os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
+
+# os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")

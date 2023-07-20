@@ -44,6 +44,7 @@ stream = spark.readStream \
   .option("cloudFiles.schemaLocation", schema_location) \
   .load(raw_data_location) \
   .select("*") \
+  ##.select(col("*"), col("_metadata"))
   .writeStream \
   .format("delta") \
   .outputMode("append") \
