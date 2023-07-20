@@ -1,10 +1,10 @@
 # Databricks notebook source
-# MAGIC %run ../global-setup $project_name=synthetic_data
+# MAGIC %run ../global-setup $project_name=synthetic_data $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for the Auto Loader to pick up
+# MAGIC ## Generate a JSON dataset for Auto Loader to pick up
 
 # COMMAND ----------
 

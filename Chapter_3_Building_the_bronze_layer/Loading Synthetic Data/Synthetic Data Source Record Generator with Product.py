@@ -1,14 +1,14 @@
 # Databricks notebook source
-# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for the Autoloader to pick up
+# MAGIC ## Generate a JSON dataset for Auto Loader to pick up
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Record Count, Temporary Location, Autoloader-Monitored Location and Sleep Interval Here
+# DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
 temp_path = "{}/temp".format(spark_storage_path)
@@ -19,8 +19,8 @@ sleepIntervalSeconds = 1
 
 # DBTITLE 1,Reset Environment & Setup
 dbutils.fs.rm(temp_path, recurse=True)
-dbutils.fs.rm(destination_path, recurse=True)
-dbutils.fs.mkdirs(destination_path)
+#dbutils.fs.rm(destination_path, recurse=True)
+#dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
@@ -84,7 +84,7 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-total = 25
+total = 200
 includeProduct = False
 while(t<total):
   writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
@@ -98,3 +98,7 @@ while(t<total):
 # DBTITLE 1,Display the Data Generated
 df = spark.read.format("json").load(destination_path)
 display(df)
+
+# COMMAND ----------
+
+

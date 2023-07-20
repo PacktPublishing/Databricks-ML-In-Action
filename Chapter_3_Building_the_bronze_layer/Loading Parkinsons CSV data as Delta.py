@@ -146,20 +146,4 @@ df.write.mode("overwrite").saveAsTable("parkinsons_test_defog")
 
 # COMMAND ----------
 
-display(dbutils.fs.ls('dbfs:/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/'))
-
-# COMMAND ----------
-
-# DBTITLE 1,Unlabeled
-df = spark.read.format("parquet") \
-  .load(r'/FileStore/LakehouseInAction/tlvmc-parkinsons-freezing-gait-prediction/unlabeled/', sep=',', decimal='.',header=True,inferType=True) \
-  .withColumn("file_id", input_file_name())
-
-df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[5]).drop('file_id')
-
-display(df)
-df.write.mode("overwrite").saveAsTable("parkinsons_unlabeled")
-
-# COMMAND ----------
-
 

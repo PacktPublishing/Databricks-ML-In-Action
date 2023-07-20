@@ -6,7 +6,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting
+# MAGIC %run ../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
