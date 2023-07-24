@@ -1,1 +1,1 @@
-# Databricks Lakehouse ML in Action	 
+# Databricks Lakehouse In Action
