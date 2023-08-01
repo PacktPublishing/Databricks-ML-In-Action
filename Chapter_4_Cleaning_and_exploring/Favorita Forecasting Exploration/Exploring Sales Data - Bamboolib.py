@@ -13,6 +13,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install bamboolib
+
+# COMMAND ----------
+
 import bamboolib as bam
 import pandas as pd
 

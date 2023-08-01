@@ -129,8 +129,8 @@ traindata = traindata.toPandas()
 
 # COMMAND ----------
 
-
 sgkf = StratifiedGroupKFold(n_splits=8, random_state=416, shuffle=True)
+
 # splits = sgkf.split(X=traindata['id'], y=traindata[target_col], groups=traindata['Subject'])
 # for fold, (train_index_0, test_index) in enumerate(splits):
 #     print(f"--- Fold = {fold} ---")
@@ -138,6 +138,8 @@ sgkf = StratifiedGroupKFold(n_splits=8, random_state=416, shuffle=True)
 #     print(f"Testing label distribution {traindata.loc[test_index].groupby([target_col]).size()/(1.0*len(test_index))*100}")
 
 # COMMAND ----------
+
+sgkf = StratifiedGroupKFold(n_splits=8, random_state=416, shuffle=True)
 
 splits = sgkf.split(X=traindata['id'], y=traindata[target_col], groups=traindata['Subject'])
 for fold, (train_index_0, test_index) in enumerate(splits):
@@ -188,9 +190,11 @@ model_testdataset = FogDataset(model_testdata,feature_cols=measures,target_col=t
 # COMMAND ----------
 
 # Start the Trainer
-trainer = Trainer(
-  max_epochs=10,
-)
+trainer = Trainer(max_epochs=10,)
+
+model = FogModel(model_traindataset, model_testdataset, model_valdataset)
+
+trainer.fit(model)
 
 # COMMAND ----------
 
