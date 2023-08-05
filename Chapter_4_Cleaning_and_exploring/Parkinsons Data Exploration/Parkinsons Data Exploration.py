@@ -1,13 +1,27 @@
 # Databricks notebook source
-# MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
+# MAGIC %md
+# MAGIC ## Parkinson's FOG Exploration
+# MAGIC
 
 # COMMAND ----------
 
-pip install missingno fancyimpute
+import pandas as pd
+import missingno as msno
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+
+# COMMAND ----------
+
+pip install missingno
 
 # COMMAND ----------
 
 dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,Run setup after Python restart
+# MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -140,68 +154,6 @@ df_profile.to_file("parkinsons_unlabeled.html")
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Data File and Field Descriptions from Kaggle
-# MAGIC
-# MAGIC train/ Folder containing the data series in the training set within three subfolders: tdcsfog/, defog/, and notype/. Series in the notype folder are from the defog dataset but lack event-type annotations. The fields present in these series vary by folder.
-# MAGIC * **Time** An integer timestep. Series from the tdcsfog dataset are recorded at 128Hz (128 timesteps per second), while series from the defog and daily series are recorded at 100Hz (100 timesteps per second).
-# MAGIC * **AccV, AccML, and AccAP** Acceleration from a lower-back sensor on three axes: V - vertical, ML - mediolateral, AP - anteroposterior. Data is in units of m/s^2 for tdcsfog/ and g for defog/ and notype/.
-# MAGIC * **StartHesitation**, Turn, Walking Indicator variables for the occurrence of each of the event types.
-# MAGIC * **Event** Indicator variable for the occurrence of any FOG-type event. Present only in the notype series, which lack type-level annotations.
-# MAGIC * **Valid** There were cases during the video annotation that were hard for the annotator to decide if there was an Akinetic (i.e., essentially no movement) FoG or the subject stopped voluntarily. Only event annotations where the series is marked true should be considered as unambiguous.
-# MAGIC * **Task** Series were only annotated where this value is true. Portions marked false should be considered unannotated.
-# MAGIC
-# MAGIC Note that the Valid and Task fields are only present in the defog dataset. They are not relevant for the tdcsfog data.
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC
-# MAGIC ## Try out the Databricks Assistant.
-# MAGIC Lets check that Subject & Visit make up the primary key for the Subject table
-# MAGIC
-# MAGIC Let's ask "How many pairs of Subject, Visit are in parkinsons_subjects"
-
-# COMMAND ----------
-
-# DBTITLE 1,This is what I asked for, but not what I wanted.
-# MAGIC %sql
-# MAGIC SELECT COUNT(DISTINCT Subject, Visit) AS pairs_count
-# MAGIC FROM parkinsons_subjects
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Let's try again with better wording "What are the Subject, Visit combinations and how many are there of each?"
-
-# COMMAND ----------
-
-# DBTITLE 1,This is the answer we were looking for.
-# MAGIC %sql
-# MAGIC SELECT Subject, Visit, count(*) as count FROM parkinsons_subjects GROUP BY Subject, Visit
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC Asking the same question for the `tdcsfog_metadata` table shows Subject, Visit are not a primary key. In the documentation, it explains that Visit in the `defog_metadata` and the `tdcsfog_metadata` are different column meanings with the same name. 
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT
-# MAGIC   Subject,
-# MAGIC   Visit,
-# MAGIC   COUNT(*) AS combo_count
-# MAGIC FROM
-# MAGIC   parkinsons_tdcsfog_metadata
-# MAGIC GROUP BY
-# MAGIC   Subject,
-# MAGIC   Visit
-# MAGIC ORDER BY
-# MAGIC   Subject
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## Missing data
 # MAGIC
@@ -226,8 +178,7 @@ df_profile.to_file("parkinsons_unlabeled.html")
 
 # COMMAND ----------
 
-import pandas as pd
-subjects_df = table("grouped_subjects").toPandas()
+subjects_df = spark.table("grouped_subjects").toPandas()
 subjects_df.info()
 
 # COMMAND ----------
@@ -237,7 +188,6 @@ subjects_df.Sex = pd.factorize(subjects_df.Sex)[0]
 
 # COMMAND ----------
 
-import missingno as msno
 msno.bar(subjects_df)
 
 # COMMAND ----------
@@ -246,14 +196,13 @@ msno.matrix(subjects_df)
 
 # COMMAND ----------
 
-from fancyimpute import IterativeImputer
-mice_imputed = pd.DataFrame(subjects_df.UPDRSIII_Off).copy(deep=True)
-mice_imputer = IterativeImputer()
-mice_imputed.iloc[:, :] = mice_imputer.fit_transform(mice_imputed)
+num_df = pd.DataFrame(subjects_df.drop(columns=['Visit','Subject','Sex'])).copy(deep=True)
+imputer = IterativeImputer()
+num_df.iloc[:, :] = imputer.fit_transform(num_df)
 
 # COMMAND ----------
 
-subjects_df.UPDRSIII_Off = mice_imputed.UPDRSIII_Off
+subjects_df.UPDRSIII_Off = num_df.UPDRSIII_Off
 
 # COMMAND ----------
 

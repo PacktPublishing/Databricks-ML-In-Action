@@ -1,9 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # XGBoost Regressor training
+# MAGIC # LightGBM Regressor training
 # MAGIC - This is an auto-generated notebook.
-# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **13.1.x-cpu-ml-scala2.12**, and rerun it.
-# MAGIC - Compare trials in the [MLflow experiment](#mlflow/experiments/3216362223347015).
+# MAGIC - To reproduce these results, attach this notebook to a cluster with runtime version **14.0.x-snapshot-cpu-ml-scala2.12**, and rerun it.
+# MAGIC - Compare trials in the [MLflow experiment](#mlflow/experiments/1430361843542082).
 # MAGIC - Clone this notebook into your project folder by selecting **File > Clone** in the notebook toolbar.
 
 # COMMAND ----------
@@ -32,7 +32,7 @@ os.makedirs(input_temp_dir)
 
 
 # Download the artifact and read it into a pandas DataFrame
-input_data_path = mlflow.artifacts.download_artifacts(run_id="21ee55f1fb464ff0a7ebc6787d7f17df", artifact_path="data", dst_path=input_temp_dir)
+input_data_path = mlflow.artifacts.download_artifacts(run_id="945cf1ab5e0545f482138ec3acfacea1", artifact_path="data", dst_path=input_temp_dir)
 
 df_loaded = pd.read_parquet(os.path.join(input_data_path, "training_data"))
 # Delete the temp data
@@ -46,12 +46,12 @@ df_loaded.head(5)
 # MAGIC %md
 # MAGIC ### Select supported columns
 # MAGIC Select only the columns that are supported. This allows us to train a model that can predict on a dataset that has extra columns that are not used in training.
-# MAGIC `["store_nbr"]` are dropped in the pipelines. See the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
+# MAGIC `[]` are dropped in the pipelines. See the Alerts tab of the AutoML Experiment page for details on why these columns are dropped.
 
 # COMMAND ----------
 
 from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-supported_cols = ["family", "date", "onpromotion", "id"]
+supported_cols = ["family", "date", "store_nbr", "transaction_date", "id", "onpromotion"]
 col_selector = ColumnSelector(supported_cols)
 
 # COMMAND ----------
@@ -76,6 +76,29 @@ col_selector = ColumnSelector(supported_cols)
 # MAGIC - hours since the beginning of the week
 # MAGIC - hours since the beginning of the month
 # MAGIC - hours since the beginning of the year
+
+# COMMAND ----------
+
+from pandas import Timestamp
+from sklearn.pipeline import Pipeline
+
+from databricks.automl_runtime.sklearn import DatetimeImputer
+from databricks.automl_runtime.sklearn import DateTransformer
+from sklearn.preprocessing import StandardScaler
+
+imputers = {
+  "transaction_date": DatetimeImputer(),
+}
+
+date_transformers = []
+
+for col in ["transaction_date"]:
+  date_preprocessor = Pipeline([
+    (f"impute_{col}", imputers[col]),
+    (f"transform_{col}", DateTransformer()),
+    (f"standardize_{col}", StandardScaler()),
+  ])
+  date_transformers.append((f"date_{col}", date_preprocessor, [col]))
 
 # COMMAND ----------
 
@@ -121,7 +144,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 num_imputers = []
-num_imputers.append(("impute_mean", SimpleImputer(), ["id", "onpromotion"]))
+num_imputers.append(("impute_mean", SimpleImputer(), ["id", "onpromotion", "store_nbr"]))
 
 numerical_pipeline = Pipeline(steps=[
     ("converter", FunctionTransformer(lambda df: df.apply(pd.to_numeric, errors='coerce'))),
@@ -129,7 +152,7 @@ numerical_pipeline = Pipeline(steps=[
     ("standardizer", StandardScaler()),
 ])
 
-numerical_transformers = [("numerical", numerical_pipeline, ["id", "onpromotion"])]
+numerical_transformers = [("numerical", numerical_pipeline, ["id", "store_nbr", "onpromotion"])]
 
 # COMMAND ----------
 
@@ -163,7 +186,7 @@ categorical_one_hot_transformers = [("onehot", one_hot_pipeline, ["family"])]
 
 from sklearn.compose import ColumnTransformer
 
-transformers = datetime_transformers + numerical_transformers + categorical_one_hot_transformers
+transformers = date_transformers + datetime_transformers + numerical_transformers + categorical_one_hot_transformers
 
 preprocessor = ColumnTransformer(transformers, remainder="passthrough", sparse_threshold=0)
 
@@ -202,15 +225,16 @@ y_test = split_test_df[target_col]
 # MAGIC %md
 # MAGIC ## Train regression model
 # MAGIC - Log relevant metrics to MLflow to track runs
-# MAGIC - All the runs are logged under [this MLflow experiment](#mlflow/experiments/3216362223347015)
+# MAGIC - All the runs are logged under [this MLflow experiment](#mlflow/experiments/1430361843542082)
 # MAGIC - Change the model parameters and re-run the training cell to log a different trial to the MLflow experiment
 # MAGIC - To view the full list of tunable hyperparameters, check the output of the cell below
 
 # COMMAND ----------
 
-from xgboost import XGBRegressor
+import lightgbm
+from lightgbm import LGBMRegressor
 
-help(XGBRegressor)
+help(LGBMRegressor)
 
 # COMMAND ----------
 
@@ -244,13 +268,13 @@ pipeline_val.fit(X_train, y_train)
 X_val_processed = pipeline_val.transform(X_val)
 
 def objective(params):
-  with mlflow.start_run(experiment_id="3216362223347015") as mlflow_run:
-    xgb_regressor = XGBRegressor(**params)
+  with mlflow.start_run(experiment_id="1430361843542082") as mlflow_run:
+    lgbmr_regressor = LGBMRegressor(**params)
 
     model = Pipeline([
         ("column_selector", col_selector),
         ("preprocessor", preprocessor),
-        ("regressor", xgb_regressor),
+        ("regressor", lgbmr_regressor),
     ])
 
     # Enable automatic logging of input samples, metrics, parameters, and models
@@ -259,7 +283,7 @@ def objective(params):
         silent=True,
     )
 
-    model.fit(X_train, y_train, regressor__early_stopping_rounds=5, regressor__verbose=False, regressor__eval_set=[(X_val_processed,y_val)])
+    model.fit(X_train, y_train, regressor__callbacks=[lightgbm.early_stopping(5), lightgbm.log_evaluation(0)], regressor__eval_set=[(X_val_processed,y_val)])
 
     
     # Log metrics for the training set
@@ -283,7 +307,7 @@ def objective(params):
         evaluator_config= {"log_model_explainability": False,
                            "metric_prefix": "val_"}
    )
-    xgb_val_metrics = val_eval_result.metrics
+    lgbmr_val_metrics = val_eval_result.metrics
     # Log metrics for the test set
     test_eval_result = mlflow.evaluate(
         model=pyfunc_model,
@@ -293,19 +317,19 @@ def objective(params):
         evaluator_config= {"log_model_explainability": False,
                            "metric_prefix": "test_"}
    )
-    xgb_test_metrics = test_eval_result.metrics
+    lgbmr_test_metrics = test_eval_result.metrics
 
-    loss = xgb_val_metrics["val_r2_score"]
+    loss = -lgbmr_val_metrics["val_r2_score"]
 
     # Truncate metric key names so they can be displayed together
-    xgb_val_metrics = {k.replace("val_", ""): v for k, v in xgb_val_metrics.items()}
-    xgb_test_metrics = {k.replace("test_", ""): v for k, v in xgb_test_metrics.items()}
+    lgbmr_val_metrics = {k.replace("val_", ""): v for k, v in lgbmr_val_metrics.items()}
+    lgbmr_test_metrics = {k.replace("test_", ""): v for k, v in lgbmr_test_metrics.items()}
 
     return {
       "loss": loss,
       "status": STATUS_OK,
-      "val_metrics": xgb_val_metrics,
-      "test_metrics": xgb_test_metrics,
+      "val_metrics": lgbmr_val_metrics,
+      "test_metrics": lgbmr_test_metrics,
       "model": model,
       "run": mlflow_run,
     }
@@ -325,7 +349,7 @@ def objective(params):
 # MAGIC search expressions.
 # MAGIC
 # MAGIC For documentation on parameters used by the model in use, please see:
-# MAGIC https://xgboost.readthedocs.io/en/stable/python/python_api.html#xgboost.XGBRegressor
+# MAGIC https://lightgbm.readthedocs.io/en/stable/pythonapi/lightgbm.LGBMRegressor.html
 # MAGIC
 # MAGIC NOTE: The above URL points to a stable version of the documentation corresponding to the last
 # MAGIC released version of the package. The documentation may differ slightly for the package version
@@ -334,15 +358,17 @@ def objective(params):
 # COMMAND ----------
 
 space = {
-  "colsample_bytree": 0.5257601863370336,
-  "learning_rate": 0.10024314852236,
-  "max_depth": 11,
-  "min_child_weight": 10,
-  "n_estimators": 125,
-  "n_jobs": 100,
-  "subsample": 0.6672083715176608,
-  "verbosity": 0,
-  "random_state": 627861072,
+  "colsample_bytree": 0.7944224758785696,
+  "lambda_l1": 4.965836430349603,
+  "lambda_l2": 1.6016287481205287,
+  "learning_rate": 1.170732101304251,
+  "max_bin": 297,
+  "max_depth": 6,
+  "min_child_samples": 75,
+  "n_estimators": 124,
+  "num_leaves": 20,
+  "subsample": 0.5775536972237154,
+  "random_state": 812876898,
 }
 
 # COMMAND ----------
@@ -385,6 +411,57 @@ model
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ### Patch pandas version in logged model
+# MAGIC
+# MAGIC Ensures that model serving uses the same version of pandas that was used to train the model.
+
+# COMMAND ----------
+
+import mlflow
+import os
+import shutil
+import tempfile
+import yaml
+
+run_id = mlflow_run.info.run_id
+
+# Set up a local dir for downloading the artifacts.
+tmp_dir = tempfile.mkdtemp()
+
+client = mlflow.tracking.MlflowClient()
+
+# Fix conda.yaml
+conda_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/conda.yaml", dst_path=tmp_dir)
+with open(conda_file_path) as f:
+  conda_libs = yaml.load(f, Loader=yaml.FullLoader)
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in conda_libs["dependencies"][-1]["pip"]])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to conda.yaml")
+  conda_libs["dependencies"][-1]["pip"].append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/conda.yaml", "w") as f:
+    f.write(yaml.dump(conda_libs))
+  client.log_artifact(run_id=run_id, local_path=conda_file_path, artifact_path="model")
+
+# Fix requirements.txt
+venv_file_path = mlflow.artifacts.download_artifacts(artifact_uri=f"runs:/{run_id}/model/requirements.txt", dst_path=tmp_dir)
+with open(venv_file_path) as f:
+  venv_libs = f.readlines()
+venv_libs = [lib.strip() for lib in venv_libs]
+pandas_lib_exists = any([lib.startswith("pandas==") for lib in venv_libs])
+if not pandas_lib_exists:
+  print("Adding pandas dependency to requirements.txt")
+  venv_libs.append(f"pandas=={pd.__version__}")
+
+  with open(f"{tmp_dir}/requirements.txt", "w") as f:
+    f.write("\n".join(venv_libs))
+  client.log_artifact(run_id=run_id, local_path=venv_file_path, artifact_path="model")
+
+shutil.rmtree(tmp_dir)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Feature importance
 # MAGIC
 # MAGIC SHAP is a game-theoretic approach to explain machine learning models, providing a summary plot
@@ -406,7 +483,7 @@ model
 # COMMAND ----------
 
 # Set this flag to True and re-run the notebook to see the SHAP plots
-shap_enabled = True
+shap_enabled = False
 
 # COMMAND ----------
 
@@ -415,10 +492,10 @@ if shap_enabled:
     mlflow.sklearn.autolog(disable=True)
     from shap import KernelExplainer, summary_plot
     # Sample background data for SHAP Explainer. Increase the sample size to reduce variance.
-    train_sample = X_train.sample(n=min(100, X_train.shape[0]), random_state=627861072)
+    train_sample = X_train.sample(n=min(100, X_train.shape[0]), random_state=812876898)
 
     # Sample some rows from the validation set to explain. Increase the sample size for more thorough results.
-    example = X_val.sample(n=min(100, X_val.shape[0]), random_state=627861072)
+    example = X_val.sample(n=min(100, X_val.shape[0]), random_state=812876898)
 
     # Use Kernel SHAP to explain feature importance on the sampled rows from the validation set.
     predict = lambda x: model.predict(pd.DataFrame(x, columns=X_train.columns))
