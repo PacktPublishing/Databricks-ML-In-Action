@@ -44,7 +44,6 @@ stream = spark.readStream \
   .option("cloudFiles.schemaLocation", schema_location) \
   .load(raw_data_location) \
   .select("*") \
-  ##.select(col("*"), col("_metadata"))
   .writeStream \
   .format("delta") \
   .outputMode("append") \
@@ -52,9 +51,13 @@ stream = spark.readStream \
   .option("mergeSchema", "true") \
   .trigger(processingTime='10 seconds') \
   .toTable(tableName=table_name)    
-  ##.trigger(availableNow=True) \
+  .trigger(availableNow=True) 
 
 # COMMAND ----------
 
 # DBTITLE 1,Viewing data in table while stream is running
 display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
+
+# COMMAND ----------
+
+

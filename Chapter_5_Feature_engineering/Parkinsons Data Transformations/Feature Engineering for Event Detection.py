@@ -6,52 +6,105 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction
+# MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC USE catalog hive_metastore;
-# MAGIC USE lakehouse_in_action;
+# MAGIC
+# MAGIC SELECT * FROM silver_subjects
 
 # COMMAND ----------
 
-# DBTITLE 1,Create a table for building features from
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE hive_metastore.lakehouse_in_action.parkinsons_updated_defog_train AS (
-# MAGIC with start_time as (select `id`,  min(`Time`) as StartTime FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog WHERE ((StartHesitation + Turn + Walking) > 0) GROUP BY `id`),
-# MAGIC end_time as (select  `id`,  max(`Time`) as EndTime FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog WHERE ((StartHesitation + Turn + Walking) > 0) GROUP BY `id`)
-# MAGIC SELECT 
-# MAGIC int(`Time`) as TimeStep,
-# MAGIC float(tdf.AccV) as AccV,
-# MAGIC float(tdf.AccML) as AccML,
-# MAGIC float(tdf.AccAP) as AccAP,
-# MAGIC tdf.`id`,
-# MAGIC CASE 
-# MAGIC WHEN StartHesitation == 1 THEN "StartHesitation"
-# MAGIC WHEN Turn == 1 THEN "Turn"
-# MAGIC WHEN Walking == 1 THEN "Walking"
-# MAGIC ELSE "None" END AS StringLabel,
-# MAGIC CASE 
-# MAGIC WHEN ((StartHesitation + Turn + Walking) > 0)
-# MAGIC THEN 1 ELSE 0 END AS EventInProgress,
-# MAGIC isnotnull(st.StartTime) as EventStart,
-# MAGIC isnotnull(et.EndTime) as EventEnd
-# MAGIC FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog tdf
-# MAGIC left join start_time st ON tdf.id = st.id AND tdf.`Time` = st.StartTime
-# MAGIC left join end_time et ON tdf.id = et.id AND tdf.`Time` = et.EndTime
-# MAGIC order by `id`, int(`Time`))
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE defog_enriched_tasks AS (
+# MAGIC   SELECT
+# MAGIC     dm.Id as TaskID,
+# MAGIC     tk.Begin,
+# MAGIC     tk.`End`,
+# MAGIC     dm.Subject,
+# MAGIC     dm.Medication,
+# MAGIC     dm.Visit,
+# MAGIC     ss.Age,
+# MAGIC     ss.Sex,
+# MAGIC     ss.YearsSinceDx,
+# MAGIC     ss.UPDRSIII_On,
+# MAGIC     ss.UPDRSIII_Off,
+# MAGIC     ss.NFOGQ
+# MAGIC   FROM
+# MAGIC     parkinsons_defog_metadata dm
+# MAGIC     LEFT JOIN silver_subjects ss ON dm.Subject = ss.Subject
+# MAGIC     AND dm.Visit = ss.Visit
+# MAGIC     LEFT JOIN parkinsons_defog_tasks tk ON dm.Id = tk.Id
+# MAGIC )
+
+# COMMAND ----------
+
+# DBTITLE 1,Create a training table for building features
+# MAGIC %sql
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE defog_training AS (
+# MAGIC   SELECT
+# MAGIC     tr.*,
+# MAGIC     tr.`id` as TaskID,
+# MAGIC     det.Subject,
+# MAGIC     det.Medication,
+# MAGIC     det.Visit,
+# MAGIC     det.Age,
+# MAGIC     det.Sex,
+# MAGIC     det.YearsSinceDx,
+# MAGIC     det.UPDRSIII_On,
+# MAGIC     det.UPDRSIII_Off,
+# MAGIC     det.NFOGQ
+# MAGIC   FROM
+# MAGIC     parkinsons_train_defog tr
+# MAGIC     LEFT JOIN defog_enriched_tasks det ON tr.id = det.TaskID
+# MAGIC )
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Lag variables
+# MAGIC ## Rolling AVG variables
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM parkinsons_updated_defog_train LIMIT 10
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE defog_temp AS (
+# MAGIC   SELECT
+# MAGIC     *
+# MAGIC   FROM
+# MAGIC     defog_training
+# MAGIC   LIMIT
+# MAGIC     1000
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM defog_temp
+
+# COMMAND ----------
+
+from pyspark.sql.functions import avg
+from pyspark.sql.window import Window
+
+window_size = "1 day"  # set the window size as per your requirements
+
+df = spark.table("defog_temp") # assuming the table 'defog_temp' is registered in Spark
+
+# create a window specification
+window_spec = Window.orderBy("Time").rangeBetween(-(60*60*24), 0)
+
+# calculate the rolling average using avg() function over the created window
+df_rolling_avg = df.select(
+        "date_time",
+        "AccV",
+        avg("AccV").over(window_spec).alias("rolling_avg_AccV")
+    )
+df_rolling_avg.show()
 
 # COMMAND ----------
 
@@ -63,7 +116,7 @@ lag_columns = ["AccV", "AccML", "AccAP"]
 
 # COMMAND ----------
 
-df = sql("""SELECT * FROM hive_metastore.lakehouse_in_action.parkinsons_updated_defog_train""")
+df = sql("""SELECT * FROM parkinsons_updated_defog_train""")
 
 lag_window = 1  # Adjust the window size as needed
 

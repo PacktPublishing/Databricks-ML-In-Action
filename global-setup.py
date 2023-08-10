@@ -5,7 +5,7 @@
 dbutils.widgets.text("min_dbr_version", "12.0", "Min required DBR version")
 
 # Specifying a value will not have fallback and fail if the catalog can't be used/created
-dbutils.widgets.text("catalog", "hive_metastore", "Catalog")
+dbutils.widgets.text("catalog", "lakehouse_in_action", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
 dbutils.widgets.text("project_name", "", "Project Name")
@@ -13,7 +13,7 @@ dbutils.widgets.text("project_name", "", "Project Name")
 #Empty value will be set to a database scoped to the current user using project_name
 dbutils.widgets.text("db", "", "Database")
 
-dbutils.widgets.text("data_path", "/FileStore/LakehouseInAction/", "Data Path")
+dbutils.widgets.text("data_path", "s3://one-env/lakehouse_ml_in_action/", "Data Path")
 
 
 # COMMAND ----------
@@ -58,8 +58,8 @@ if len(data_path) == 0:
   cloud_storage_path = f"/Users/{current_user}/lakehouse_in_action/{project_name}"
   spark_storage_path = f"dbfs:/Users/{current_user}/lakehouse_in_action/{project_name}"
 else:
-  cloud_storage_path = f"/dbfs{data_path}{project_name}"
-  spark_storage_path = f"dbfs:{data_path}{project_name}"
+  cloud_storage_path = f"{data_path}{project_name}"
+  spark_storage_path = f"{data_path}{project_name}"
 
 try:
   dbutils.fs.ls(cloud_storage_path)

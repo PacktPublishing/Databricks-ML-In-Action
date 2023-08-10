@@ -1,5 +1,27 @@
 # Databricks notebook source
-# MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction
+# MAGIC %md
+# MAGIC ## Parkinson's FOG Exploration
+# MAGIC
+
+# COMMAND ----------
+
+import pandas as pd
+import missingno as msno
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+
+# COMMAND ----------
+
+pip install missingno
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# DBTITLE 1,Run setup after Python restart
+# MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -132,35 +154,63 @@ df_profile.to_file("parkinsons_unlabeled.html")
 
 # COMMAND ----------
 
-# MAGIC %md 
-# MAGIC ## Data File and Field Descriptions from Kaggle
-# MAGIC
-# MAGIC train/ Folder containing the data series in the training set within three subfolders: tdcsfog/, defog/, and notype/. Series in the notype folder are from the defog dataset but lack event-type annotations. The fields present in these series vary by folder.
-# MAGIC * **Time** An integer timestep. Series from the tdcsfog dataset are recorded at 128Hz (128 timesteps per second), while series from the defog and daily series are recorded at 100Hz (100 timesteps per second).
-# MAGIC * **AccV, AccML, and AccAP** Acceleration from a lower-back sensor on three axes: V - vertical, ML - mediolateral, AP - anteroposterior. Data is in units of m/s^2 for tdcsfog/ and g for defog/ and notype/.
-# MAGIC * **StartHesitation**, Turn, Walking Indicator variables for the occurrence of each of the event types.
-# MAGIC * **Event** Indicator variable for the occurrence of any FOG-type event. Present only in the notype series, which lack type-level annotations.
-# MAGIC * **Valid** There were cases during the video annotation that were hard for the annotator to decide if there was an Akinetic (i.e., essentially no movement) FoG or the subject stopped voluntarily. Only event annotations where the series is marked true should be considered as unambiguous.
-# MAGIC * **Task** Series were only annotated where this value is true. Portions marked false should be considered unannotated.
-# MAGIC
-# MAGIC Note that the Valid and Task fields are only present in the defog dataset. They are not relevant for the tdcsfog data.
-
-# COMMAND ----------
-
 # MAGIC %md
+# MAGIC ## Missing data
 # MAGIC
-# MAGIC The Subject & Visit make up the primary key for the Subject table
+# MAGIC Recall from our data profile on the subjects table, UPDRS_Off is 24% null. Lets use the methods [here](https://www.kaggle.com/code/hafsaezzahraouy/dealing-with-missing-data-with-pyspark)
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT Subject, Visit, count(*) as count FROM hive_metastore.lakehouse_in_action.parkinsons_subjects GROUP BY Subject, Visit
+# MAGIC CREATE OR REPLACE TABLE grouped_subjects AS SELECT * FROM (
+# MAGIC (SELECT 
+# MAGIC   *,
+# MAGIC   'tdcsfog' as FOG_group
+# MAGIC FROM parkinsons_subjects s
+# MAGIC WHERE Subject IN (SELECT DISTINCT Subject FROM parkinsons_tdcsfog_metadata))
+# MAGIC UNION
+# MAGIC (SELECT 
+# MAGIC   *,
+# MAGIC   'defog' as FOG_group
+# MAGIC FROM parkinsons_subjects s
+# MAGIC WHERE Subject IN (SELECT DISTINCT Subject FROM parkinsons_defog_metadata))
+# MAGIC )
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC
-# MAGIC SELECT StartHesitation, Turn, Walking, Valid, Task, COUNT(*) as cnt FROM hive_metastore.lakehouse_in_action.parkinsons_train_defog GROUP BY ALL ORDER BY cnt DESC
+subjects_df = spark.table("grouped_subjects").toPandas()
+subjects_df.info()
+
+# COMMAND ----------
+
+subjects_df.FOG_group = pd.factorize(subjects_df.FOG_group)[0]
+subjects_df.Sex = pd.factorize(subjects_df.Sex)[0]
+
+# COMMAND ----------
+
+msno.bar(subjects_df)
+
+# COMMAND ----------
+
+msno.matrix(subjects_df)
+
+# COMMAND ----------
+
+num_df = pd.DataFrame(subjects_df.drop(columns=['Visit','Subject','Sex'])).copy(deep=True)
+imputer = IterativeImputer()
+num_df.iloc[:, :] = imputer.fit_transform(num_df)
+
+# COMMAND ----------
+
+subjects_df.UPDRSIII_Off = num_df.UPDRSIII_Off
+
+# COMMAND ----------
+
+msno.matrix(subjects_df)
+
+# COMMAND ----------
+
+spark.createDataFrame(subjects_df).write.mode("overwrite").saveAsTable("silver_subjects")
 
 # COMMAND ----------
 
