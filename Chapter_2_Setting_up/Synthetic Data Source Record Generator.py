@@ -1,10 +1,15 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC #Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ../global-setup $project_name=synthetic_data $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for Auto Loader to pick up
+# MAGIC # Generate a JSON dataset
 
 # COMMAND ----------
 
@@ -77,6 +82,11 @@ while(t<50):
   writeJsonFile(recordCount, nIDs, temp_path, destination_path)
   t = t+1
   time.sleep(sleepIntervalSeconds)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #Visually verify
 
 # COMMAND ----------
 

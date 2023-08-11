@@ -1,5 +1,17 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC #Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #Download data
+# MAGIC
+# MAGIC Using the opendatasets library, connect to Kaggle and download the asl data
 
 # COMMAND ----------
 
