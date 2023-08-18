@@ -1,6 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC #Run Setup
+# MAGIC # ASL Fingerspelling
+# MAGIC
+# MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
+# MAGIC
+# MAGIC ##Run Setup
 
 # COMMAND ----------
 
@@ -9,7 +13,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC #Download data
+# MAGIC ##Download data
 # MAGIC
 # MAGIC Using the opendatasets library, connect to Kaggle and download the asl data
 
@@ -22,7 +26,3 @@ od.download("https://www.kaggle.com/competitions/asl-fingerspelling/data", "/dbf
 # COMMAND ----------
 
 dbutils.fs.mv('dbfs:/FileStore/LakehouseInAction/asl-fingerspelling','s3://one-env/lakehouse_ml_in_action/asl-fingerspelling', recurse=True)
-
-# COMMAND ----------
-
-

@@ -1,4 +1,11 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC #Synthetic data
+# MAGIC
+# MAGIC ##Run setup
+
+# COMMAND ----------
+
 # MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
