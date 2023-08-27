@@ -69,3 +69,17 @@ df = pd.read_csv(f'{cloud_storage_path}/transactions.csv', sep=',', decimal='.')
 df['date'] = pd.to_datetime(df['date'])
 spark.createDataFrame(df).write.mode("overwrite").saveAsTable("favorita_transactions")
 display(df)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC USE `lakehouse_in_action`.`favorita_forecasting`
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SHOW TABLES
+
+# COMMAND ----------
+
+

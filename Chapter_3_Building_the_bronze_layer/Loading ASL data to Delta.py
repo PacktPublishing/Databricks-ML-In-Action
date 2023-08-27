@@ -36,7 +36,7 @@ display(df)
 # COMMAND ----------
 
 df = pd.read_csv(f'{cloud_storage_path}/train.csv', sep=',', decimal='.')
-spark.createDataFrame(df).write.mode("overwrite").saveAsTable("training")
+spark.createDataFrame(df).write.mode("overwrite").saveAsTable("training_metadata")
 display(df)
 
 # COMMAND ----------

@@ -145,3 +145,7 @@ create_animation(np.array(hand_images)[:, 0])
 # COMMAND ----------
 
 
+
+# COMMAND ----------
+
+
