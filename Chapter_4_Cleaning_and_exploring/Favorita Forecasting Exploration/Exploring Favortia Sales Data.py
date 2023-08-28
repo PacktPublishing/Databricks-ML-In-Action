@@ -10,12 +10,12 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SHOW TABLES LIKE 'favorita*'
+# MAGIC SHOW TABLES
 
 # COMMAND ----------
 
 from pyspark.sql.functions import *
-df = spark.table("favorita_train_set")
+df = spark.table("train_set")
 df = df.withColumn("transaction_date", to_date("date"))
 display(df)
 

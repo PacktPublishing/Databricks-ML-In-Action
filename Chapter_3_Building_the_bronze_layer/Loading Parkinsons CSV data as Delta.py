@@ -1,8 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Parkinson's FOG
+# MAGIC # Parkinson's FOG
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/)
+# MAGIC
+# MAGIC ##Run setup
 
 # COMMAND ----------
 
