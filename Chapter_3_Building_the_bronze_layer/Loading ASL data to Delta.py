@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling
+# MAGIC # ASL Fingerspelling Data to Delta
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC

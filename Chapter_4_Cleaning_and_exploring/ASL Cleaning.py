@@ -66,12 +66,11 @@ RHAND_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if "right" in col]
 LHAND_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "left" in col]
 RPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in RPOSE]
 LPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in LPOSE]
-len(RHAND_IDX)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Reduce the sequences used for training
+# MAGIC ### Use Spark and PySpark Pandas to reduce the sequences used for training
 # MAGIC
 # MAGIC Using the extracted landmarks and phrases to limit to those with more non-null values than 2x the length of the phrase
 
@@ -102,7 +101,7 @@ mdf = mdf.withColumn('max_nn_rows', greatest(col("lh_nn_rows"), col("rh_nn_rows"
 
 # COMMAND ----------
 
-mdf.filter(2*col('phrase_length')<col('max_nn_rows')).createOrReplaceTempView("cleaned_training_metadata")
+mdf.filter(2*col('phrase_length')<col('max_nn_rows')).write.mode('overwrite').saveAsTable("cleaned_training_metadata")
 
 # COMMAND ----------
 
@@ -111,7 +110,28 @@ mdf.filter(2*col('phrase_length')<col('max_nn_rows')).createOrReplaceTempView("c
 
 # COMMAND ----------
 
-np.sum(np.sum(np.isnan(frames[:, RHAND_IDX]), axis=1) == 0)
+import numpy as np
+
+seq_id = '1983865658'
+phrase = 'jeramy duran'
+tdf= spark.table("train_landmarks").select("sequence_id", *FEATURE_COLUMNS).filter(col('sequence_id')==seq_id)
+pdf = tdf.toPandas()
+
+parquet_numpy = tdf.pandas_api().to_numpy()
+
+frames = parquet_numpy
+
+# Calculate the number of NaN values in each hand landmark
+r_nonan = np.sum(np.sum(np.isnan(frames[:, RHAND_IDX]), axis=1) == 0)
+l_nonan = np.sum(np.sum(np.isnan(frames[:, LHAND_IDX]), axis=1) == 0)
+no_nan = max(r_nonan, l_nonan)
+
+if 2 * len(phrase) < no_nan:
+  print(no_nan)
+
+# COMMAND ----------
+
+display(np.isnan(frames[:, RHAND_IDX]))
 
 # COMMAND ----------
 
@@ -123,7 +143,7 @@ len(np.sum(np.isnan(frames[:, RHAND_IDX]), axis=1))
 
 # COMMAND ----------
 
-display(np.isnan(frames[:, RHAND_IDX]))
+np.sum(np.sum(np.isnan(frames[:, RHAND_IDX]), axis=1) == 0)
 
 # COMMAND ----------
 
