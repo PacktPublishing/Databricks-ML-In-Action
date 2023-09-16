@@ -48,13 +48,14 @@ display(df)
 
 # COMMAND ----------
 
-import pyspark.pandas as ps
+import pyspark.pandas as psp
 
 # COMMAND ----------
 
-data = ps.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
+data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
 dic = data.to_dict()
 char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()], columns=["char","pred_index"])
+spark.createDataFrame(char_2_pred_index).write.mode("overwrite").saveAsTable("character_to_prediction_index")
 
 # COMMAND ----------
 
