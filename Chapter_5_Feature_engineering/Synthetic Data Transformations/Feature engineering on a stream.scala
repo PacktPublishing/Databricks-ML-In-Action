@@ -29,7 +29,7 @@ using delta
 location '$outputPath/featureTable'""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
-// aggregate transactions for window_minutes
+// aggregate transactions for windowMinutes
 val windowMinutes = 2
 // wait at most max_wait_minutes before writing a record
 val maxWaitMinutes = 1
@@ -61,7 +61,7 @@ def addNewRecords(newRecords: List[InputRow], transactionCountState: Transaction
   new TransactionCountState(latestTimestamp, transactionCountState.currentTransactions ::: newRecords)
 }
 
-// Drop records that are more than window_minutes old
+// Drop records that are more than windowMinutes old
 def dropExpiredRecords(newLatestTimestamp: java.time.Instant, currentTransactions: List[InputRow]): TransactionCountState = {
   val newTransactionList = ListBuffer[InputRow]()
   
