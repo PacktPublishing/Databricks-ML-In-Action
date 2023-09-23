@@ -137,6 +137,31 @@ if catalog != 'hive_metastore':
 
 # COMMAND ----------
 
+if project_name == 'asl-fingerspelling':
+  # Pose coordinates for hand movement.
+  LPOSE = [13, 15, 17, 19, 21]
+  RPOSE = [14, 16, 18, 20, 22]
+  POSE = LPOSE + RPOSE
+
+  X = [f'x_right_hand_{i}' for i in range(21)] + [f'x_left_hand_{i}' for i in range(21)] + [f'x_pose_{i}' for i in POSE]
+  Y = [f'y_right_hand_{i}' for i in range(21)] + [f'y_left_hand_{i}' for i in range(21)] + [f'y_pose_{i}' for i in POSE]
+  Z = [f'z_right_hand_{i}' for i in range(21)] + [f'z_left_hand_{i}' for i in range(21)] + [f'z_pose_{i}' for i in POSE]
+
+  FEATURE_COLUMNS = X + Y + Z
+
+  X_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if "x_" in col]
+  Y_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if "y_" in col]
+  Z_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if "z_" in col]
+
+  RHAND_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if "right" in col]
+  LHAND_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "left" in col]
+  RPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in RPOSE]
+  LPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in LPOSE]
+
+  volume_data_path = "/Volumes/lakehouse_in_action/asl_fingerspelling/asl_volume/"
+
+# COMMAND ----------
+
 # DBTITLE 1,Get Kaggle credentials using secrets
 # import os
 # os.environ['kaggle_username'] = 'YOUR KAGGLE USERNAME HERE' # replace with your own credential here temporarily or set up a secret scope with your credential

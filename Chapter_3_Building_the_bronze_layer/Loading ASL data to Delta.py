@@ -42,20 +42,37 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ##Transforming JSON to Delta
+# MAGIC ## Utilizing Volumes
 # MAGIC
-# MAGIC We create a dictionary between dataframes due to the JSON format
+# MAGIC We copy the json file to our Volume so we can access it, as JSON, easily during training and inference. Additionally, we read it in as a dataframe for inspection.
 
 # COMMAND ----------
 
-import pyspark.pandas as psp
+# MAGIC %sql
+# MAGIC CREATE VOLUME lakehouse_in_action.asl_fingerspelling.asl_volume
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC GRANT WRITE VOLUME
+# MAGIC ON VOLUME lakehouse_in_action.asl_fingerspelling.asl_volume
+# MAGIC TO `hayley.horn@databricks.com`;
+
+# COMMAND ----------
+
+## The volume data path is defined in our global setup file
+print(volume_data_path)
+
+# COMMAND ----------
+
+dbutils.fs.cp(f"{cloud_storage_path}/character_to_prediction_index.json", volume_data_path)
 
 # COMMAND ----------
 
 data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
 dic = data.to_dict()
 char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()], columns=["char","pred_index"])
-spark.createDataFrame(char_2_pred_index).write.mode("overwrite").saveAsTable("character_to_prediction_index")
+
 
 # COMMAND ----------
 
