@@ -133,7 +133,8 @@ def get_hands(seq_df):
 
 # COMMAND ----------
 
-example_df = sql("SELECT * FROM train_landmarks WHERE sequence_id='1983865658'").toPandas()
+example_df = sql("SELECT * FROM train_landmarks WHERE sequence_id='1983865658'")
+example_df = example_df.select("sequence_id", *FEATURE_COLUMNS).toPandas()
 
 # COMMAND ----------
 
@@ -141,10 +142,6 @@ example_df = sql("SELECT * FROM train_landmarks WHERE sequence_id='1983865658'")
 hand_images, hand_landmarks = get_hands(example_df)
 # Fetch and show the data for right hand
 create_animation(np.array(hand_images)[:, 0])
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 

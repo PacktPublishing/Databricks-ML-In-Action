@@ -8,16 +8,23 @@
 
 # COMMAND ----------
 
+#dbutils.library.restartPython()
+
+
+# COMMAND ----------
+
 # MAGIC %run ../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
+import numpy as np
 import pandas as pd
 import pyspark.pandas as psp
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from skimage.transform import resize
+from mediapipe.framework.formats import landmark_pb2
 import matplotlib
 import matplotlib.pyplot as plt
 from mlflow.tracking.client import MlflowClient
@@ -59,10 +66,10 @@ print(f"List of {len(tf_records)} TFRecord files.")
 
 # COMMAND ----------
 
-char_to_num = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
-char_to_num = char_to_num.to_dict()
+char_to_num = spark.table("character_to_prediction_index")
 
 # Add pad_token, start pointer and end pointer to the dict
+update_dict = {}
 pad_token = 'P'
 start_token = '<'
 end_token = '>'
@@ -70,15 +77,14 @@ pad_token_idx = 59
 start_token_idx = 60
 end_token_idx = 61
 
-char_to_num[pad_token] = pad_token_idx
-char_to_num[start_token] = start_token_idx
-char_to_num[end_token] = end_token_idx
+update_dict[pad_token] = pad_token_idx
+update_dict[start_token] = start_token_idx
+update_dict[end_token] = end_token_idx
+update_df = spark.createDataFrame([(key,value) for key, value in update_dict.items()], schema=["char","pred_index"])
 
-# COMMAND ----------
-
-data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
-dic = data.to_dict()
-char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()], columns=["char","pred_index"])
+char_to_num = char_to_num.unionAll(update_df)
+char_to_num = char_to_num.toPandas()
+char_to_num = dict(zip(char_to_num.char, char_to_num.pred_index))
 
 # COMMAND ----------
 
@@ -156,8 +162,8 @@ def decode_fn(record_bytes):
 
 table = tf.lookup.StaticHashTable(
     initializer=tf.lookup.KeyValueTensorInitializer(
-        keys=list(char_2_pred_index.char),
-        values=list(char_2_pred_index.pred_index),
+        keys=list(char_to_num.keys()),
+        values=list(char_to_num.values()),
     ),
     default_value=tf.constant(-1),
     name="class_weight"
@@ -198,7 +204,7 @@ train_len = int(0.8 * len(tf_records))
 
 train_ds = tf.data.TFRecordDataset(tf_records[:train_len]).map(decode_fn).map(convert_fn).batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE).cache()
 valid_ds = tf.data.TFRecordDataset(tf_records[train_len:]).map(decode_fn).map(convert_fn).batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE).cache()
-ex_ds = tf.data.TFRecordDataset(tf_records[:10]).map(decode_fn).map(convert_fn).batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
+ex_ds = tf.data.TFRecordDataset(tf_records[:2]).map(decode_fn).map(convert_fn).batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE).cache()
 
 
 # COMMAND ----------
@@ -206,12 +212,6 @@ ex_ds = tf.data.TFRecordDataset(tf_records[:10]).map(decode_fn).map(convert_fn).
 ex_ds = tf.data.TFRecordDataset(tf_records[:10]).map(decode_fn).map(convert_fn).batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
 
 display(ex_ds.take(3))
-
-# COMMAND ----------
-
-from mlflow.models import ModelSignature, infer_signature
-
-signature = infer_signature(testX, model.predict(testX))
 
 # COMMAND ----------
 
@@ -572,7 +572,7 @@ loss_fn = tf.keras.losses.CategoricalCrossentropy(
 optimizer = keras.optimizers.Adam(0.0001)
 model.compile(optimizer=optimizer, loss=loss_fn)
 
-history = model.fit(train_ds, validation_data=valid_ds, callbacks=[display_cb], epochs=13)
+history = model.fit(train_ds, validation_data=valid_ds, callbacks=[display_cb], epochs=2)
 
 
 # model,history = train_and_register_keras_model(train_set=train_ds, validation_set=valid_ds,example_set=ex_ds)
@@ -627,12 +627,35 @@ tflitemodel_base = TFLiteModel(model)
 
 # COMMAND ----------
 
+from mlflow.models import ModelSignature, infer_signature
+
+signature = infer_signature(train_ds, tflitemodel_base(train_ds))
+
+# COMMAND ----------
+
+keras_model_converter = tf.lite.TFLiteConverter.from_keras_model(tflitemodel_base)
+keras_model_converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]#, tf.lite.OpsSet.SELECT_TF_OPS]
+tflite_model = keras_model_converter.convert()
+
+# COMMAND ----------
+
+interpreter = tf.lite.Interpreter("model.tflite")
+
+
+# COMMAND ----------
+
+from mlflow.models.signature import infer_signature
+signature = infer_signature(valid_ds, model.predict(valid_ds))
+
+
+# COMMAND ----------
+
 from mlflow.types.schema import Schema, TensorSpec
 
 # Option 1: Manually construct the signature object
 input_schema = Schema(
     [
-      TensorSpec(shape=[None, len(FEATURE_COLS)], dtype=tf.float32, name='inputs'),
+      TensorSpec(shape=[None, len(FEATURE_COLS)], type=np.dtype(np.float32), name='inputs'),
     ]
 )
 output_schema = Schema([TensorSpec(np.dtype(np.float32), (-1, 10))])
@@ -643,6 +666,7 @@ MODEL_NAME = "lakehouse_in_action.asl_fingerspelling.phrase_predictions"
 mlflow.tensorflow.log_model(
 tflitemodel_base,
 artifact_path="model",
+signature=signature,
 registered_model_name=MODEL_NAME
 )
 
