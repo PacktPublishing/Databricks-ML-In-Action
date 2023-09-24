@@ -159,6 +159,7 @@ if project_name == 'asl-fingerspelling':
   LPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in LPOSE]
 
   volume_data_path = "/Volumes/lakehouse_in_action/asl_fingerspelling/asl_volume/"
+  print(f"using volume_data_path {volume_data_path}")
 
 # COMMAND ----------
 
