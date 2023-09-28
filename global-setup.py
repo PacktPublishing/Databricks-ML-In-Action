@@ -56,10 +56,8 @@ current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
 data_path = dbutils.widgets.get('data_path')
 if len(data_path) == 0:
   cloud_storage_path = f"/Users/{current_user}/lakehouse_in_action/{project_name}"
-  spark_storage_path = f"dbfs:/Users/{current_user}/lakehouse_in_action/{project_name}"
 else:
   cloud_storage_path = f"{data_path}{project_name}"
-  spark_storage_path = f"{data_path}{project_name}"
 
 try:
   dbutils.fs.ls(cloud_storage_path)
@@ -113,7 +111,6 @@ else:
     catalog = "hive_metastore"
 
 print(f"using cloud_storage_path {cloud_storage_path}")
-print(f"using spark_storage_path {spark_storage_path}")
 print(f"using catalog.database_name `{catalog}`.`{database_name}`")
 
 # With parallel execution this can fail the time of the initialization. add a few retries to fix these issues
