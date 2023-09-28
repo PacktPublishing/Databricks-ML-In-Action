@@ -137,7 +137,10 @@ if catalog != 'hive_metastore':
 
 # COMMAND ----------
 
-if project_name == 'asl-fingerspelling':
+if catalog == 'hive_metastore':
+  volume_label = ''
+  print(f"Not using volumes for {project_name}")
+elif database_name == 'asl_fingerspelling':
   # Pose coordinates for hand movement.
   LPOSE = [13, 15, 17, 19, 21]
   RPOSE = [14, 16, 18, 20, 22]
@@ -158,7 +161,17 @@ if project_name == 'asl-fingerspelling':
   RPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in RPOSE]
   LPOSE_IDX = [i for i, col in enumerate(FEATURE_COLUMNS)  if  "pose" in col and int(col[-2:]) in LPOSE]
 
-  volume_data_path = "/Volumes/lakehouse_in_action/asl_fingerspelling/asl_volume/"
+  volume_label = "asl"
+elif database_name == 'parkinsons_freezing_gait_prediction':
+  volume_label = "fog"
+elif database_name == 'favorita_forecasting':
+  volume_label = "fav"
+
+# COMMAND ----------
+
+if volume_label != '':
+  sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.{volume_label}_volume""")
+  volume_data_path = f"/Volumes/{catalog}/{database_name}/{volume_label}_volume/"
   print(f"using volume_data_path {volume_data_path}")
 
 # COMMAND ----------
