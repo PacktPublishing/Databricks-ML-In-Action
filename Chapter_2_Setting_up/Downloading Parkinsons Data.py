@@ -1,9 +1,21 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC #Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ../global-setup $project_name=parkinsons-freezing_gait_prediction
 
 # COMMAND ----------
 
 dbutils.fs.mkdirs(volume_data_path + 'raw_data')
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##Download data
+# MAGIC
+# MAGIC Using the opendatasets library, connect to Kaggle and download the Parkinson's FOG data
 
 # COMMAND ----------
 

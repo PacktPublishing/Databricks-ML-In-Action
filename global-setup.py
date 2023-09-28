@@ -137,6 +137,7 @@ if catalog != 'hive_metastore':
 
 # COMMAND ----------
 
+# DBTITLE 1,Use volumes for projects using UC
 if catalog == 'hive_metastore':
   volume_label = ''
   print(f"Not using volumes for {project_name}")
@@ -169,6 +170,7 @@ elif database_name == 'favorita_forecasting':
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the volume
 if volume_label != '':
   sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.{volume_label}_volume""")
   volume_data_path = f"/Volumes/{catalog}/{database_name}/{volume_label}_volume/"

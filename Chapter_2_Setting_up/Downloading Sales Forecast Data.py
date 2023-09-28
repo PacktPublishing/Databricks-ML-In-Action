@@ -8,8 +8,13 @@
 
 # COMMAND ----------
 
+raw_data_path = volume_data_path + 'raw_data'
+dbutils.fs.mkdirs(raw_data_path)
+
+# COMMAND ----------
+
 # MAGIC %md
-# MAGIC #Download data
+# MAGIC ##Download data
 # MAGIC
 # MAGIC Using the opendatasets library, connect to Kaggle and download the favorita data
 
@@ -17,16 +22,4 @@
 
 import opendatasets as od
 
-od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecasting/data","/dbfs/FileStore/LakehouseInAction/")
-
-# COMMAND ----------
-
-dbutils.fs.mv('dbfs:/FileStore/LakehouseInAction/store-sales-time-series-forecasting/',cloud_storage_path, recurse=True)
-
-# COMMAND ----------
-
-# MAGIC %fs ls s3://one-env/lakehouse_ml_in_action/favorita_forecasting/
-
-# COMMAND ----------
-
-
+od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecasting/data",raw_data_path)
