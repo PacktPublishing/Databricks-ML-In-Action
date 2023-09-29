@@ -12,11 +12,6 @@
 
 # COMMAND ----------
 
-raw_data_path = volume_data_path + 'raw_data'
-dbutils.fs.mkdirs(raw_data_path)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ##Download data
 # MAGIC
@@ -26,4 +21,8 @@ dbutils.fs.mkdirs(raw_data_path)
 
 import opendatasets as od
 
-od.download("https://www.kaggle.com/competitions/asl-fingerspelling/data", raw_data_path)
+od.download("https://www.kaggle.com/competitions/asl-fingerspelling/data", "/dbfs/FileStore/LakehouseInAction/", force=True)
+
+# COMMAND ----------
+
+dbutils.fs.mv('dbfs:/FileStore/LakehouseInAction/asl-fingerspelling','s3://one-env/lakehouse_ml_in_action/asl-fingerspelling', recurse=True)
