@@ -1,5 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC #Synthetic data
+# MAGIC
 # MAGIC #Run Setup
 
 # COMMAND ----------
@@ -9,7 +11,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC # Generate a JSON dataset
+# MAGIC ## Generate a JSON dataset
 
 # COMMAND ----------
 
@@ -23,9 +25,9 @@ sleepIntervalSeconds = 1
 # COMMAND ----------
 
 # DBTITLE 1,Reset Environment & Setup
-# dbutils.fs.rm(temp_path, recurse=True)
-# dbutils.fs.rm(destination_path, recurse=True)
-# dbutils.fs.mkdirs(destination_path)
+dbutils.fs.rm(temp_path, recurse=True)
+dbutils.fs.rm(destination_path, recurse=True)
+dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
@@ -76,6 +78,15 @@ def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
 
 # COMMAND ----------
 
+# DBTITLE 1,Loop for Generating Data
+t=1
+while(t<500):
+  writeJsonFile(recordCount, nIDs, temp_path, destination_path)
+  t = t+1
+  time.sleep(sleepIntervalSeconds)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #Visually verify
 # MAGIC Inspect that we have written records as expected
@@ -92,3 +103,7 @@ display(usercounts.orderBy("CustomerID"))
 
 # DBTITLE 1,Display the Data Generated
 display(df)
+
+# COMMAND ----------
+
+

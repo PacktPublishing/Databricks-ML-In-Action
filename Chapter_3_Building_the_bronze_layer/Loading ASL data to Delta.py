@@ -44,12 +44,8 @@ display(df)
 # MAGIC %md
 # MAGIC ## Utilizing Volumes
 # MAGIC
+# MAGIC Let's grant access to Hayley so she can work on the data we are putting in our volume. 
 # MAGIC We copy the json file to our Volume so we can access it, as JSON, easily during training and inference. Additionally, we read it in as a dataframe for inspection.
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC CREATE VOLUME lakehouse_in_action.asl_fingerspelling.asl_volume
 
 # COMMAND ----------
 
@@ -60,15 +56,11 @@ display(df)
 
 # COMMAND ----------
 
-## The volume data path is defined in our global setup file
-print(volume_data_path)
-
-# COMMAND ----------
-
 dbutils.fs.cp(f"{cloud_storage_path}/character_to_prediction_index.json", volume_data_path)
 
 # COMMAND ----------
 
+import pyspark.pandas as psp
 data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
 dic = data.to_dict()
 char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()], columns=["char","pred_index"])
