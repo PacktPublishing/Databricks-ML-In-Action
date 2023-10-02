@@ -18,16 +18,16 @@
 # DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-temp_path = "{}/temp".format(cloud_storage_path)
+temp_path = "dbfs:/{}/temp".format(cloud_storage_path)
 destination_path = "{}/data".format(cloud_storage_path)
 sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
 # DBTITLE 1,Reset Environment & Setup
-dbutils.fs.rm(temp_path, recurse=True)
-dbutils.fs.rm(destination_path, recurse=True)
-dbutils.fs.mkdirs(destination_path)
+# dbutils.fs.rm(temp_path, recurse=True)
+# dbutils.fs.rm(destination_path, recurse=True)
+# dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
@@ -80,7 +80,7 @@ def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-while(t<500):
+while(t<5):
   writeJsonFile(recordCount, nIDs, temp_path, destination_path)
   t = t+1
   time.sleep(sleepIntervalSeconds)

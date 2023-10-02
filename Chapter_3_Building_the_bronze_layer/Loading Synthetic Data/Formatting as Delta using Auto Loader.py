@@ -8,14 +8,16 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
 
+# DBTITLE 1,Variables
 table_name = "synthetic_transactions"
-raw_data_location = f"{spark_storage_path}/data"
-schema_location = f"{spark_storage_path}/{table_name}/schema"
-checkpoint_location = f"{spark_storage_path}/{table_name}/checkpoint"
+raw_data_location = f"{cloud_storage_path}/data/"
+destination_location = f"{cloud_storage_path}/delta/"
+schema_location = f"dbfs:/{cloud_storage_path}/{table_name}/schema"
+checkpoint_location = f"dbfs:/{cloud_storage_path}/{table_name}/checkpoint"
 
 # COMMAND ----------
 
@@ -23,7 +25,8 @@ checkpoint_location = f"{spark_storage_path}/{table_name}/checkpoint"
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(schema_location, True)
   dbutils.fs.rm(checkpoint_location, True)
-  sql(f"DROP TABLE IF EXISTS {table_name}")
+  dbutils.fs.rm(destination_location, True)
+  #sql(f"DROP TABLE IF EXISTS {table_name}")
 
 # COMMAND ----------
 
@@ -50,13 +53,17 @@ stream = spark.readStream \
   .option("checkpointLocation", checkpoint_location) \
   .option("mergeSchema", "true") \
   .trigger(processingTime='10 seconds') \
-  .toTable(tableName=table_name)    
-  .trigger(availableNow=True) 
+  .start(destination_location)
+
+# COMMAND ----------
+
+df = spark.read.format("delta").load(destination_location)
+display(df)
 
 # COMMAND ----------
 
 # DBTITLE 1,Viewing data in table while stream is running
-display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
+#display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
 
 # COMMAND ----------
 

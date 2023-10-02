@@ -18,16 +18,16 @@
 # DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-temp_path = "{}/temp".format(spark_storage_path)
-destination_path = "{}/data".format(spark_storage_path)
+temp_path = "{}/temp/".format(spark_temp_path)
+destination_path = "{}/data/".format(cloud_storage_path)
 sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
 # DBTITLE 1,Reset Environment & Setup
 dbutils.fs.rm(temp_path, recurse=True)
-#dbutils.fs.rm(destination_path, recurse=True)
-#dbutils.fs.mkdirs(destination_path)
+dbutils.fs.rm(destination_path, recurse=True)
+dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
@@ -91,20 +91,40 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-total = 200
+total = 20
 includeProduct = False
 while(t<total):
   writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
   t = t+1
-  if t > total/2: 
+  if t > total/20: 
     includeProduct = True
   time.sleep(sleepIntervalSeconds)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #Visually verify
+# MAGIC Inspect that we have written records as expected
+
+# COMMAND ----------
+
+# DBTITLE 1,Count of Transactions per User
+df = spark.read.format("json").load(destination_path)
+if includeProduct:
+  usercounts = df.groupBy("CustomerID","Product").count()
+else:
+  usercounts = df.groupBy("CustomerID").count()
+display(usercounts.orderBy("CustomerID"))
 
 # COMMAND ----------
 
 # DBTITLE 1,Display the Data Generated
 df = spark.read.format("json").load(destination_path)
 display(df)
+
+# COMMAND ----------
+
+dbutils.fs.ls(destination_path)
 
 # COMMAND ----------
 
