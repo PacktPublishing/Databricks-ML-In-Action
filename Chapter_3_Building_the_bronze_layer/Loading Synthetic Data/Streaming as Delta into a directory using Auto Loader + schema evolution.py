@@ -12,12 +12,16 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # COMMAND ----------
 
+from pyspark.sql.functions import col
+
+# COMMAND ----------
+
 # DBTITLE 1,Variables
-table_name = "synthetic_transactions"
+#table_name = "synthetic_transactions"
 raw_data_location = f"{cloud_storage_path}/data/"
 destination_location = f"{cloud_storage_path}/delta/"
-schema_location = f"dbfs:/{cloud_storage_path}/{table_name}/schema"
-checkpoint_location = f"dbfs:/{cloud_storage_path}/{table_name}/checkpoint"
+schema_location = f"dbfs:/{cloud_storage_path}/directory/schema"
+checkpoint_location = f"dbfs:/{cloud_storage_path}/directory/checkpoint"
 
 # COMMAND ----------
 
@@ -57,14 +61,6 @@ stream = spark.readStream \
 
 # COMMAND ----------
 
+# DBTITLE 1,Viewing data in directory while stream is running
 df = spark.read.format("delta").load(destination_location)
-display(df)
-
-# COMMAND ----------
-
-# DBTITLE 1,Viewing data in table while stream is running
-#display(sql(f"SELECT * FROM {table_name} ORDER BY TransactionTimestamp DESC LIMIT 10"))
-
-# COMMAND ----------
-
-
+display(df.orderBy(col("TransactionTimestamp").desc()))

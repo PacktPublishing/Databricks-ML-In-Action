@@ -91,12 +91,12 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-total = 20
+total = 200
 includeProduct = False
 while(t<total):
   writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
   t = t+1
-  if t > total/20: 
+  if t > total/10: 
     includeProduct = True
   time.sleep(sleepIntervalSeconds)
 
