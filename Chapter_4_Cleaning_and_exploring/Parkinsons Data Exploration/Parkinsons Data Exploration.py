@@ -5,18 +5,18 @@
 
 # COMMAND ----------
 
-import pandas as pd
-import missingno as msno
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
-
-# COMMAND ----------
-
 pip install missingno
 
 # COMMAND ----------
 
 dbutils.library.restartPython()
+
+# COMMAND ----------
+
+import pandas as pd
+import missingno as msno
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
 
 # COMMAND ----------
 

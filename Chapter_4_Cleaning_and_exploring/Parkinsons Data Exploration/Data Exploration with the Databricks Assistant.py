@@ -47,3 +47,10 @@
 # MAGIC   Visit
 # MAGIC ORDER BY
 # MAGIC   Subject
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT Subject, Visit, COUNT(*) AS count
+# MAGIC FROM parkinsons_tdcsfog_metadata
+# MAGIC GROUP BY Subject, Visit

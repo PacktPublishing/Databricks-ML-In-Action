@@ -65,7 +65,6 @@ data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
 dic = data.to_dict()
 char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()], columns=["char","pred_index"])
 
-
 # COMMAND ----------
 
 display(char_2_pred_index)
