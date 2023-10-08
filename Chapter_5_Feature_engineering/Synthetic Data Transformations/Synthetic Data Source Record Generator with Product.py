@@ -1,20 +1,26 @@
 # Databricks notebook source
-# MAGIC %run ../global-setup $project_name=transactional_data
+# MAGIC %md
+# MAGIC #Synthetic data
+# MAGIC
+# MAGIC ##Run setup
+
+# COMMAND ----------
+
+# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for the Autoloader to pick up
+# MAGIC ## Generate a JSON dataset for Auto Loader to pick up
 
 # COMMAND ----------
 
-# DBTITLE 1,Define Record Count, Temporary Location, Autoloader-Monitored Location and Sleep Interval Here
-recordCount=5
+# DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
+recordCount=15
 nIDs = 10
-stem_file_path = spark_storage_path
-temp_path = "{}/temp".format(stem_file_path)
-destination_path = "{}/autoloader".format(stem_file_path)
-sleepIntervalSeconds = 2
+temp_path = "{}/temp/".format(spark_temp_path)
+destination_path = "{}/data/".format(cloud_storage_path)
+sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
@@ -85,18 +91,38 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-total = 25
+total = 2000
 nIDs = 10
-includeProduct = False
 while(t<total):
-  writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
+  writeJsonFile(recordCount, nIDs, False, temp_path, destination_path)
   t = t+1
-  if t > total/5: 
+  if t > 20: 
     nIDs = 2
   time.sleep(sleepIntervalSeconds)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC #Visually verify
+# MAGIC Inspect that we have written records as expected
+
+# COMMAND ----------
+
+# DBTITLE 1,Count of Transactions per User
+df = spark.read.format("json").load(destination_path)
+usercounts = df.groupBy("CustomerID").count()
+display(usercounts.orderBy("CustomerID"))
 
 # COMMAND ----------
 
 # DBTITLE 1,Display the Data Generated
 df = spark.read.format("json").load(destination_path)
 display(df)
+
+# COMMAND ----------
+
+dbutils.fs.ls(destination_path)
+
+# COMMAND ----------
+
+

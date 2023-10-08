@@ -28,8 +28,29 @@
 # COMMAND ----------
 
 from pyspark.sql.functions import greatest, col, length, expr, when
+from databricks.feature_store import FeatureStoreClient
 import pyspark.pandas as ps
 import tensorflow as tf
+
+# COMMAND ----------
+
+RHAND_COLS = [col for col in FEATURE_COLUMNS if "right" in col]
+LHAND_COLS = [col for col in FEATURE_COLUMNS if "left" in col]
+RPOSE_COLS = [col for col in FEATURE_COLUMNS if "pose" in col and int(col[-2:]) in RPOSE]
+LPOSE_COLS = [col for col in FEATURE_COLUMNS if "pose" in col and int(col[-2:]) in LPOSE]
+
+
+DOMINANT_COLS = (
+    [f"x_hand_{i}" for i in range(21)]
+    + [f"y_hand_{i}" for i in range(21)]
+    + [f"z_hand_{i}" for i in range(21)]
+    + [f"x_pose_{i}" for i in range(5)]
+    + [f"y_pose_{i}" for i in range(5)]
+    + [f"z_pose_{i}" for i in range(5)]
+)
+
+X_HAND_COLS = [col for col in DOMINANT_COLS if "x_hand" in col]
+X_POSE_COLS = [col for col in DOMINANT_COLS if "x_pose" in col]
 
 # COMMAND ----------
 
@@ -94,7 +115,7 @@ featuresDF.write.mode("overwrite").saveAsTable("feature_table")
 
 # COMMAND ----------
 
-fs = feature_store.FeatureStoreClient()
+fs = FeatureStoreClient()
 
 # COMMAND ----------
 
@@ -102,9 +123,31 @@ fs = feature_store.FeatureStoreClient()
 
 # COMMAND ----------
 
-fs.create_feature_table(
+fs.create_table(
     name="lakehouse_in_action.asl_fingerspelling.ASL_training_fs_table",
-    keys=["sequence_id"],
+    primary_keys=["sequence_id"],
     features_df=featuresDF,
+    description="ASL fingerspelling feature store table for training",
+)
+
+# COMMAND ----------
+
+from pyspark.sql.window import Window
+from pyspark.sql.functions import monotonically_increasing_id, rank
+
+# Create and index to maintain current order
+featuresDF_indexed = featuresDF.select("*").withColumn("step", monotonically_increasing_id())
+# Define window
+window = Window.partitionBy(featuresDF_indexed['sequence_id']).orderBy(featuresDF_indexed['step'])
+# Create column
+featuresDF_indexed = featuresDF_indexed.select('*', rank().over(window).alias('sequence_step'))
+display(featuresDF_indexed.take(50))
+
+# COMMAND ----------
+
+fs.create_table(
+    name="lakehouse_in_action.asl_fingerspelling.ASL_training_fs_table",
+    primary_keys=["sequence_id","sequence_step"],
+    df=featuresDF_indexed,
     description="ASL fingerspelling feature store table for training",
 )

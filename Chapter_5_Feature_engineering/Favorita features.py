@@ -10,7 +10,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Import & Initialize the Feature Store
-from databricks.feature_store.client import FeatureStoreClient
+from databricks.feature_store import FeatureStoreClient
 from databricks.feature_store.entities.feature_lookup import FeatureLookup
  
 fs = FeatureStoreClient()
@@ -24,7 +24,7 @@ model_name = "favorita_sales_forecasting"
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SHOW TABLES LIKE 'favorita*'
+# MAGIC SHOW TABLES
 
 # COMMAND ----------
 
@@ -32,7 +32,7 @@ model_name = "favorita_sales_forecasting"
 # MAGIC SELECT
 # MAGIC   *
 # MAGIC FROM
-# MAGIC   favorita_holiday_events
+# MAGIC   holiday_events
 
 # COMMAND ----------
 
@@ -57,7 +57,7 @@ df = sql(
       s.`type` as store_type
     FROM
       favorita_stores s
-      INNER JOIN favorita_holiday_events h ON (
+      INNER JOIN holiday_events h ON (
         s.city == h.locale_name
         OR s.state == h.locale_name
       )
@@ -77,17 +77,17 @@ fs.create_table(
 
 # DBTITLE 1,Some dates have more than one national holiday
 # MAGIC %sql
-# MAGIC SELECT * FROM favorita_holiday_events WHERE `date`==date('2016-05-07T00:00:00.000+0000')
+# MAGIC SELECT * FROM holiday_events WHERE `date`==date('2016-05-07T00:00:00.000+0000')
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE favorita_national_holidays AS (
+# MAGIC CREATE OR REPLACE TABLE national_holidays AS (
 # MAGIC   SELECT
 # MAGIC     `date`,
 # MAGIC     MIN(`type`) as holiday_type
 # MAGIC   FROM
-# MAGIC     favorita_holiday_events
+# MAGIC     holiday_events
 # MAGIC   WHERE
 # MAGIC     locale == "National"
 # MAGIC   GROUP BY
@@ -104,13 +104,13 @@ fs.create_table(
 # MAGIC   t.store_nbr,
 # MAGIC   t.family,
 # MAGIC   t.onpromotion,
-# MAGIC   count(1) as cunt
+# MAGIC   count(1) as cnt
 # MAGIC FROM
-# MAGIC   favorita_train_set t
-# MAGIC   LEFT JOIN favorita_national_holidays h ON (date(t.`date`) == date(h.`date`))
+# MAGIC   train_set t
+# MAGIC   LEFT JOIN national_holidays h ON (date(t.`date`) == date(h.`date`))
 # MAGIC   GROUP BY ALL
 # MAGIC ORDER BY
-# MAGIC   cunt DESC
+# MAGIC   cnt DESC
 
 # COMMAND ----------
 
@@ -124,8 +124,8 @@ df = sql("""
         IFNULL(h.holiday_type,"None") as national_holiday_type,
         t.sales
       FROM
-        favorita_train_set t
-        LEFT JOIN favorita_national_holidays h ON (date(h.`date`) == date(t.`date`))
+        train_set t
+        LEFT JOIN national_holidays h ON (date(h.`date`) == date(t.`date`))
       ORDER BY
         t.`date`
       """)
@@ -147,7 +147,7 @@ df = sql(
       date(`date`) -10 as join_on_date,
       dcoilwtico as lag10_oil_price
     FROM
-      favorita_oil
+      oil_prices
   """
 )
 

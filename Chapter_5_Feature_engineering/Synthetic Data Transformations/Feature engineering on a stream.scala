@@ -1,5 +1,12 @@
 // Databricks notebook source
-// MAGIC %run ../global-setup $project_name=transactional_data
+// MAGIC %md
+// MAGIC #Synthetic data
+// MAGIC
+// MAGIC ##Run setup
+
+// COMMAND ----------
+
+// MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 // COMMAND ----------
 
@@ -15,18 +22,23 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // COMMAND ----------
 
+// DBTITLE 1,Resets
+// MAGIC %python
+// MAGIC dbutils.fs.rm(f"{cloud_storage_path}/feature_outputs/", True)
+// MAGIC sql("DROP TABLE IF EXISTS transactional_data_features")
+
+// COMMAND ----------
+
 // DBTITLE 1,Set up table, paths, and variables
 // variables passed from the setup file are in python
-val sparkStoragePath = "dbfs:/FileStore/LakehouseInAction/transactional_data"
+val sparkStoragePath = "s3://one-env/lakehouse_ml_in_action/synthetic_data/"
 val outputPath = f"$sparkStoragePath/feature_outputs/"
-val rawDataPath = f"$sparkStoragePath/autoloader"
+val rawDataPath = f"$sparkStoragePath/data/"
 
 val table_name = "transactional_data_features"
 val catalog = "hive_metastore"
-val database = "lakehouse_in_action" 
-sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)
-using delta 
-location '$outputPath/featureTable'""")
+val database = "lakehouse_in_action"
+sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
 // aggregate transactions for windowMinutes
@@ -161,15 +173,6 @@ def updateState(
 
 // COMMAND ----------
 
-// DBTITLE 1,Dropping transactions outside the window
-
-
-// COMMAND ----------
-
-
-
-// COMMAND ----------
-
 // DBTITLE 1,Schema for checking type
 import org.apache.spark.sql.types.{StringType, StructField, StructType, LongType, DoubleType, TimestampType}
 
@@ -182,7 +185,11 @@ val schema = StructType(Array(StructField("Source", StringType, true),
 
 // COMMAND ----------
 
-// DBTITLE 1,Auto Loader read stream
+// DBTITLE 1,Read and write streams
+import io.delta.tables._
+import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.streaming.Trigger
+
 // Read from cloud storage using the Auto-Loader
 // There are two ways to use the Auto-Loader - Directory listing and Notifications.  Directory listing is the default, and only requires permissions on the cloud bucket that you want to read
 // When a new stream is first set up using the useNotifications option, the Auto-Loader automatically spins up cloud resources that get events from the input directory
@@ -198,22 +205,13 @@ val inputDf =
     .selectExpr("CustomerID", "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
     .as[InputRow]  // Specifically set the type of the Dataframe to the case class that flatMapGroupsWithState is expecting
 
-// COMMAND ----------
-
-// Execute flatMapGroupsWithState and write out to Delta
+    // Execute flatMapGroupsWithState and write out to Delta
 // We're allowing data to be 30 seconds late before it is dropped
 val flatMapGroupsWithStateResultDf = 
   inputDf
     .withWatermark("TransactionTimestamp", "30 seconds")
     .groupByKey(_.CustomerID)
     .flatMapGroupsWithState(OutputMode.Append, GroupStateTimeout.EventTimeTimeout)(updateState)
-
-
-// COMMAND ----------
-
-import io.delta.tables._
-import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.streaming.Trigger
 
 // Function for foreachBatch to update the counts in the Delta table
 def updateCounts(newCountsDs: Dataset[TransactionCount], epoch_id: Long): Unit = {
