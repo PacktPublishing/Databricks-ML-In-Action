@@ -1,3 +1,4 @@
+*.html
 kaggle.json
 */lightning_logs/*
 

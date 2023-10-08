@@ -10,7 +10,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -59,6 +59,10 @@ mdf = mdf.withColumn('max_nn_rows', greatest(col("lh_nn_rows"), col("rh_nn_rows"
 # COMMAND ----------
 
 mdf.filter(2*col('phrase_length')<col('max_nn_rows')).write.mode('overwrite').saveAsTable("cleaned_training_metadata")
+
+# COMMAND ----------
+
+display(mdf.filter(2*col('phrase_length')<col('max_nn_rows')).take(10))
 
 # COMMAND ----------
 
