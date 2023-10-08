@@ -137,7 +137,8 @@ if catalog != 'hive_metastore':
 # DBTITLE 1,Use volumes for projects using UC
 if catalog == 'hive_metastore':
   volume_label = ''
-  print(f"Not using volumes for {project_name}")
+  spark_temp_path = f"dbfs:/Users/{current_user}/lakehouse_in_action/{project_name}"
+  print(f"Not using volumes for {project_name}, spark_temp_path = {spark_temp_path}")
 elif database_name == 'asl_fingerspelling':
   # Pose coordinates for hand movement.
   LPOSE = [13, 15, 17, 19, 21]

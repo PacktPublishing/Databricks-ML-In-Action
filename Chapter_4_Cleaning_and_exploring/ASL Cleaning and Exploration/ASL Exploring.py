@@ -8,7 +8,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -142,7 +142,3 @@ example_df = example_df.select("sequence_id", *FEATURE_COLUMNS).toPandas()
 hand_images, hand_landmarks = get_hands(example_df)
 # Fetch and show the data for right hand
 create_animation(np.array(hand_images)[:, 0])
-
-# COMMAND ----------
-
-
