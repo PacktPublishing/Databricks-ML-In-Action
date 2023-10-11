@@ -93,11 +93,16 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 t=1
 total = 2000
 nIDs = 10
+includeProduct = False
 while(t<total):
-  writeJsonFile(recordCount, nIDs, False, temp_path, destination_path)
+  writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
   t = t+1
-  if t > 20: 
+  if t > 50:
+    includeProduct = True
+  if t > 200: 
     nIDs = 2
+  if t > 100:
+    nIDs = 12
   time.sleep(sleepIntervalSeconds)
 
 # COMMAND ----------

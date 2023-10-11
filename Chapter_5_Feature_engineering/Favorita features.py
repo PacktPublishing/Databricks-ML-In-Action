@@ -5,7 +5,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+# MAGIC %run ../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
@@ -94,7 +94,9 @@ fs.create_table(
 # MAGIC     ALL
 # MAGIC   ORDER BY
 # MAGIC     `date`
-# MAGIC )
+# MAGIC );
+# MAGIC
+# MAGIC SELECT * FROM national_holidays LIMIT 6;
 
 # COMMAND ----------
 
@@ -108,7 +110,7 @@ fs.create_table(
 # MAGIC FROM
 # MAGIC   train_set t
 # MAGIC   LEFT JOIN national_holidays h ON (date(t.`date`) == date(h.`date`))
-# MAGIC   GROUP BY ALL
+# MAGIC GROUP BY ALL
 # MAGIC ORDER BY
 # MAGIC   cnt DESC
 
