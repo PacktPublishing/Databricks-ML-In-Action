@@ -27,10 +27,9 @@
 
 # COMMAND ----------
 
-from pyspark.sql.functions import greatest, col, length, expr, when
+from pyspark.sql.functions import greatest, col, length, expr, when, abs
 from databricks.feature_store import FeatureStoreClient
 import pyspark.pandas as ps
-import tensorflow as tf
 
 # COMMAND ----------
 
@@ -95,13 +94,13 @@ lh = df.select("sequence_id","phrase",*LHAND_COLS,*LPOSE_COLS).where(col("domina
 
 # MAGIC %md
 # MAGIC ### Reflect the left hand to align as a right hand
-# MAGIC For the left hand dataframe, flip the x coordinates horizontally. The function `y = 1 - x` reflects the function `y = x` horizontally at `y = 1/2` for values of x between 0 and 1
+# MAGIC For the left hand dataframe, flip the x coordinates horizontally. The function `y = |1 - x|` reflects the function `y = x` horizontally at `x = 1/2` for values of x between 0 and 1
 
 # COMMAND ----------
 
 X_COLS = X_HAND_COLS + X_POSE_COLS
 for lh_x_col in X_COLS:
-  lh = lh.withColumn(lh_x_col,when(col(lh_x_col)!=0,1 - col(lh_x_col)).otherwise(0))
+  lh = lh.withColumn(lh_x_col,when(col(lh_x_col)!=0,abs(1 - col(lh_x_col))).otherwise(0))
 
 featuresDF = rh.unionAll(lh)
 
