@@ -15,6 +15,13 @@
 
 // COMMAND ----------
 
+// MAGIC %sql
+// MAGIC SELECT * FROM system.information_schema.catalogs catalogs
+// MAGIC   where catalog_name not in (SELECT distinct(catalog_name) FROM system.information_schema.catalog_tags WHERE lower(tag_name) like "remove%" )
+// MAGIC   and catalog_owner = current_user();
+
+// COMMAND ----------
+
 // DBTITLE 1,Configurations
 import java.time.Instant
 import java.util.concurrent.TimeUnit
