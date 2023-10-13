@@ -14,7 +14,6 @@ from databricks.feature_store import FeatureStoreClient
 from databricks.feature_store.entities.feature_lookup import FeatureLookup
  
 fs = FeatureStoreClient()
-model_name = "favorita_sales_forecasting"
 
 # COMMAND ----------
 
@@ -109,7 +108,7 @@ fs.create_table(
 # MAGIC   count(1) as cnt
 # MAGIC FROM
 # MAGIC   train_set t
-# MAGIC   LEFT JOIN national_holidays h ON (date(t.`date`) == date(h.`date`))
+# MAGIC LEFT JOIN national_holidays h ON (date(t.`date`) == date(h.`date`))
 # MAGIC GROUP BY ALL
 # MAGIC ORDER BY
 # MAGIC   cnt DESC
@@ -127,7 +126,7 @@ df = sql("""
         t.sales
       FROM
         train_set t
-        LEFT JOIN national_holidays h ON (date(h.`date`) == date(t.`date`))
+        LEFT JOIN national_holidays h ON (date(t.`date`) == date(h.`date`))
       ORDER BY
         t.`date`
       """)
@@ -138,6 +137,12 @@ fs.create_table(
     df=df,
     description="Joined the training dataset with National holidays only.",
 )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT national_holiday_type, count(*) FROM fs_train_national_holidays GROUP BY national_holiday_type
 
 # COMMAND ----------
 
@@ -159,3 +164,38 @@ fs.create_table(
     df=df,
     description="The lag10_oil_price is the price of oil 10 days after the join_on_date.",
 )
+
+# COMMAND ----------
+
+# DBTITLE 1,Update the feature table with a new column
+feature_df = fs.read_table(name="fs_train_national_holidays")
+oil_df = fs.read_table(name="fs_oil_lag")
+oil_df = oil_df.drop("date").withColumnRenamed("join_on_date","date")
+feature_df = feature_df.join(oil_df, on=["date"],how="left")
+
+display(feature_df)
+
+# COMMAND ----------
+
+# DBTITLE 1,Overwrite the table to produce a new version
+fs.write_table(name="fs_train_national_holidays",
+               df=feature_df,
+               mode="overwrite")
+
+# COMMAND ----------
+
+# DBTITLE 1,View the version history
+# MAGIC %sql
+# MAGIC DESCRIBE HISTORY fs_train_national_holidays
+
+# COMMAND ----------
+
+# DBTITLE 1,Select the data from our table as it was for version 5. 
+# MAGIC %sql
+# MAGIC SELECT * FROM fs_train_national_holidays VERSION AS OF 5 LIMIT 50
+
+# COMMAND ----------
+
+# DBTITLE 1,Select the data from our table as it was for timestamp "2023-10-11 20:41:16.000" 
+# MAGIC %sql
+# MAGIC SELECT * FROM fs_train_national_holidays TIMESTAMP AS OF "2023-10-11 20:41:16.000" LIMIT 50
