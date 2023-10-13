@@ -10,7 +10,7 @@
 
 **Here are the technical requirements needed to complete the hands-on examples in this chapter:**
 1. Databricks ML Runtime includes several pre-installed libraries useful for machine learning and data science projects. For this reason, we will be using clusters with an [ML Runtime](https://docs.databricks.com/runtime/mlruntime.html#introduction-to-databricks-runtime-for-machine-learning).
-2. [Pandas]([https://www.kaggle.com/docs/api](https://pandas.pydata.org/))
+2. [Pandas](https://www.kaggle.com/docs/api](https://pandas.pydata.org/)
 3. [Pandas API on Spark](https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/index.html)
 4. [Delta Live Tables (DLT)](https://docs.databricks.com/en/delta-live-tables/index.html)
 5. [Volumes](https://docs.databricks.com/en/sql/language-manual/sql-ref-volumes.html) 
@@ -18,8 +18,8 @@
 ## Links
 
 **In the chapter:**
-1. [Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html))
-2. [Delta Live Tables]([https://docs.databricks.com/data-governance/unity-catalog/index.html](https://docs.databricks.com/en/delta-live-tables/index.html))
+1. [Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
+2. [Delta Live Tables]([https://docs.databricks.com/data-governance/unity-catalog/index.html](https://docs.databricks.com/en/delta-live-tables/index.html)
 
 **Further Reading:**
 - [AutoLoader options](https://docs.databricks.com/ingestion/auto-loader/options.html)
