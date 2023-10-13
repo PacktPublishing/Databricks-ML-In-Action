@@ -32,18 +32,17 @@
 
 
 **Further Reading:**
-
-
-s
-
-
-
-s
-
-s
-
-
-v
+- [Lakehouse Monitoring demo](https://youtu.be/3TLBZSKeYTk?t=560)
+- [UC has a more centralized method of managing the model lifecycle than HMS](https://docs.databricks.com/machine-learning/manage-model-lifecycle/index.html)
+- [In depth UC setup on Azure](https://youtu.be/itGKRVHdNPo)
+- [Best practices: Cluster configuration | Select Cloud in the dropdown](https://docs.databricks.com/clusters/cluster-config-best-practices.html)
+- [Best practices for DBFS and Unity Catalog | Select Cloud in the dropdown](https://docs.databricks.com/dbfs/unity-catalog.html)
+- [Databricks Notebooks](https://docs.databricks.com/en/notebooks/index.html)
+- [Databricks Autologging | Select Cloud in the dropdown](https://docs.databricks.com/mlflow/databricks-autologging.html#security-and-data-management)
+- [Kaggle API GitHub](https://github.com/Kaggle/kaggle-api)
+- [Jira tickets](https://support.atlassian.com/jira-service-management-cloud/docs/categorize-customer-requests-into-request-types/)
+- [Databricks Utilities](https://docs.databricks.com/en/dev-tools/databricks-utils.html)
+- [Workspace libraries](https://docs.databricks.com/en/libraries/workspace-libraries.html)
 
 
 
