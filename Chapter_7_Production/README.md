@@ -16,7 +16,7 @@
 ## Links
 
 **In the chapter:**
-1. [MLFLow Model Registry Webhooks on Databricks]([https://docs.databricks.com/en/query-federation/index.html](https://docs.databricks.com/en/mlflow/model-registry-webhooks.html))
+1. [MLFLow Model Registry Webhooks on Databricks](https://docs.databricks.com/en/mlflow/model-registry-webhooks.html)
 
 **Further Reading:**
 - [The big book of machine learning use case](https://www.databricks.com/resources/ebook/big-book-of-machine-learning-use-cases)
