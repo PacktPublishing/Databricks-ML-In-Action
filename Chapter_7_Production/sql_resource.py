@@ -63,8 +63,6 @@ import os
 import uuid
 import copy
 
-OPENAI_API_KEY= "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"
-os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def setDataLocation(catalog, schema):
