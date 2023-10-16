@@ -165,6 +165,8 @@ elif database_name == 'parkinsons_freezing_gait_prediction':
   volume_label = "fog"
 elif database_name == 'favorita_forecasting':
   volume_label = "fav"
+elif database_name == "sql_bot":
+  volume_label = "sqlbot"
 
 # COMMAND ----------
 

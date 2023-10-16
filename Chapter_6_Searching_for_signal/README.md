@@ -9,14 +9,20 @@
 ## Technical requirements 
 
 **Here are the technical requirements needed to complete the hands-on examples in this chapter:**
-1. We will integrate our LLM model with the ChatGPT model from [OpenAI](https://openai.com/).
+1. In order to use the OpenAI API, you need to [set up a paid account](https://platform.openai.com/account/billing/overview).
+2. For our LLM model, we will integrate with the ChatGPT model from OpenAI. You will need an [API Key](https://platform.openai.com/account/api-keys) and install the [OpenAI Python library](https://pypi.org/project/openai/)
+3. We use the [SQLAlchemy Dialect](https://pypi.org/project/sqlalchemy-databricks/) for Databricks workspace and sql analytics clusters using the officially supported databricks-sql-connector dbapi.
+
 
 ## Links
 
 **In the chapter:**
 1. [MLFlow Tracking](https://mlflow.org/docs/latest/tracking.html#tracking)
 2. [MLFlow Model flavors](https://mlflow.org/docs/latest/models.html#built-in-model-flavors)
-3. [Introducing the Spark PyTorch Distributor](https://www.databricks.com/blog/2023/04/20/pytorch-databricks-introducing-spark-pytorch-distributor.html) 
+3. [Introducing the Spark PyTorch Distributor](https://www.databricks.com/blog/2023/04/20/pytorch-databricks-introducing-spark-pytorch-distributor.html)
+4. [Data & AI Summit 2023: Generative AI at Scale Using GAN and Stable Diffusion](https://www.youtube.com/watch?v=YsWZDCsM9aE)
+5. [New Expert-Led Large Language Models (LLMs) Courses on edX](https://www.databricks.com/blog/enroll-our-new-expert-led-large-language-models-llms-courses-edx)
+6. [OpenAI](https://platform.openai.com)
 
 **Further Reading:**
 - [Introducing AI Functions: Integrating Large Language Models with Databricks SQL](https://www.databricks.com/blog/2023/04/18/introducing-ai-functions-integrating-large-language-models-databricks-sql.html)
