@@ -32,3 +32,4 @@
 - [Ray on Spark Databricks docs](https://docs.databricks.com/machine-learning/ray-integration.html)
 - [Announcing Ray support on Databricks and Apache Spark Clusters Blog post](https://www.databricks.com/blog/2023/02/28/announcing-ray-support-databricks-and-apache-spark-clusters.html)
 - [Ray docs](https://docs.ray.io/en/latest/cluster/vms/user-guides/community/spark.html#deploying-on-spark-standalone-cluster)
+- [Databricks Blog: Best Practices for LLM Evaluation of RAG Applications](https://www.databricks.com/blog/LLM-auto-eval-best-practices-RAG)
