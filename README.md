@@ -1,15 +1,16 @@
 # Databricks Lakehouse ML In Action
+## Best practices and technical examples for the machine learning lifecycle 
 
 Welcome to the GIT repository for the code samples included in the book. The code included in this repository are subject to change without prior notice.
 
 
 ## About this book
 
-This book is an essential guide to leveraging the Databricks Lakehouse for a development and deployment platform of data products. You will build your expertise and resume by doing hands-on projects that cover the entire data lifecycle across the data personas and platform. 
+This book is an essential guide to leveraging the Databricks Lakehouse for a development and deployment platform of data products. You will build your expertise and resume by doing hands-on projects that cover the entire data lifecycle. 
 
 ## Who this book is for
 
-This book is targeted at machine learning engineers, data scientists and analysts that want to learn hands-on about implementing and leveraging the Databricks Lakehouse Platform to create data products.
+This book is for machine learning engineers, data scientists and analysts that want to learn hands-on about implementing and leveraging the Databricks Lakehouse Platform to create data products.
 
 ## Executing the code samples
 
@@ -34,13 +35,23 @@ The authors will do its best to keep the code and examples provided as up-to-dat
 
 ## About the authors
 
-[Stephanie Rivera](https://www.linkedin.com/in/stephanieamrivera/) has worked in big data and machine learning for over 12 years. Currently, she collaborates with teams as they design their Lakehouse vision and implement it for Databricks as a Senior Solutions Architect.
-Previously Stephanie was the Vice President of Data Intelligence for a global company, taking in over 20 terabytes of data daily. She led the data science, data engineering, and business intelligence teams there.  Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using different data science algorithms. Stephanie authored multiple sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science.
+[Stephanie Rivera](https://www.linkedin.com/in/stephanieamrivera/) has been working in big data and machine learning for 12 years. She collaborates with teams and companies as they design their Lakehouse as a Sr. Solutions Architect for Databricks. 
 
-[Hayley Horn](https://www.linkedin.com/in/hayleyhorn/)
+Previously Stephanie was the VP, Data Intelligence for a global company, taking in 20+ terabytes of data daily. She led the data science, data engineering, and business intelligence teams. 
 
-[Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/)
+Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using data science algorithms. Stephanie authored numerous sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science. 
 
+<i>I want to thank my loving partner, Rami Alba, Databricks coworkers, and friends who have supported me. </i>
+
+[Hayley Horn](https://www.linkedin.com/in/hayleyhorn/) started her data career 15 years ago as a data quality consultant on enterprise data integration projects. As a data scientist, she specialized in customer insights and strategy, and presented at Data Science and AI conferences in the US and Europe. She is currently a Sr. Solutions Architect for Databricks, with expertise in data science and technology modernization. 
+
+A graduate of the MS Data Science program at Southern Methodist University in Dallas, Texas, USA, she is now a capstone advisor to students in their final semesters of the program.  
+
+<i>I’d like to thank my husband, Kevin, and my sons Dyson and Dalton for their encouragement and enthusiastic support.</i>  
+
+[Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/) began her career in data 8 years ago. She loves leveraging her skills as a data scientist to orchestrate transformative journeys for companies across diverse industries as a Solutions Architect for Databricks. Her experiences have brought her from large corporations to small startups and everything in between. Mandy is a graduate of Carnegie Mellon University and the University of Washington.  
+
+<i>Thank you to my partner Emmanuel, my parents, sisters, and friends for their enduring love and support. </i>
 
 ### Thanks for purchasing the book!
 
