@@ -10,10 +10,9 @@
 # COMMAND ----------
 
 # DBTITLE 1,Import & Initialize the Feature Store
-from databricks.feature_store import FeatureStoreClient
-from databricks.feature_store.entities.feature_lookup import FeatureLookup
- 
-fs = FeatureStoreClient()
+from databricks.feature_engineering import FeatureEngineeringClient
+
+fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
@@ -65,8 +64,8 @@ df = sql(
 
 display(df)
 df = df.drop("type")
-fs.create_table(
-    f"{database_name}.fs_stores_local_regional_holidays",
+fe.create_table(
+    f"{database_name}.stores_local_regional_holidays",
     primary_keys=["date", "store_nbr","locale","holiday_type"],
     df=df,
     description="Joined stores with Holidays by locale_name = city or locale_name = state. National holidays are not included.",
@@ -132,7 +131,7 @@ df = sql("""
       """)
 
 fs.create_table(
-    f"{database_name}.fs_train_national_holidays",
+    f"{database_name}.train_national_holidays",
     primary_keys=["date", "store_nbr","family","onpromotion"],
     df=df,
     description="Joined the training dataset with National holidays only.",
@@ -142,7 +141,7 @@ fs.create_table(
 
 # MAGIC %sql
 # MAGIC
-# MAGIC SELECT national_holiday_type, count(*) FROM fs_train_national_holidays GROUP BY national_holiday_type
+# MAGIC SELECT national_holiday_type, count(*) FROM train_national_holidays GROUP BY national_holiday_type
 
 # COMMAND ----------
 
@@ -159,7 +158,7 @@ df = sql(
 )
 
 fs.create_table(
-    f"{database_name}.fs_oil_lag",
+    f"{database_name}.oil_lag",
     primary_keys=["join_on_date"],
     df=df,
     description="The lag10_oil_price is the price of oil 10 days after the join_on_date.",
@@ -168,8 +167,8 @@ fs.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,Update the feature table with a new column
-feature_df = fs.read_table(name="fs_train_national_holidays")
-oil_df = fs.read_table(name="fs_oil_lag")
+feature_df = fs.read_table(name="train_national_holidays")
+oil_df = fs.read_table(name="oil_lag")
 oil_df = oil_df.drop("date").withColumnRenamed("join_on_date","date")
 feature_df = feature_df.join(oil_df, on=["date"],how="left")
 
@@ -178,7 +177,7 @@ display(feature_df)
 # COMMAND ----------
 
 # DBTITLE 1,Overwrite the table to produce a new version
-fs.write_table(name="fs_train_national_holidays",
+fs.write_table(name="train_national_holidays",
                df=feature_df,
                mode="overwrite")
 
@@ -186,16 +185,16 @@ fs.write_table(name="fs_train_national_holidays",
 
 # DBTITLE 1,View the version history
 # MAGIC %sql
-# MAGIC DESCRIBE HISTORY fs_train_national_holidays
+# MAGIC DESCRIBE HISTORY train_national_holidays
 
 # COMMAND ----------
 
 # DBTITLE 1,Select the data from our table as it was for version 5. 
 # MAGIC %sql
-# MAGIC SELECT * FROM fs_train_national_holidays VERSION AS OF 5 LIMIT 50
+# MAGIC SELECT * FROM train_national_holidays VERSION AS OF 5 LIMIT 50
 
 # COMMAND ----------
 
 # DBTITLE 1,Select the data from our table as it was for timestamp "2023-10-11 20:41:16.000" 
 # MAGIC %sql
-# MAGIC SELECT * FROM fs_train_national_holidays TIMESTAMP AS OF "2023-10-11 20:41:16.000" LIMIT 50
+# MAGIC SELECT * FROM train_national_holidays TIMESTAMP AS OF "2023-10-11 20:41:16.000" LIMIT 50

@@ -28,7 +28,7 @@
 # COMMAND ----------
 
 from pyspark.sql.functions import greatest, col, length, expr, when, abs
-from databricks.feature_store import FeatureStoreClient
+from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.pandas as ps
 
 # COMMAND ----------
@@ -110,23 +110,23 @@ featuresDF.write.mode("overwrite").saveAsTable("feature_table")
 
 # COMMAND ----------
 
-# MAGIC %md First instantiate a feature store client
+# MAGIC %md First instantiate a feature engineering client
 
 # COMMAND ----------
 
-fs = FeatureStoreClient()
+fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
-# MAGIC %md Use create_feature_table API to create the feature store tables and define the schema and unique ID keys. We use the features_df argument to write the data to Feature Store.
+# MAGIC %md Use create_table API to create the feature tables and define the schema and unique ID keys. We use the features_df to specify the dataframe.
 
 # COMMAND ----------
 
-fs.create_table(
-    name="lakehouse_in_action.asl_fingerspelling.ASL_training_fs_table",
+fe.create_table(
+    name="lakehouse_in_action.asl_fingerspelling.ASL_training_table",
     primary_keys=["sequence_id"],
     features_df=featuresDF,
-    description="ASL fingerspelling feature store table for training",
+    description="ASL fingerspelling feature table for training",
 )
 
 # COMMAND ----------
@@ -145,8 +145,8 @@ display(featuresDF_indexed.take(50))
 # COMMAND ----------
 
 fs.create_table(
-    name="lakehouse_in_action.asl_fingerspelling.ASL_training_fs_table",
+    name="lakehouse_in_action.asl_fingerspelling.ASL_training_table",
     primary_keys=["sequence_id","sequence_step"],
     df=featuresDF_indexed,
-    description="ASL fingerspelling feature store table for training",
+    description="ASL fingerspelling feature table for training",
 )
