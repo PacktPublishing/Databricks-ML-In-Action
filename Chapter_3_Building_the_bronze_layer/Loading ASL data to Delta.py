@@ -78,10 +78,12 @@ display(char_2_pred_index)
 
 # COMMAND ----------
 
+# DBTITLE 1,Listing files
 display(dbutils.fs.ls(cloud_storage_path+"/supplemental_landmarks/"))
 
 # COMMAND ----------
 
+# DBTITLE 1,Reading Parquet with Spark directly
 df = spark.read.parquet(f'{cloud_storage_path}/supplemental_landmarks/')
 df.write.mode("overwrite").saveAsTable("supplemental_landmarks")
 display(df)
