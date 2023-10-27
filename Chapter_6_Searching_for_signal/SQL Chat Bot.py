@@ -150,3 +150,8 @@ db_chain.run(question)
 # COMMAND ----------
 
 chat_chain.run(question)
+
+
+
+# We'd like to thank Robert Mosley, a Sr. Solutions Architect at Databricks and Generative AI/LLM thoughtleader for helping use with the development of our Chat Bot code!
+
