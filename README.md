@@ -43,16 +43,16 @@ Her data career has also included contributing to and leading a team in creating
 
 <i>I want to thank my loving partner, Rami Alba, Databricks coworkers, and friends who have supported me. </i>
 
+[Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/) began her career in data 8 years ago. She loves leveraging her skills as a data scientist to orchestrate transformative journeys for companies across diverse industries as a Solutions Architect for Databricks. Her experiences have brought her from large corporations to small startups and everything in between. Mandy is a graduate of Carnegie Mellon University and the University of Washington.  
+
+<i>Thank you to my partner Emmanuel, my parents, sisters, and friends for their enduring love and support. </i>
+
 [Hayley Horn](https://www.linkedin.com/in/hayleyhorn/) started her data career 15 years ago as a data quality consultant on enterprise data integration projects. As a data scientist, she specialized in customer insights and strategy, and presented at Data Science and AI conferences in the US and Europe. She is currently a Sr. Solutions Architect for Databricks, with expertise in data science and technology modernization. 
 
 A graduate of the MS Data Science program at Southern Methodist University in Dallas, Texas, USA, she is now a capstone advisor to students in their final semesters of the program.  
 
 <i>I’d like to thank my husband, Kevin, and my sons Dyson and Dalton for their encouragement and enthusiastic support.</i>  
 
-[Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/) began her career in data 8 years ago. She loves leveraging her skills as a data scientist to orchestrate transformative journeys for companies across diverse industries as a Solutions Architect for Databricks. Her experiences have brought her from large corporations to small startups and everything in between. Mandy is a graduate of Carnegie Mellon University and the University of Washington.  
-
-<i>Thank you to my partner Emmanuel, my parents, sisters, and friends for their enduring love and support. </i>
-
 ### Thanks for purchasing the book!
 
-Hope you will enjoy it as much as I enjoyed writing it for you.
+Hope you will enjoy it as much as we enjoyed writing it for you.
