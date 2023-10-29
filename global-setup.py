@@ -163,6 +163,8 @@ elif database_name == 'asl_fingerspelling':
   volume_label = "asl"
 elif database_name == 'parkinsons_freezing_gait_prediction':
   volume_label = "fog"
+elif database_name == 'synthetic_transactions':
+  volume_label = "syn"
 elif database_name == 'favorita_forecasting':
   volume_label = "fav"
 elif database_name == "sql_bot":

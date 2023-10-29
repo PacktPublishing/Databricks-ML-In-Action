@@ -11,14 +11,7 @@
 
 // COMMAND ----------
 
-// MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
-
-// COMMAND ----------
-
-// MAGIC %sql
-// MAGIC SELECT * FROM system.information_schema.catalogs catalogs
-// MAGIC   where catalog_name not in (SELECT distinct(catalog_name) FROM system.information_schema.catalog_tags WHERE lower(tag_name) like "remove%" )
-// MAGIC   and catalog_owner = current_user();
+// MAGIC %run ../../global-setup $project_name=synthetic_transactions 
 
 // COMMAND ----------
 
@@ -36,21 +29,20 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Resets
 // MAGIC %python
+// MAGIC table_name = "synthetic_streaming_features"
 // MAGIC if bool(dbutils.widgets.get('Reset')):
-// MAGIC   dbutils.fs.rm(f"{cloud_storage_path}/table_feature_outputs/", True)
-// MAGIC   sql("DROP TABLE IF EXISTS synthetic_streaming_features")
+// MAGIC   dbutils.fs.rm(f"{volume_data_path}/table_feature_outputs/", True)
+// MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
 
 // COMMAND ----------
 
 // DBTITLE 1,Set up table, paths, and variables
 // variables passed from the setup file are in python
-val sparkStoragePath = "s3://one-env/lakehouse_ml_in_action/synthetic_data/"
-val outputPath = f"$sparkStoragePath/table_feature_outputs/"
-val inputTable = "synthetic_transactions"
+val volumePath = "/Volumes/lakehouse_in_action/synthetic_transactions/syn_volume/"
+val outputPath = f"$volumePath/table_feature_outputs/"
+val inputTable = "hive_metastore.lakehouse_in_action.synthetic_transactions"
 
 val table_name = "synthetic_streaming_features"
-val catalog = "hive_metastore"
-val database = "lakehouse_in_action"
 sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
@@ -249,8 +241,8 @@ flatMapGroupsWithStateResultDf.writeStream
 
 // COMMAND ----------
 
-// MAGIC %sql
-// MAGIC select * from lakehouse_in_action.synthetic_streaming_features order by eventTimestamp desc;
+// MAGIC %python
+// MAGIC display(sql(f"select * from {table_name} order by eventTimestamp desc"))
 
 // COMMAND ----------
 
