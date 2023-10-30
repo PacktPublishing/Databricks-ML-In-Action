@@ -241,8 +241,25 @@ flatMapGroupsWithStateResultDf.writeStream
 
 // COMMAND ----------
 
+inputDf
+  .withWatermark("TransactionTimestamp", "30 seconds")
+  .groupByKey(_.CustomerID)
+  .flatMapGroupsWithState(OutputMode.Append, GroupStateTimeout.EventTimeTimeout)(updateState)
+  .writeStream
+  .option("checkpointLocation", f"$outputPath/checkpoint2")
+  .trigger(Trigger.ProcessingTime("10 seconds"))
+  .queryName("flatMapGroupsTable")  //query name will show up in Spark UI
+  .table("synthetic_feature_history")
+
+// COMMAND ----------
+
 // MAGIC %python
 // MAGIC display(sql(f"select * from {table_name} order by eventTimestamp desc"))
+
+// COMMAND ----------
+
+// MAGIC %sql
+// MAGIC SELECT * FROM synthetic_feature_history
 
 // COMMAND ----------
 
