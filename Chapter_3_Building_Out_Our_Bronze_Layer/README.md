@@ -20,6 +20,7 @@
 **In the chapter:**
 1. [Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
 2. [Delta Live Tables](https://docs.databricks.com/en/delta-live-tables/index.html)
+3. [Advanced Cluster Options: Spark configuration](https://docs.databricks.com/en/clusters/configure.html#spark-configuration)
 
 **Further Reading:**
 - [AutoLoader options](https://docs.databricks.com/ingestion/auto-loader/options.html)
