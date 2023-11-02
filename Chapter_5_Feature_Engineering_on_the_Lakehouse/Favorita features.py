@@ -130,7 +130,7 @@ df = sql("""
         t.`date`
       """)
 
-fs.create_table(
+fe.create_table(
     f"{database_name}.train_national_holidays",
     primary_keys=["date", "store_nbr","family","onpromotion"],
     df=df,
@@ -157,7 +157,7 @@ df = sql(
   """
 )
 
-fs.create_table(
+fe.create_table(
     f"{database_name}.oil_lag",
     primary_keys=["join_on_date"],
     df=df,
@@ -167,8 +167,8 @@ fs.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,Update the feature table with a new column
-feature_df = fs.read_table(name="train_national_holidays")
-oil_df = fs.read_table(name="oil_lag")
+feature_df = fe.read_table(name="train_national_holidays")
+oil_df = fe.read_table(name="oil_lag")
 oil_df = oil_df.drop("date").withColumnRenamed("join_on_date","date")
 feature_df = feature_df.join(oil_df, on=["date"],how="left")
 
@@ -177,7 +177,7 @@ display(feature_df)
 # COMMAND ----------
 
 # DBTITLE 1,Overwrite the table to produce a new version
-fs.write_table(name="train_national_holidays",
+fe.write_table(name="train_national_holidays",
                df=feature_df,
                mode="overwrite")
 

@@ -46,6 +46,8 @@ val table_name = "synthetic_streaming_features"
 sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
+val history_table_name = "synthetic_feature_history"
+
 // aggregate transactions for windowMinutes
 val windowMinutes = 2
 // wait at most max_wait_minutes before writing a record
@@ -196,9 +198,7 @@ import io.delta.tables._
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.streaming.Trigger
 
-// Read from cloud storage using the Auto-Loader
-// There are two ways to use the Auto-Loader - Directory listing and Notifications.  Directory listing is the default, and only requires permissions on the cloud bucket that you want to read
-// When a new stream is first set up using the useNotifications option, the Auto-Loader automatically spins up cloud resources that get events from the input directory
+// Read from table we created using Auto-Loader
 val inputDf =
   spark.readStream
     .format("delta")
@@ -207,7 +207,7 @@ val inputDf =
     .selectExpr("CustomerID", "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
     .as[InputRow]  // Specifically set the type of the Dataframe to the case class that flatMapGroupsWithState is expecting
 
-// Execute flatMapGroupsWithState and write out to Delta
+// Execute flatMapGroupsWithState
 // We're allowing data to be 30 seconds late before it is dropped
 val flatMapGroupsWithStateResultDf = 
   inputDf
@@ -217,13 +217,13 @@ val flatMapGroupsWithStateResultDf =
 
 // Function for foreachBatch to update the counts in the Delta table
 def updateCounts(newCountsDs: Dataset[TransactionCount], epoch_id: Long): Unit = {
-  // Convert the dataset (which was output by the mapGroupsWithState function) to a dataframe for merging
+  // Convert the dataset to a dataframe for merging
   val newCountsDf = newCountsDs.toDF
   
   // Get the target Delta table that is being merged
   val aggregationTable = DeltaTable.forName(table_name)
 
-  // Merge the new records into the target Delta table.  This can be done with SQL syntax as well
+  // Merge the new records into the target Delta table.
   aggregationTable.alias("t")
     .merge(newCountsDf.alias("m"), "m.CustomerID = t.CustomerID")
     .whenMatched().updateAll()
@@ -248,8 +248,17 @@ inputDf
   .writeStream
   .option("checkpointLocation", f"$outputPath/checkpoint2")
   .trigger(Trigger.ProcessingTime("10 seconds"))
-  .queryName("flatMapGroupsTable")  //query name will show up in Spark UI
-  .table("synthetic_feature_history")
+  .queryName("flatMapGroupsHistoryTable")  //query name will show up in Spark UI
+  .table(history_table_name)
+
+// COMMAND ----------
+
+// DBTITLE 1,can I do just this instead of cmd 10?
+flatMapGroupsWithStateResultDf.writeStream
+  .option("checkpointLocation", f"$outputPath/checkpoint2")
+  .trigger(Trigger.ProcessingTime("10 seconds"))
+  .queryName("flatMapGroupsHistoryTable")  //query name will show up in Spark UI
+  .table(history_table_name)
 
 // COMMAND ----------
 

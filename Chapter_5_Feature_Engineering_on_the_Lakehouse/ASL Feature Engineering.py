@@ -144,7 +144,7 @@ display(featuresDF_indexed.take(50))
 
 # COMMAND ----------
 
-fs.create_table(
+fe.create_table(
     name="lakehouse_in_action.asl_fingerspelling.ASL_training_table",
     primary_keys=["sequence_id","sequence_step"],
     df=featuresDF_indexed,
