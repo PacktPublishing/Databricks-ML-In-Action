@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Favorita Forecasting
+# MAGIC ## Favorita Forecasting - Build a Training Set
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
 # COMMAND ----------
@@ -17,12 +17,7 @@ fe = FeatureEngineeringClient()
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Reviewing the data
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SHOW TABLES
+# MAGIC ### words
 
 # COMMAND ----------
 
@@ -30,7 +25,12 @@ fe = FeatureEngineeringClient()
 # MAGIC SELECT
 # MAGIC   *
 # MAGIC FROM
-# MAGIC   holiday_events
+# MAGIC   training_set
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SHOW TABLES
 
 # COMMAND ----------
 
@@ -65,7 +65,7 @@ df = sql(
 display(df)
 df = df.drop("type")
 fe.create_table(
-    name=f"{database_name}.stores_local_regional_holidays",
+    f"{database_name}.stores_local_regional_holidays",
     primary_keys=["date", "store_nbr","locale","holiday_type"],
     df=df,
     description="Joined stores with Holidays by locale_name = city or locale_name = state. National holidays are not included.",
@@ -131,7 +131,7 @@ df = sql("""
       """)
 
 fe.create_table(
-    name = f"{database_name}.training_set",
+    f"{database_name}.train_national_holidays",
     primary_keys=["date", "store_nbr","family","onpromotion"],
     df=df,
     description="Joined the training dataset with National holidays only.",
@@ -141,7 +141,7 @@ fe.create_table(
 
 # MAGIC %sql
 # MAGIC
-# MAGIC SELECT national_holiday_type, count(*) FROM training_set GROUP BY national_holiday_type
+# MAGIC SELECT national_holiday_type, count(*) FROM train_national_holidays GROUP BY national_holiday_type
 
 # COMMAND ----------
 
@@ -158,7 +158,7 @@ df = sql(
 )
 
 fe.create_table(
-    name=f"{database_name}.oil_lag",
+    f"{database_name}.oil_lag",
     primary_keys=["join_on_date"],
     df=df,
     description="The lag10_oil_price is the price of oil 10 days after the join_on_date.",
@@ -167,7 +167,7 @@ fe.create_table(
 # COMMAND ----------
 
 # DBTITLE 1,Update the feature table with a new column
-feature_df = fe.read_table(name="training_set")
+feature_df = fe.read_table(name="train_national_holidays")
 oil_df = fe.read_table(name="oil_lag")
 oil_df = oil_df.drop("date").withColumnRenamed("join_on_date","date")
 feature_df = feature_df.join(oil_df, on=["date"],how="left")
@@ -177,34 +177,24 @@ display(feature_df)
 # COMMAND ----------
 
 # DBTITLE 1,Overwrite the table to produce a new version
-fe.write_table(name="training_set",
+fe.write_table(name="train_national_holidays",
                df=feature_df,
-               mode="merge")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ##Using time travel with our traning set
-# MAGIC Now that we have multiple versions of our feature table, lets look at how we can easily access previous versions. We can access by version number as shown in the feature table history. We can also access by timestamp. This is the timestamp of the table change not the timestamp in the table's time column.
+               mode="overwrite")
 
 # COMMAND ----------
 
 # DBTITLE 1,View the version history
 # MAGIC %sql
-# MAGIC DESCRIBE HISTORY training_set
+# MAGIC DESCRIBE HISTORY train_national_holidays
 
 # COMMAND ----------
 
 # DBTITLE 1,Select the data from our table as it was for version 5. 
 # MAGIC %sql
-# MAGIC SELECT * FROM training_set VERSION AS OF 5 LIMIT 50
+# MAGIC SELECT * FROM train_national_holidays VERSION AS OF 5 LIMIT 50
 
 # COMMAND ----------
 
 # DBTITLE 1,Select the data from our table as it was for timestamp "2023-10-11 20:41:16.000" 
 # MAGIC %sql
-# MAGIC SELECT * FROM training_set TIMESTAMP AS OF "2023-11-02 14:19:08.000" LIMIT 50
-
-# COMMAND ----------
-
-
+# MAGIC SELECT * FROM train_national_holidays TIMESTAMP AS OF "2023-10-11 20:41:16.000" LIMIT 50
