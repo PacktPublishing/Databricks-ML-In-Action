@@ -62,7 +62,7 @@ fe.create_table(
     name=f"{database_name}.stores_ft",
     primary_keys=["store_nbr"],
     df=df,
-    description="Store features include geography, cluster, and store_type.",
+    description="Favortia Store features include geography, store cluster, and store_type.",
 )
 
 # COMMAND ----------
@@ -275,3 +275,12 @@ fe.create_table(
     df=df,
     description="The lag10_oil_price is the price of oil 10 days after the join_on_date.",
 )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM oil_lag
+
+# COMMAND ----------
+
+
