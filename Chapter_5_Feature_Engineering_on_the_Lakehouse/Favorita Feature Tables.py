@@ -261,25 +261,25 @@ fe.create_table(
 df = sql(
     """
     SELECT
-      date(`date`),
-      date(`date`) -10 as join_on_date,
+      date(`date`) as price_date,
+      date(`date`) -10 as date,
       dcoilwtico as lag10_oil_price
     FROM
-      oil_prices
+      oil_prices_silver
   """
 )
 
 fe.create_table(
     name=f"{database_name}.oil_10d_lag_ft",
-    primary_keys=["join_on_date"],
+    primary_keys=["date"],
     df=df,
-    description="The lag10_oil_price is the price of oil 10 days after the join_on_date.",
+    description="The lag10_oil_price is the price of oil 10 days after date. The price date is the actual date of the oil price. The oil prices were imputed to replace nulls with the previous day's price. The stock market is not open on weekends and holidays.",
 )
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM oil_lag
+# MAGIC SELECT * FROM oil_10d_lag_ft
 
 # COMMAND ----------
 
