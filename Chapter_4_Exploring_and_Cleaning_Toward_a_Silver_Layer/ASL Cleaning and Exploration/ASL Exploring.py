@@ -1,14 +1,23 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling
+# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# MAGIC
+# MAGIC ## ASL Fingerspelling - ASL Exploring
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ##Run Setup
 
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
+
+# COMMAND ----------
+
+# MAGIC %md Viewing the data with SQL
 
 # COMMAND ----------
 
@@ -135,6 +144,10 @@ def get_hands(seq_df):
 
 example_df = sql("SELECT * FROM train_landmarks WHERE sequence_id='1983865658'")
 example_df = example_df.select("sequence_id", *FEATURE_COLUMNS).toPandas()
+
+# COMMAND ----------
+
+# MAGIC %md Now we are using the Mediapipe library to view the animation of the hands
 
 # COMMAND ----------
 

@@ -1,4 +1,17 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# MAGIC
+# MAGIC ## Favorita Sales - Data Exploration with the Databricks Assistant
+# MAGIC
+# MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------

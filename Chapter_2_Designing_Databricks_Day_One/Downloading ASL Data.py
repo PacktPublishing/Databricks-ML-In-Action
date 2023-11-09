@@ -1,10 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling
+# MAGIC Chapter 2: Designing Databricks Day One
+# MAGIC
+# MAGIC ## ASL Fingerspelling - Downloading ASL Data
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -12,6 +17,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Set the data path
 raw_data_path = volume_data_path + 'raw_data'
 dbutils.fs.mkdirs(raw_data_path)
 

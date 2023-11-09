@@ -1,7 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Parkinson's FOG Exploration
+# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
 # MAGIC
+# MAGIC ## Parkinson's FOG - Parkinsons Data Exploration
+# MAGIC
+# MAGIC [Kaggle Competition Link](Kaggle competition link](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/)
+
+# COMMAND ----------
+
+# MAGIC %md ##Install Library
 
 # COMMAND ----------
 
@@ -20,7 +27,10 @@ from sklearn.impute import IterativeImputer
 
 # COMMAND ----------
 
-# DBTITLE 1,Run setup after Python restart
+# MAGIC %md ##Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ./../../global-setup $project_name=parkinsons-freezing_gait_prediction $catalog=lakehouse_in_action
 
 # COMMAND ----------

@@ -1,10 +1,16 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Parkinson's FOG
+# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC
+# MAGIC ## Parkinson's FOG - Loading Parkinsons CSV data as Delta
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/)
 # MAGIC
-# MAGIC ##Run setup
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC ## Run Setup
 
 # COMMAND ----------
 
@@ -19,6 +25,7 @@ from  pyspark.sql.functions import input_file_name, split
 
 # COMMAND ----------
 
+# DBTITLE 1,Set the data path and displaying the files
 raw_data_path = volume_data_path + 'raw_data/tlvmc-parkinsons-freezing-gait-prediction/'
 display(dbutils.fs.ls(raw_data_path))
 
@@ -146,7 +153,3 @@ df = df.withColumn("id", split(split(df.file_id,'\.')[0],'/')[6]).drop('file_id'
 
 display(df)
 df.write.mode("overwrite").saveAsTable("parkinsons_test_defog")
-
-# COMMAND ----------
-
-

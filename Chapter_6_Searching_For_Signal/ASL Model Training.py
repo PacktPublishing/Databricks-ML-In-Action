@@ -1,9 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling
+# MAGIC Chapter 6: Searching for Signal
+# MAGIC
+# MAGIC ## ASL Fingerspelling - ASL Model Training
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
-# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md 
 # MAGIC ##Run Setup
 
 # COMMAND ----------

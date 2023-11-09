@@ -1,13 +1,18 @@
 // Databricks notebook source
 // MAGIC %md
-// MAGIC #Synthetic data
+// MAGIC Chapter 5: Feature Engineering
 // MAGIC
-// MAGIC ##Run setup
+// MAGIC ##Synthetic data - Feature engineering on a streaming table
+// MAGIC
 
 // COMMAND ----------
 
 // MAGIC %python
 // MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+
+// COMMAND ----------
+
+// MAGIC %md ## Run Setup
 
 // COMMAND ----------
 

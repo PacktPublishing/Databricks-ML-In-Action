@@ -1,5 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
+# MAGIC Chapter 6: Searching for Signal
+# MAGIC
+# MAGIC ## ASL Fingerspelling - asl-fingerspelling-recognition-w-tensorflow
+# MAGIC
+# MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC # Google - American Sign Language Fingerspelling Recognition with TensorFlow
 # MAGIC
 # MAGIC This notebook walks you through how to train a Transformer model using TensorFlow on the Google - American Sign Language Fingerspelling Recognition dataset made available for this competition.

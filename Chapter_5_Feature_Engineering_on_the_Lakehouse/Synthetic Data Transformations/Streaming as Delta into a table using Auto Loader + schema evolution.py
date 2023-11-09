@@ -1,10 +1,19 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Synthetic Data
+# MAGIC Chapter 5: Feature Engineering
+# MAGIC
+# MAGIC ##Synthetic data - Streaming as Delta into a table using Auto Loader + schema evolution
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Widget to reset Checkpoint and Schema
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+
+# COMMAND ----------
+
+# MAGIC %md ##Run Setup
 
 # COMMAND ----------
 

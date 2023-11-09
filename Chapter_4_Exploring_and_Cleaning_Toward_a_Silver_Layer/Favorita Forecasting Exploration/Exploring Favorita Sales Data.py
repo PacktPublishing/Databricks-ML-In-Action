@@ -1,7 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Favortia Sales Exploration
+# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# MAGIC
+# MAGIC ## Favorita Sales - Exploring Favorita Sales Data
+# MAGIC
 # MAGIC [Kaggle link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting) and [autoML documentation](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 

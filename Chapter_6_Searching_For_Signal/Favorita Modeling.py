@@ -1,14 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 5: Feature Engineering
+# MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ## Favorita Forecasting - Build a Training Set
+# MAGIC ## Favorita Forecasting -Favorita Modeling
+# MAGIC
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Run Setup
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -36,7 +36,6 @@ display(raw_data.take(10))
 
 # COMMAND ----------
 
-# DBTITLE 1,Create training set using feature tables
 model_feature_lookups = [
     FeatureLookup(
       table_name="lakehouse_in_action.favorita_forecasting.oil_10d_lag_ft",
@@ -59,21 +58,16 @@ training_set = fe.create_training_set(
     label=label_name,
     timestamp_lookup_key="date",
 )
-training_df = training_set.load_df()
-training_df.write.mode("overwrite").saveAsTable("training_set")
-training_pd = training_df.toPandas()
-
+training_pd = training_set.load_df().toPandas()
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the timeseries split for data
 dates = np.sort(training_pd["date"].unique())
 max_train = len(dates) - 10
 tscv = TimeSeriesSplit(test_size=10, max_train_size=max_train)
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the folds for training with test and train data
 for i, (train_index, test_index) in enumerate(tscv.split(dates)):
   print(f"Fold {i}:")
   training_dates = dates[train_index]
