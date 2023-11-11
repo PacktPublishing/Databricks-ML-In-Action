@@ -51,6 +51,26 @@ fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE stores_sql_ft AS(
+# MAGIC   SELECT
+# MAGIC     *,
+# MAGIC     `type` as store_type
+# MAGIC   FROM
+# MAGIC     favorita_stores
+# MAGIC );
+# MAGIC ALTER TABLE stores_sql_ft ALTER COLUMN store_nbr SET NOT NULL;
+# MAGIC ALTER TABLE stores_sql_ft ADD PRIMARY KEY(store_nbr);
+# MAGIC --ALTER TABLE stores_sql_ft ADD CONSTRAINT unique_name_for_pk_constraint PRIMARY KEY store_nbr;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE TABLE EXTENDED stores_sql_ft
+
+# COMMAND ----------
+
 # DBTITLE 1,Store features
 df = sql(
 """
