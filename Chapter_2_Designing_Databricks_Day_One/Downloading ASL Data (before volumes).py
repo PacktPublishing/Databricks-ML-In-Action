@@ -4,7 +4,10 @@
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 

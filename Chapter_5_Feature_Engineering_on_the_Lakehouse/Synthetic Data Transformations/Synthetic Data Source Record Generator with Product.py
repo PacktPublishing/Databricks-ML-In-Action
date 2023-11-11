@@ -1,8 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC #Synthetic data
+# MAGIC Chapter 5: Feature Engineering
 # MAGIC
-# MAGIC ##Run setup
+# MAGIC ##Synthetic data - Synthetic Data Source Record Generator with Product
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md ##Run Setup
 
 # COMMAND ----------
 

@@ -1,4 +1,15 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC Chapter 5: Feature Engineering
+# MAGIC
+# MAGIC ##Synthetic data - Updating to Feature Tables
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ../../global-setup $project_name=synthetic_transactions 
 
 # COMMAND ----------

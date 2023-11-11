@@ -1,10 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling Feature Engineering
+# MAGIC Chapter 5: Feature Engineering
+# MAGIC
+# MAGIC ## ASL Fingerspelling - ASL Feature Engineering
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
-# MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 

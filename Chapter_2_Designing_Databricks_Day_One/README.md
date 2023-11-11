@@ -1,4 +1,4 @@
-# Designing Databricks Day One 
+# Chapter 2: Designing Databricks Day One
 
 **Here is what you will learn as part of this chapter:**
 

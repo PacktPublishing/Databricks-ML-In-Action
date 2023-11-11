@@ -1,7 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Favorita Forecasting
+# MAGIC Chapter 5: Feature Engineering
+# MAGIC
+# MAGIC ## Favorita Forecasting - Favorita Feature Tables
+# MAGIC
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -261,8 +268,8 @@ fe.create_table(
 df = sql(
     """
     SELECT
-      date(`date`) as price_date,
-      date(`date`) -10 as date,
+      timestamp(`date`) as price_date,
+      timestamp(date(`date`) -10) as date,
       dcoilwtico as lag10_oil_price
     FROM
       oil_prices_silver
@@ -283,4 +290,5 @@ fe.create_table(
 
 # COMMAND ----------
 
-
+# MAGIC %sql
+# MAGIC drop table oil_10d_lag_ft

@@ -1,10 +1,17 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Synthetic Data
+# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC
+# MAGIC ## Synthetic Data - Streaming as Delta into a directory using Auto Loader + schema evolution
 
 # COMMAND ----------
 
+# DBTITLE 1,Create Checkpoint and Schema reset widget
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 

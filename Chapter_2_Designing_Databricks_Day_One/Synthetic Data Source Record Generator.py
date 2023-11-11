@@ -1,8 +1,13 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC #Synthetic data
+# MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
-# MAGIC #Run Setup
+# MAGIC ## Synthetic data - Synthetic Data Source Record Generator
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -103,7 +108,3 @@ display(usercounts.orderBy("CustomerID"))
 
 # DBTITLE 1,Display the Data Generated
 display(df)
-
-# COMMAND ----------
-
-

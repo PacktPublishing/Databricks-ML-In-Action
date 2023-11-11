@@ -1,16 +1,23 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling Cleaning the Dataset
+# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# MAGIC
+# MAGIC ## ASL Fingerspelling - ASL Cleaning the Dataset
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC
-# MAGIC We need to reduce the sequeces down to those with enough non-null data points.
-# MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=asl-fingerspelling $catalog=lakehouse_in_action
+
+# COMMAND ----------
+
+# MAGIC %md In this notebook, we will reduce the sequences down to those with enough non-null data points.
 
 # COMMAND ----------
 
@@ -63,7 +70,3 @@ mdf.filter(2*col('phrase_length')<col('max_nn_rows')).write.mode('overwrite').sa
 # COMMAND ----------
 
 display(mdf.filter(2*col('phrase_length')<col('max_nn_rows')).take(10))
-
-# COMMAND ----------
-
-

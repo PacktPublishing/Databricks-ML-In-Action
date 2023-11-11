@@ -1,10 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Favorita Sales
+# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC
+# MAGIC ## Favorita Sales - Loading Sales CSV data as Delta
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
-# MAGIC
-# MAGIC ##Run setup
+
+# COMMAND ----------
+
+# MAGIC %md ##Run setup
 
 # COMMAND ----------
 
@@ -12,6 +16,7 @@
 
 # COMMAND ----------
 
+# DBTITLE 1,Set the data path and displaying the files
 raw_data_path = volume_data_path + '/raw_data/store-sales-time-series-forecasting/'
 display(dbutils.fs.ls(raw_data_path))
 

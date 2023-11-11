@@ -1,8 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC #Synthetic data
+# MAGIC Chapter 3: Building out our Bronze Layer
 # MAGIC
-# MAGIC ##Run setup
+# MAGIC ## Synthetic Data - Synthetic Data Source Record Generator with Product
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -124,8 +128,5 @@ display(df)
 
 # COMMAND ----------
 
+# DBTITLE 1,List the Data Generated
 dbutils.fs.ls(destination_path)
-
-# COMMAND ----------
-
-

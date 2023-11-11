@@ -1,10 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # ASL Fingerspelling Data to Delta
+# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC
+# MAGIC ## ASL Fingerspelling - Loading ASL data to Delta
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/asl-fingerspelling/)
 # MAGIC
-# MAGIC ##Run Setup
+
+# COMMAND ----------
+
+# MAGIC %md ## Run Setup
 
 # COMMAND ----------
 
@@ -56,10 +61,12 @@ display(df)
 
 # COMMAND ----------
 
+# DBTITLE 1,Copy files into the volume
 dbutils.fs.cp(f"{cloud_storage_path}/character_to_prediction_index.json", volume_data_path)
 
 # COMMAND ----------
 
+# DBTITLE 1,Create the character to prediction index
 import pyspark.pandas as psp
 data = psp.read_json(f'{cloud_storage_path}/character_to_prediction_index.json')
 dic = data.to_dict()
@@ -67,6 +74,7 @@ char_2_pred_index = pd.DataFrame([(key,value[0]) for key, value in dic.items()],
 
 # COMMAND ----------
 
+# DBTITLE 1,View the character to prediction index
 display(char_2_pred_index)
 
 # COMMAND ----------
