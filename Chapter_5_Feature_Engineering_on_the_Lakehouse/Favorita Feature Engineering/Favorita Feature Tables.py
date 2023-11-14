@@ -45,32 +45,29 @@ fe = FeatureEngineeringClient()
 
 # MAGIC %md
 # MAGIC ### Feature Engineering
-# MAGIC Lets work on transforming our data
+# MAGIC Lets work on transforming our data.
 # MAGIC
 # MAGIC #### Stores
+# MAGIC We could rename the feature names when creating the training set, but do not want to alter our bronze table to use as a feature table.
 
 # COMMAND ----------
 
-# DBTITLE 1,Store features
-df = sql(
-"""
-    SELECT
-      *,
-      `type` as store_type
-    FROM
-      favorita_stores
-"""
-)
-
-df = df.drop("type")
-display(df)
-
-fe.create_table(
-    name=f"{database_name}.stores_ft",
-    primary_keys=["store_nbr"],
-    df=df,
-    description="Favortia Store features include geography, store cluster, and store_type.",
-)
+# MAGIC %sql
+# MAGIC CREATE
+# MAGIC OR REPLACE TABLE stores_ft AS(
+# MAGIC   SELECT
+# MAGIC     store_nbr,
+# MAGIC     city,
+# MAGIC     state,
+# MAGIC     `type` as store_type,
+# MAGIC     `cluster` as store_cluster
+# MAGIC   FROM
+# MAGIC     favorita_stores
+# MAGIC   );
+# MAGIC ALTER TABLE stores_ft ALTER COLUMN store_nbr SET NOT NULL;
+# MAGIC ALTER TABLE stores_ft ADD PRIMARY KEY(store_nbr);
+# MAGIC COMMENT ON TABLE stores_ft IS 'Favortia Store features include geography, store cluster, and store_type.';
+# MAGIC
 
 # COMMAND ----------
 
@@ -287,8 +284,3 @@ fe.create_table(
 
 # MAGIC %sql
 # MAGIC SELECT * FROM oil_10d_lag_ft
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC drop table oil_10d_lag_ft

@@ -56,17 +56,20 @@ model_feature_lookups = [
 training_set = fe.create_training_set(
     df=raw_data,
     feature_lookups=model_feature_lookups,
-    label=label_name,
-    timestamp_lookup_key="date",
+    label=label_name
 )
+
 training_df = training_set.load_df()
 training_df.write.mode("overwrite").saveAsTable("training_set")
-training_pd = training_df.toPandas()
 
+# COMMAND ----------
+
+display(training_df)
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the timeseries split for data
+training_pd = training_df.toPandas()
 dates = np.sort(training_pd["date"].unique())
 max_train = len(dates) - 10
 tscv = TimeSeriesSplit(test_size=10, max_train_size=max_train)
@@ -90,5 +93,9 @@ for i, (train_index, test_index) in enumerate(tscv.split(dates)):
   fold_test = training_pd.query(f"date >= '{min_test_date}' & date <= '{max_test_date}'")
   X_test = fold_test.drop(label_name, axis=1)
   y_test = fold_test[label_name]
+
+
+
+# COMMAND ----------
 
 

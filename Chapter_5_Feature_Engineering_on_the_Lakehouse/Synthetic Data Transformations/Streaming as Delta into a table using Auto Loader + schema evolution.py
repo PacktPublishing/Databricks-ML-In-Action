@@ -24,7 +24,6 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 # DBTITLE 1,Variables
 table_name = "synthetic_transactions"
 raw_data_location = f"{cloud_storage_path}/data/"
-#destination_location = f"{cloud_storage_path}/delta/"
 schema_location = f"dbfs:/{cloud_storage_path}/{table_name}/schema"
 checkpoint_location = f"dbfs:/{cloud_storage_path}/{table_name}/checkpoint"
 
@@ -34,7 +33,6 @@ checkpoint_location = f"dbfs:/{cloud_storage_path}/{table_name}/checkpoint"
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(schema_location, True)
   dbutils.fs.rm(checkpoint_location, True)
-  #dbutils.fs.rm(destination_location, True)
   sql(f"DROP TABLE IF EXISTS {table_name}")
 
 # COMMAND ----------
