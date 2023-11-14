@@ -31,8 +31,8 @@ sleepIntervalSeconds = 1
 
 # DBTITLE 1,Reset Environment & Setup
 dbutils.fs.rm(temp_path, recurse=True)
-dbutils.fs.rm(destination_path, recurse=True)
-dbutils.fs.mkdirs(destination_path)
+# dbutils.fs.rm(destination_path, recurse=True)
+# dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
@@ -127,12 +127,4 @@ display(usercounts.orderBy("CustomerID"))
 
 # DBTITLE 1,Display the Data Generated
 df = spark.read.format("json").load(destination_path)
-display(df)
-
-# COMMAND ----------
-
-dbutils.fs.ls(destination_path)
-
-# COMMAND ----------
-
-
+display(df.take(10))

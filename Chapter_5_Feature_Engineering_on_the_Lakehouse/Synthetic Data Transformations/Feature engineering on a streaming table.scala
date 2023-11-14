@@ -34,10 +34,12 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Resets
 // MAGIC %python
-// MAGIC table_name = "synthetic_streaming_features"
+// MAGIC table_name = "transaction_count_ft"
+// MAGIC history_table_name = "transaction_count_history"
 // MAGIC if bool(dbutils.widgets.get('Reset')):
 // MAGIC   dbutils.fs.rm(f"{volume_data_path}/table_feature_outputs/", True)
 // MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
+// MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
 
 // COMMAND ----------
 
@@ -47,11 +49,11 @@ val volumePath = "/Volumes/lakehouse_in_action/synthetic_transactions/syn_volume
 val outputPath = f"$volumePath/table_feature_outputs/"
 val inputTable = "hive_metastore.lakehouse_in_action.synthetic_transactions"
 
-val table_name = "synthetic_streaming_features"
+val table_name = "transaction_count_ft"
 sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
-val history_table_name = "synthetic_feature_history"
+val history_table_name = "transaction_count_history"
 
 // aggregate transactions for windowMinutes
 val windowMinutes = 2
@@ -246,19 +248,7 @@ flatMapGroupsWithStateResultDf.writeStream
 
 // COMMAND ----------
 
-inputDf
-  .withWatermark("TransactionTimestamp", "30 seconds")
-  .groupByKey(_.CustomerID)
-  .flatMapGroupsWithState(OutputMode.Append, GroupStateTimeout.EventTimeTimeout)(updateState)
-  .writeStream
-  .option("checkpointLocation", f"$outputPath/checkpoint2")
-  .trigger(Trigger.ProcessingTime("10 seconds"))
-  .queryName("flatMapGroupsHistoryTable")  //query name will show up in Spark UI
-  .table(history_table_name)
-
-// COMMAND ----------
-
-// DBTITLE 1,can I do just this instead of cmd 10?
+// DBTITLE 1,Writing the history of transaction counts to a table
 flatMapGroupsWithStateResultDf.writeStream
   .option("checkpointLocation", f"$outputPath/checkpoint2")
   .trigger(Trigger.ProcessingTime("10 seconds"))
@@ -267,13 +257,13 @@ flatMapGroupsWithStateResultDf.writeStream
 
 // COMMAND ----------
 
-// MAGIC %python
-// MAGIC display(sql(f"select * from {table_name} order by eventTimestamp desc"))
+// MAGIC %sql
+// MAGIC select * from transaction_count_ft order by eventTimestamp desc
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC SELECT * FROM synthetic_feature_history
+// MAGIC SELECT * FROM transaction_count_history LIMIT 10
 
 // COMMAND ----------
 
