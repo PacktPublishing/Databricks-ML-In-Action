@@ -3,6 +3,7 @@
 # MAGIC Chapter 3: Building out our Bronze Layer
 # MAGIC
 # MAGIC ## Synthetic Data - Synthetic Data Source Record Generator with Product
+# MAGIC We generate JSON data (with a new column, product) to simulate transactions occuring. Then we write it to a folder in cloud storage.
 
 # COMMAND ----------
 
