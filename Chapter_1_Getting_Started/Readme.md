@@ -4,8 +4,12 @@ We begin working on our use cases in Chapter 2. In each chapter that follows, we
 ### Project 1: Synthetic Streaming Transactions Data
 The synthetic dataset is generated to demonstrate the use of Auto Loader and streaming.
 
-Chapter 2:
+Chapter 2: 
+* We generate JSON data and write it to a folder in cloud storage.
+
 Chapter 3:
+* We generate JSON data with a new column, product, and write it to a folder in cloud storage.
+
 Chapter 4:
 Chapter 5:
 Chapter 6:

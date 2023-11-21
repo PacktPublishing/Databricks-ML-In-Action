@@ -3,7 +3,7 @@
 # MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
 # MAGIC ## Synthetic data - Synthetic Data Source Record Generator
-# MAGIC
+# MAGIC We generate JSON data to simulate transactions occuring. Then we write it to a folder in cloud storage.
 
 # COMMAND ----------
 
