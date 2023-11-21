@@ -93,20 +93,33 @@ rh = df.select("sequence_id","phrase",*RHAND_COLS,*RPOSE_COLS).where(col("domina
 sh = df.select("sequence_id","phrase",*RHAND_COLS,*RPOSE_COLS).where(col("dominant_hand") == "same").toDF("sequence_id","phrase",*DOMINANT_COLS)
 rh = rh.unionAll(sh)
 lh = df.select("sequence_id","phrase",*LHAND_COLS,*LPOSE_COLS).where(col("dominant_hand") == "left").toDF("sequence_id","phrase",*DOMINANT_COLS)
+featuresDF = rh.unionAll(lh)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Reflect the left hand to align as a right hand
-# MAGIC For the left hand dataframe, flip the x coordinates horizontally. The function `y = |1 - x|` reflects the function `y = x` horizontally at `x = 1/2` for values of x between 0 and 1
+# MAGIC The dominant hand at inference time is supplied via the user's profile. Therefore it is better not to alter the data coming in for those who are left handed. Given the distribution, we would suggest finding data for those not well represented.
 
 # COMMAND ----------
 
-X_COLS = X_HAND_COLS + X_POSE_COLS
-for lh_x_col in X_COLS:
-  lh = lh.withColumn(lh_x_col,when(col(lh_x_col)!=0,abs(1 - col(lh_x_col))).otherwise(0))
+sql(f"""
+CREATE OR REPLACE FUNCTION {`catalog`}.{`database`}.extract_user_dominant_hand(blob STRING)
+RETURNS STRING
+LANGUAGE PYTHON
+COMMENT "Extract dominant hand from a JSON blob"
+AS $$
+import json
 
-featuresDF = rh.unionAll(lh)
+def extract_longitude(json_blob: str):
+    # Parse the JSON blob
+    data = json.loads(json_blob)
+    x = data.get('user_x_coord')
+
+    return x
+
+return extract_longitude(blob)
+$$;
+""")
 
 # COMMAND ----------
 
