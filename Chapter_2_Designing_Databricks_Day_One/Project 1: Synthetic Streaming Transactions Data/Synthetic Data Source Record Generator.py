@@ -1,8 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
-# MAGIC ## Synthetic Data - Synthetic Data Source Record Generator with Product
+# MAGIC ## Synthetic data - Synthetic Data Source Record Generator
+# MAGIC We generate JSON data to simulate transactions occuring. Then we write it to a folder in cloud storage.
 
 # COMMAND ----------
 
@@ -10,39 +11,39 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
+# MAGIC %run ../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset for Auto Loader to pick up
+# MAGIC ## Generate a JSON dataset
 
 # COMMAND ----------
 
 # DBTITLE 1,Define Record Count, Temporary Location, Auto Loader-Monitored Location and Sleep Interval Here
 recordCount=5
 nIDs = 10
-temp_path = "{}/temp/".format(spark_temp_path)
-destination_path = "{}/data/".format(cloud_storage_path)
+temp_path = "dbfs:/{}/temp".format(cloud_storage_path)
+destination_path = "{}/data".format(cloud_storage_path)
 sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
 # DBTITLE 1,Reset Environment & Setup
-dbutils.fs.rm(temp_path, recurse=True)
-dbutils.fs.rm(destination_path, recurse=True)
-dbutils.fs.mkdirs(destination_path)
+# dbutils.fs.rm(temp_path, recurse=True)
+# dbutils.fs.rm(destination_path, recurse=True)
+# dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 
-# DBTITLE 1,Functions to generate a JSON dataset for the Autoloader to pick up
+# DBTITLE 1,Functions to generate a JSON dataset for Auto Loader to pick up
 import random
 import string
 from datetime import datetime
 import time
 import os
 
-# Method to return a random User ID between 1 and 5 (set low for testing some stateful streaming aggregations, higher for more variability)
+# Method to return a random User ID between 1 and nIDs (set low for testing some stateful streaming aggregations, higher for more variability)
 def returnCustomerID(nIDs):
   return random.randint(1, nIDs)
 
@@ -50,37 +51,26 @@ def returnCustomerID(nIDs):
 def returnValue():
   return round(random.uniform(2.11, 399.99), 2)
 
-# Method to return a Product string
-def returnString():
-  letters = string.ascii_letters
-  return ('Product ' + ''.join(random.choice(letters.upper()) for i in range(1)) )
-
 def returnTransactionTimestamp():
   currentDateTime = datetime.now()
   return currentDateTime.strftime("%Y-%m-%d %H:%M:%S.%f")
 
 # Generate a record
-def generateRecord(nIDs, includeProduct):
-  if includeProduct:
-    return (returnCustomerID(nIDs), returnString(), returnValue(), returnTransactionTimestamp())
-  else:
-    return (returnCustomerID(nIDs), returnValue(), returnTransactionTimestamp())
+def generateRecord(nIDs):
+  return (returnCustomerID(nIDs), returnValue(), returnTransactionTimestamp())
   
 # Generate a list of records
-def generateRecordSet(recordCount, nIDs, includeProduct):
+def generateRecordSet(recordCount, nIDs):
   recordSet = []
   for x in range(recordCount):
-    recordSet.append(generateRecord(nIDs, includeProduct))
+    recordSet.append(generateRecord(nIDs))
   return recordSet
 
 # Generate a set of data, convert it to a Dataframe, write it out as one json file in a temp location, 
 # move the json file to the desired location that the autoloader will be watching and then delete the temp location
-def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path):
-  if includeProduct:
-    recordColumns = ["CustomerID", "Product", "Amount", "TransactionTimestamp"]
-  else:
-    recordColumns = ["CustomerID", "Amount", "TransactionTimestamp"]
-  recordSet = generateRecordSet(recordCount,nIDs,includeProduct)
+def writeJsonFile(recordCount, nIDs, temp_path, destination_path):
+  recordColumns = ["CustomerID", "Amount", "TransactionTimestamp"]
+  recordSet = generateRecordSet(recordCount,nIDs)
   recordDf = spark.createDataFrame(data=recordSet, schema=recordColumns)
   
   # Write out the json file with Spark in a temp location - this will create a directory with the file we want
@@ -95,13 +85,9 @@ def writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path
 
 # DBTITLE 1,Loop for Generating Data
 t=1
-total = 200
-includeProduct = False
-while(t<total):
-  writeJsonFile(recordCount, nIDs, includeProduct, temp_path, destination_path)
+while(t<5):
+  writeJsonFile(recordCount, nIDs, temp_path, destination_path)
   t = t+1
-  if t > total/10: 
-    includeProduct = True
   time.sleep(sleepIntervalSeconds)
 
 # COMMAND ----------
@@ -114,19 +100,11 @@ while(t<total):
 
 # DBTITLE 1,Count of Transactions per User
 df = spark.read.format("json").load(destination_path)
-if includeProduct:
-  usercounts = df.groupBy("CustomerID","Product").count()
-else:
-  usercounts = df.groupBy("CustomerID").count()
+usercounts = df.groupBy("CustomerID").count()
 display(usercounts.orderBy("CustomerID"))
+
 
 # COMMAND ----------
 
 # DBTITLE 1,Display the Data Generated
-df = spark.read.format("json").load(destination_path)
 display(df)
-
-# COMMAND ----------
-
-# DBTITLE 1,List the Data Generated
-dbutils.fs.ls(destination_path)

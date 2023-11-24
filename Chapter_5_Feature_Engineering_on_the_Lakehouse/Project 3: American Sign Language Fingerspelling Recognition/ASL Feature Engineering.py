@@ -32,7 +32,6 @@
 # COMMAND ----------
 
 from pyspark.sql.functions import greatest, col, length, expr, when, abs
-from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.pandas as ps
 
 # COMMAND ----------
