@@ -70,7 +70,8 @@ Chapter 3:
 * Grant permission to someone on the ASL volume. The setup file creates the volume for you. Transformation shown includes moving files to the volume.
 
 Chapter 4:
-* Filter out the 
+* Filter out the sequences that do not have enough data points. Specifically, the sequences where the number of non-null hand coordinates are less than 2x the length of the phrase.
+* Explore the dataset using the code provided on Kaggle. This includes an animation of the hand coordinates. 
 
 Chapter 5:
 
