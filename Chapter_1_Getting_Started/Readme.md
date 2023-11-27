@@ -74,10 +74,14 @@ Chapter 4:
 * Explore the dataset using the code provided on Kaggle. This includes an animation of the hand coordinates. 
 
 Chapter 5:
+* Determine the dominant hand being used to spell the phrase.
 
 Chapter 6:
+* Create a deep learning model to predict the phrase being spelled.
+* Deploy your model via API using Databricks model serving.
 
 Chapter 7:
+
 
 Chapter 8:
 
@@ -85,10 +89,14 @@ Chapter 8:
 In collaboration with The Michael J. Fox Foundation for Parkinson's Research, [Kaggle](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/overview) has a competition to detect freezing of gait (FoG).
 
 Chapter 2:
-* Download the dataset from Kaggle. 
+* Download the dataset from Kaggle and put into a volume.
 
 Chapter 3:
+* Use Pandas and Spark to transform the CSVs into Delta tables.
+
 Chapter 4:
+* Explore the data by creating data profiles. Use AutoML to create the data exploration notebook. Then create a profile for each data table.
+
 Chapter 5:
 Chapter 6:
 Chapter 7:
