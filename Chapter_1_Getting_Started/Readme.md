@@ -78,10 +78,14 @@ Chapter 5:
 
 Chapter 6:
 * Create a deep learning model to predict the phrase being spelled.
-* Deploy your model via API using Databricks model serving.
+
 
 Chapter 7:
 
+* Register the model.
+* Deploy your model via API using Databricks model serving.
+* Monitor the input and output tables.
+* Create a webhook to trigger testing.
 
 Chapter 8:
 
