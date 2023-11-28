@@ -6,11 +6,13 @@
 # MAGIC
 # MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 # MAGIC
+# MAGIC Create a SQL bot that takes questions about your tables as input and then generates and executes the SQL to answer the question. Utilize OpenAI and langchain.
+# MAGIC
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Install Library and Restart Python
+# MAGIC ### Install Library and Restart Python
 
 # COMMAND ----------
 
@@ -22,7 +24,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %md ## Run Setup
+# MAGIC %md ### Run Setup
 
 # COMMAND ----------
 
