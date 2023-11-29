@@ -3,7 +3,7 @@ Begin working on the projects in Chapter 2. In each chapter that follows, we exp
 
 Be sure you open the global setup file, understand it, and customize it to your liking.
 
-### Project 1: Synthetic Streaming Transactions Data
+### Project: Synthetic Streaming Transactions Data
 The synthetic dataset is generated to demonstrate the use of Auto Loader and streaming.
 
 Chapter 2: 
@@ -34,7 +34,7 @@ Chapter 7:
 Chapter 8:
 * Create a DBSQL dashboard.
 
-### Project 2: Favorita Store Sales - Time Series Forecasting
+### Project: Favorita Store Sales - Time Series Forecasting
 This dataset is hosted on the [Kaggle website](https://www.kaggle.com/competitions/store-sales-time-series-forecasting/overview) for learning purposes. We want to be able to predict sales on each type of 
 
 Chapter 2:
@@ -59,7 +59,7 @@ Chapter 7:
 
 Chapter 8:
 
-### Project 3: American Sign Language Fingerspelling Recognition
+### Project: American Sign Language Fingerspelling Recognition
 Our second dataset is the ASL Fingerspelling dataset, also hosted on [Kaggle](https://www.kaggle.com/competitions/asl-fingerspelling).
 
 Chapter 2:
@@ -70,30 +70,36 @@ Chapter 3:
 * Grant permission to someone on the ASL volume. The setup file creates the volume for you. Transformation shown includes moving files to the volume.
 
 Chapter 4:
-* Filter out the 
+* Filter out the sequences that do not have enough data points. Specifically, the sequences where the number of non-null hand coordinates are less than 2x the length of the phrase.
+* Explore the dataset using the code provided on Kaggle. This includes an animation of the hand coordinates. 
 
 Chapter 5:
+* Determine the dominant hand being used to spell the phrase.
 
 Chapter 6:
+* Create a deep learning model to predict the phrase being spelled.
+
 
 Chapter 7:
 
+* Register the model.
+* Deploy your model via API using Databricks model serving.
+* Monitor the input and output tables.
+* Create a webhook to trigger testing.
+
 Chapter 8:
 
-### Project 4: Parkinson's Freezing of Gait - Event Detection
+### Project: Parkinson's Freezing of Gait - Event Detection
 In collaboration with The Michael J. Fox Foundation for Parkinson's Research, [Kaggle](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/overview) has a competition to detect freezing of gait (FoG).
 
 Chapter 2:
-* Download the dataset from Kaggle. 
+* Download the dataset from Kaggle and put into a volume.
 
 Chapter 3:
-Chapter 4:
-Chapter 5:
-Chapter 6:
-Chapter 7:
-Chapter 8:
+* Use Pandas and Spark to transform the CSVs into Delta tables.
 
-### Project 5: SQL Bot
+Chapter 4:
+* Explore the data by creating data profiles. Use AutoML to create the data exploration notebook. Then create a profile for each data table.
 
 Chapter 5:
 Chapter 6:
