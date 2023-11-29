@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ## Favorita Forecasting -Favorita Modeling
+# MAGIC ## Favorita Forecasting -Favorita Advanced Experiment Tracking
 # MAGIC
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
@@ -83,6 +83,35 @@ summary = databricks.automl.regress(automl_data,
                                     timeout_minutes=10,
                                     exclude_cols=['id']
                                     )
+
+# COMMAND ----------
+
+from pandas import Timestamp
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+from databricks.automl_runtime.sklearn import DatetimeImputer
+from databricks.automl_runtime.sklearn import OneHotEncoder
+from databricks.automl_runtime.sklearn import TimestampTransformer
+from sklearn.preprocessing import StandardScaler
+
+imputers = {
+  "date": DatetimeImputer(),
+}
+
+datetime_transformers = []
+
+for col in ["date"]:
+    ohe_transformer = ColumnTransformer(
+        [("ohe", OneHotEncoder(sparse=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
+        remainder="passthrough")
+    timestamp_preprocessor = Pipeline([
+        (f"impute_{col}", imputers[col]),
+        (f"transform_{col}", TimestampTransformer()),
+        (f"onehot_encode_{col}", ohe_transformer),
+        (f"standardize_{col}", StandardScaler()),
+    ])
+    datetime_transformers.append((f"timestamp_{col}", timestamp_preprocessor, [col]))
 
 # COMMAND ----------
 

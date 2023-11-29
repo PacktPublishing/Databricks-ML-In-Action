@@ -6,6 +6,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $catalog=lakehouse_in_action
+
+# COMMAND ----------
+
 # MAGIC %md 
 # MAGIC ###Step 1: Calculate maximum price per product and save as a feature table
 
@@ -41,6 +45,10 @@ customer_feature_table = fe.create_table(
 
 # COMMAND ----------
 
+display(max_price_df)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ### Step 2: Create a Python UDF to calculate the discount of each transaction
 
@@ -48,7 +56,7 @@ customer_feature_table = fe.create_table(
 
 # DBTITLE 1,Creating a Python UDF and saving to Unity Catalog.
 # MAGIC %sql
-# MAGIC CREATE FUNCTION lakehouse_in_action.synthetic_transactions.product_discount_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
+# MAGIC CREATE FUNCTION IF NOT EXISTS product_discount_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
 # MAGIC RETURNS float
 # MAGIC LANGUAGE PYTHON
 # MAGIC COMMENT 'Calculate the percent discount for a product at time of transaction (maximum price - transaction amount)/maximum price.'
@@ -63,4 +71,8 @@ customer_feature_table = fe.create_table(
 
 # DBTITLE 1,Testing out the function.
 # MAGIC %sql
-# MAGIC select lakehouse_in_action.synthetic_transactions.product_discount_on_demand_feature(15, 10) as discount
+# MAGIC select product_discount_on_demand_feature(15, 100) as discount
+
+# COMMAND ----------
+
+
