@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ## Favorita Forecasting -Favorita Modeling
+# MAGIC ## Favorita Forecasting -Favorita Advanced Experiment Tracking
 # MAGIC
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
@@ -13,6 +13,26 @@
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Reuse the code create by AutoML
+
+# COMMAND ----------
+
+import mlflow
+import databricks.automl_runtime
+
+target_col = "sales"
+time_col = "date"
+
+# COMMAND ----------
+
+# DBTITLE 1,Select supported columns
+from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
+supported_cols = ["family", "lag10_oil_price", "cluster", "date", "regional_holiday_type", "store_nbr", "onpromotion", "store_type", "local_holiday_type", "national_holiday_type"]
+col_selector = ColumnSelector(supported_cols)
 
 # COMMAND ----------
 
@@ -71,18 +91,32 @@ training_df = training_set.load_df()
 
 # COMMAND ----------
 
-display(training_df)
+from pandas import Timestamp
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
-# COMMAND ----------
+from databricks.automl_runtime.sklearn import DatetimeImputer
+from databricks.automl_runtime.sklearn import OneHotEncoder
+from databricks.automl_runtime.sklearn import TimestampTransformer
+from sklearn.preprocessing import StandardScaler
 
-automl_data = training_df.filter("date > '2016-12-31'")
+imputers = {
+  "date": DatetimeImputer(),
+}
 
-summary = databricks.automl.regress(automl_data, 
-                                    target_col=label_name,
-                                    time_col="date",
-                                    timeout_minutes=10,
-                                    exclude_cols=['id']
-                                    )
+datetime_transformers = []
+
+for col in ["date"]:
+    ohe_transformer = ColumnTransformer(
+        [("ohe", OneHotEncoder(sparse=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
+        remainder="passthrough")
+    timestamp_preprocessor = Pipeline([
+        (f"impute_{col}", imputers[col]),
+        (f"transform_{col}", TimestampTransformer()),
+        (f"onehot_encode_{col}", ohe_transformer),
+        (f"standardize_{col}", StandardScaler()),
+    ])
+    datetime_transformers.append((f"timestamp_{col}", timestamp_preprocessor, [col]))
 
 # COMMAND ----------
 

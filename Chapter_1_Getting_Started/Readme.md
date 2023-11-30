@@ -4,31 +4,32 @@ Begin working on the projects in Chapter 2. In each chapter that follows, we exp
 Be sure you open the global setup file, understand it, and customize it to your liking.
 
 ### Project: Synthetic Streaming Transactions Data
-The synthetic dataset is generated to demonstrate the use of Auto Loader and streaming.
+The synthetic dataset is generated to demonstrate the use of **Auto Loader** and **streaming**.
 
 Chapter 2: 
 * Generate JSON data and write it to a folder in cloud storage.
 
 Chapter 3:
 * Generate JSON data with a new column, product, and write it to a folder in cloud storage.
-* Transform JSON data in a stream to Delta while handling the schema change. Data is written to a streaming table in one notebook and to cloud storage in another.
+* Transform JSON data in a stream to **Delta** while handling the **schema change** with **Auto Loader**. Data is written to a streaming table in one notebook and to cloud storage in another.
 
 Chapter 4:
 No exploration of the synthetic data.
 
 Chapter 5:
 * Reuse the data generator and Delta transformation from earlier chapters.
-* Count the number of transactions over the last 2 minutes for each customer ID using stateful streaming.
-* Using the stream of transaction counts, create a table with only the most up to date feature values and a historical transaction table. The feature table is created using Delta Change Data Feed.
-* Create a feature UDF to calculate the difference between the maximum price for a product and the transaction price. This requires an additional feature of the max price for a product over the last __ amout of time.
+* Count the number of transactions over the last 2 minutes for each customer ID using **stateful streaming**.
+* Using the stream of transaction counts, create a table with only the most up to date feature values and a historical transaction table. The feature table is created using **Delta Change Data Feed**.
+* Create a **feature UDF** to calculate the difference between the maximum price for a product and the transaction price. This requires an additional feature of the max price for a product over the last __ amout of time.
 
 Chapter 6:
-* Create a snapshot training set of the streaming data using DFE. Include the feature UDF from chapter 5 and publish the feature table to the Databricks online store.
-* Create and register a model.
+* Create a snapshot **training set** of the streaming data using **Databricks Feature Engineering API** client. Include the **feature UDF** from chapter 5 and publish the feature table to the **Databricks online store**.
+* Create a model. 
 
 Chapter 7:
-* Deploy the registered model.
-* Monitor the input and output tables.
+* Register the model in **Unity Catalog's Model Registry**.
+* Deploy the registered model as an API using **Databricks Model Serving**.
+* Monitor the input and output tables using **Databricks Lakehouse Monitoring**.
 * Create a webhook to trigger testing.
 
 Chapter 8:
@@ -41,23 +42,29 @@ Chapter 2:
 * Download the dataset from Kaggle and put into a volume. 
 
 Chapter 3:
-* Using pandas transform the CSV files into dataframes. Use Spark to write the dataframes to Delta tables.
+* Using Pandas, transform the CSV files into dataframes. Use Spark to write the dataframes to Delta tables.
 
 Chapter 4:
-* Use AutoML to explore the training_data table, open the autogenerate data exploration notebook.
-* Use Pandas API on Spark to impute the missing days in the oil table with the previous day's oil price.
+* Use **Databricks AutoML** to explore the training_data table, open the autogenerate data exploration notebook.
+* Use **Pandas API on Spark** to impute the missing days in the oil table with the previous day's oil price.
 
 Chapter 5:
 * Create three feature tables: holiday, stores, and oil.
 
 Chapter 6:
-* Create a training set using DFE.
+* Create a **training set** using **DFE** API client.
 * Create a model using AutoML and the feature tables.
+* Use the notebook from AutoML to test the prediction accuracy for different windows. Logging these as nested runs with MLflow.
 
 Chapter 7:
+* Register the model in **Unity Catalog's Model Registry**.
+* Create a batch prediction workflow that updates each day with the new forecast.
+* Monitor the input and output tables using **Databricks Lakehouse Monitoring**.
+* Create a webhook to trigger testing.
 
 
 Chapter 8:
+* Create a Lakeview dashboard of the forecast and actuals.
 
 ### Project: American Sign Language Fingerspelling Recognition
 Our second dataset is the ASL Fingerspelling dataset, also hosted on [Kaggle](https://www.kaggle.com/competitions/asl-fingerspelling).
@@ -87,21 +94,4 @@ Chapter 7:
 * Monitor the input and output tables.
 * Create a webhook to trigger testing.
 
-Chapter 8:
-
-### Project: Parkinson's Freezing of Gait - Event Detection
-In collaboration with The Michael J. Fox Foundation for Parkinson's Research, [Kaggle](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/overview) has a competition to detect freezing of gait (FoG).
-
-Chapter 2:
-* Download the dataset from Kaggle and put into a volume.
-
-Chapter 3:
-* Use Pandas and Spark to transform the CSVs into Delta tables.
-
-Chapter 4:
-* Explore the data by creating data profiles. Use AutoML to create the data exploration notebook. Then create a profile for each data table.
-
-Chapter 5:
-Chapter 6:
-Chapter 7:
 Chapter 8:
