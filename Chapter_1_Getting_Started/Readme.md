@@ -53,11 +53,16 @@ Chapter 5:
 Chapter 6:
 * Create a training set using DFE.
 * Create a model using AutoML and the feature tables.
+* Use the notebook from AutoML to test the prediction accuracy for different windows. Logging these as nested runs with MLflow.
 
 Chapter 7:
+* Create a batch prediction workflow that updates each day with the new forecast.
+* Monitor the inputs and outputs.
+* Create a webhook to trigger testing.
 
 
 Chapter 8:
+* Create a Lakeview dashboard of the forecast and actuals.
 
 ### Project: American Sign Language Fingerspelling Recognition
 Our second dataset is the ASL Fingerspelling dataset, also hosted on [Kaggle](https://www.kaggle.com/competitions/asl-fingerspelling).
@@ -87,21 +92,4 @@ Chapter 7:
 * Monitor the input and output tables.
 * Create a webhook to trigger testing.
 
-Chapter 8:
-
-### Project: Parkinson's Freezing of Gait - Event Detection
-In collaboration with The Michael J. Fox Foundation for Parkinson's Research, [Kaggle](https://www.kaggle.com/competitions/tlvmc-parkinsons-freezing-gait-prediction/overview) has a competition to detect freezing of gait (FoG).
-
-Chapter 2:
-* Download the dataset from Kaggle and put into a volume.
-
-Chapter 3:
-* Use Pandas and Spark to transform the CSVs into Delta tables.
-
-Chapter 4:
-* Explore the data by creating data profiles. Use AutoML to create the data exploration notebook. Then create a profile for each data table.
-
-Chapter 5:
-Chapter 6:
-Chapter 7:
 Chapter 8:

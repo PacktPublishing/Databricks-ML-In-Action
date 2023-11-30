@@ -16,6 +16,26 @@
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Reuse the code create by AutoML
+
+# COMMAND ----------
+
+import mlflow
+import databricks.automl_runtime
+
+target_col = "sales"
+time_col = "date"
+
+# COMMAND ----------
+
+# DBTITLE 1,Select supported columns
+from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
+supported_cols = ["family", "lag10_oil_price", "cluster", "date", "regional_holiday_type", "store_nbr", "onpromotion", "store_type", "local_holiday_type", "national_holiday_type"]
+col_selector = ColumnSelector(supported_cols)
+
+# COMMAND ----------
+
 # DBTITLE 1,Import & Initialize the DFE Client
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from sklearn.model_selection import TimeSeriesSplit
@@ -68,21 +88,6 @@ training_set = fe.create_training_set(
     label=label_name,
 )
 training_df = training_set.load_df()
-
-# COMMAND ----------
-
-display(training_df)
-
-# COMMAND ----------
-
-automl_data = training_df.filter("date > '2016-12-31'")
-
-summary = databricks.automl.regress(automl_data, 
-                                    target_col=label_name,
-                                    time_col="date",
-                                    timeout_minutes=10,
-                                    exclude_cols=['id']
-                                    )
 
 # COMMAND ----------
 
