@@ -22,7 +22,7 @@ raw_transactions_df = spark.sql("select * from hive_metastore.lakehouse_prod_in_
 
 # DBTITLE 1,Creating a feature table of product maximum prices.
 from databricks.feature_engineering import FeatureEngineeringClient
-from pyspark.sql.functions import max, to_date, col, window, date_trunc, to_timestamp
+from pyspark.sql.functions import max, to_date, col, window, date_trunc, to_timestamp, expr
 
 fe = FeatureEngineeringClient()
 
@@ -36,7 +36,7 @@ max_price_df = (
     raw_transactions_df.withColumn("TransactionHour", date_trunc('hour',to_timestamp("TransactionTimestamp")))
     .groupBy(col("Product"),time_window)
     .agg(max(col("Amount")).alias("MaxProductAmount"))
-    .withColumn("TransactionHour", date_trunc('hour',col("time_window.end")))
+    .withColumn("TransactionHour", date_trunc('hour',col("time_window.end") + expr('INTERVAL 1 HOUR')))
     .drop("time_window")
 )
 
@@ -47,7 +47,7 @@ fe.create_table(
   name='product_3hour_max_price_ft',
   primary_keys=['Product','TransactionHour'],
   schema=max_price_df.schema,
-  description='Maximum price per product over the last 3 hours for Synthetic Transactions.'
+  description="Maximum price per product over the last 3 hours for Synthetic Transactions. Join on TransactionHour to get the max product price from last hour's 3 hour rolling max"
 )
 
 # COMMAND ----------
