@@ -57,7 +57,7 @@ display(max_price_df)
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Step 2: Create a Python UDF to calculate the discount of each transaction
+# MAGIC ### Step 2: Create a Python UDF to calculate the difference ratio of each transaction
 
 # COMMAND ----------
 
