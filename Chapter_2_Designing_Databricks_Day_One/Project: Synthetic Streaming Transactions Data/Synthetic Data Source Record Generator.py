@@ -11,7 +11,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=synthetic_data $catalog=hive_metastore
+# MAGIC %run ../../global-setup $project_name=synthetic_data $catalog=hive_metastore
 
 # COMMAND ----------
 
@@ -107,4 +107,8 @@ display(usercounts.orderBy("CustomerID"))
 # COMMAND ----------
 
 # DBTITLE 1,Display the Data Generated
-display(df)
+display(spark.read.format("text").load(destination_path))
+
+# COMMAND ----------
+
+

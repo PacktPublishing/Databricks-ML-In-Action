@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ## Favorita Forecasting -Favorita Modeling
+# MAGIC ## Favorita Forecasting -Favorita Baseline Model
 # MAGIC
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
 
@@ -12,20 +12,25 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
 
 # COMMAND ----------
 
 # DBTITLE 1,Import & Initialize the DFE Client
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
-import pyspark.pandas as ps
 from sklearn.model_selection import TimeSeriesSplit
+from sklearn.inspection import permutation_importance
+from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import RandomForestRegressor
+import pyspark.pandas as ps
 import numpy as np
+import mlflow
 
 fe = FeatureEngineeringClient()
 training_features = "training_dataset"
 raw_data_table = "train_set"
 label_name = "sales"
+time_column = "date"
 
 # COMMAND ----------
 
@@ -36,6 +41,7 @@ display(raw_data.take(10))
 
 # COMMAND ----------
 
+# DBTITLE 1,Create a list of FeatureLookups
 model_feature_lookups = [
     FeatureLookup(
       table_name="lakehouse_in_action.favorita_forecasting.oil_10d_lag_ft",
@@ -48,41 +54,32 @@ model_feature_lookups = [
     ),
     FeatureLookup(
       table_name="lakehouse_in_action.favorita_forecasting.stores_ft",
-      lookup_key="store_nbr"
-    )  
+      lookup_key="store_nbr",
+      feature_names=["cluster","store_type"]
+    ),
 ]
 
+# COMMAND ----------
+
+# DBTITLE 1,Create the training set
 training_set = fe.create_training_set(
     df=raw_data,
     feature_lookups=model_feature_lookups,
     label=label_name,
-    timestamp_lookup_key="date",
 )
-training_pd = training_set.load_df().toPandas()
+training_df = training_set.load_df()
 
 # COMMAND ----------
 
-dates = np.sort(training_pd["date"].unique())
-max_train = len(dates) - 10
-tscv = TimeSeriesSplit(test_size=10, max_train_size=max_train)
+display(training_df)
 
 # COMMAND ----------
 
-for i, (train_index, test_index) in enumerate(tscv.split(dates)):
-  print(f"Fold {i}:")
-  training_dates = dates[train_index]
-  testing_dates = dates[test_index]
-  min_train_date = np.datetime_as_string(training_dates[0],unit='D')
-  max_train_date = np.datetime_as_string(training_dates[-1],unit='D')
-  min_test_date = np.datetime_as_string(testing_dates[0],unit='D')
-  max_test_date = np.datetime_as_string(testing_dates[-1],unit='D')
-  print(f"Training Dates = {min_train_date} to {max_train_date}")
-  print(f"Testing Dates = {min_test_date} to {max_test_date}")
-  fold_train = training_pd.query(f"date <= '{max_train_date}'")
-  X_train = fold_train.drop(label_name, axis=1)
-  y_train = fold_train[label_name]
-  fold_test = training_pd.query(f"date >= '{min_test_date}' & date <= '{max_test_date}'")
-  X_test = fold_test.drop(label_name, axis=1)
-  y_test = fold_test[label_name]
+automl_data = training_df.filter("date > '2016-12-31'")
 
-
+summary = databricks.automl.regress(automl_data, 
+                                    target_col=label_name,
+                                    time_col="date",
+                                    timeout_minutes=10,
+                                    exclude_cols=['id']
+                                    )
