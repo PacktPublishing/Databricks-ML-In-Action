@@ -17,7 +17,7 @@ Chapter 4:
 No exploration of the synthetic data.
 
 Chapter 5:
-* Reuse the data generator and Delta transformation from earlier chapters.
+* Reuse the data generator and **Auto Loader** transformation from earlier chapters.
 * Count the number of transactions over the last 2 minutes for each customer ID using **stateful streaming**.
 * Using the stream of transaction counts, create a table with only the most up to date feature values and a historical transaction table. The feature table is created using **Delta Change Data Feed**.
 * Create a **feature UDF** to calculate the difference between the maximum price for a product and the transaction price. This requires an additional feature of the max price for a product over the last __ amout of time.
