@@ -14,7 +14,7 @@
 
 # COMMAND ----------
 
-from databricks.feature_engineering import FeatureEngineeringClient
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
 fe = FeatureEngineeringClient()
 
 fe.set_feature_table_tag(name="transaction_count_ft", key="FE_role", value="online_serving")
@@ -39,13 +39,13 @@ training_feature_lookups = [
       feature_names=["transactionCount", "isTimeout"]
     ),
     FeatureLookup(
-      table_name="lakehouse_in_action.favorita_forecasting.store_holidays_ft",
-      lookup_key=["date","store_nbr"]
+      table_name="product_3hour_max_price_ft",
+      lookup_key=['Product','TransactionHour']
     ),
-    FeatureLookup(
-      table_name="lakehouse_in_action.favorita_forecasting.stores_ft",
-      lookup_key="store_nbr",
-      feature_names=["cluster","store_type"]
+    FeatureFunction(
+      udf_name="product_difference_ratio_on_demand_feature",
+      input_bindings={"max_price":"n1", "transaction_amount":"n2"},
+      output_name="max_difference_ratio"
     ),
 ]
 
@@ -53,8 +53,8 @@ training_feature_lookups = [
 
 # DBTITLE 1,Create the training set
 training_set = fe.create_training_set(
-    df=raw_data,
-    feature_lookups=model_feature_lookups,
+    df=spark.table("hive_metastore.lakehouse_prod_in_action.synthetic_transactions"),
+    feature_lookups=training_feature_lookups,
     label=label_name,
 )
 training_df = training_set.load_df()

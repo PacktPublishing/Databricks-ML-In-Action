@@ -20,7 +20,7 @@
 # MAGIC
 # MAGIC ALTER TABLE transaction_count_history ALTER COLUMN CustomerID SET NOT NULL;
 # MAGIC ALTER TABLE transaction_count_history ALTER COLUMN eventTimestamp SET NOT NULL;
-# MAGIC ALTER TABLE transaction_count_history ADD PRIMARY KEY(CustomerID,eventTimestamp TIMESERIES);
+# MAGIC ALTER TABLE transaction_count_history ADD PRIMARY KEY(CustomerID);
 
 # COMMAND ----------
 
