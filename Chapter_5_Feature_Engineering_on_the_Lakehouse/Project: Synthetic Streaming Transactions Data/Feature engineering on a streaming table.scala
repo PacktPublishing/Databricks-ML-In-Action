@@ -64,13 +64,18 @@ val maxWaitMinutes = 1
 
 // DBTITLE 1,Aggregating transactions for each customerID
 // The structure of the input data - a user and a transaction
-case class InputRow(CustomerID: Long, TransactionTimestamp: java.time.Instant)
+case class InputRow(CustomerID: Long, 
+                    TransactionTimestamp: java.time.Instant)
 
 // This is what the stream is storing so that it can count the number of transactions for a customer within the last window minutes
-case class TransactionCountState(latestTimestamp: java.time.Instant, currentTransactions: List[InputRow])
+case class TransactionCountState(latestTimestamp: java.time.Instant, 
+                                  currentTransactions: List[InputRow])
 
 // The structure of the values being emitted - includes the event datetime that triggered this update and a boolean indicating whether the update was triggered by a timeout, meaning a record wasn't received for a customer in a minute
-case class TransactionCount(CustomerID: Long, transactionCount: Integer, eventTimestamp: java.time.Instant, isTimeout: Boolean) 
+case class TransactionCount(CustomerID: Long, 
+                            transactionCount: Integer, 
+                            eventTimestamp: java.time.Instant, 
+                            isTimeout: Boolean) 
 
 def addNewRecords(newRecords: List[InputRow], transactionCountState: TransactionCountState): TransactionCountState = {
   // Get the latest timestamp in the set of new records
@@ -177,26 +182,27 @@ import io.delta.tables._
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.streaming.Trigger
 
-// Read from table we created using Auto-Loader
+
 val inputDf =
   spark.readStream
     .format("delta")
     .schema(schema)
     .table(inputTable)
     .selectExpr("CustomerID", 
-      "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
-    .as[InputRow]  // Specifically set the type of the Dataframe to the case class that flatMapGroupsWithState is expecting
+      "cast(TransactionTimestamp as timestamp) 
+      TransactionTimestamp")
+    .as[InputRow]
 
-// Execute flatMapGroupsWithState
 // We're allowing data to be 30 seconds late before it is dropped
 val flatMapGroupsWithStateResultDf = 
   inputDf
     .withWatermark("TransactionTimestamp", "30 seconds")
     .groupByKey(_.CustomerID)
-    .flatMapGroupsWithState(OutputMode.Append, GroupStateTimeout.EventTimeTimeout)(updateState)
+    .flatMapGroupsWithState(OutputMode.Append, 
+        GroupStateTimeout.EventTimeTimeout)(updateState)
 
-// Function for foreachBatch to update the counts in the Delta table
-def updateCounts(newCountsDs: Dataset[TransactionCount], epoch_id: Long): Unit = {
+def updateCounts(newCountsDs: Dataset[TransactionCount], 
+                  epoch_id: Long): Unit = {
   // Convert the dataset to a dataframe for merging
   val newCountsDf = newCountsDs.toDF
   
@@ -211,12 +217,12 @@ def updateCounts(newCountsDs: Dataset[TransactionCount], epoch_id: Long): Unit =
     .execute()
 }
 
-// Save the flatMapGroupsWithState result to a Delta table.  Delta tables do not support streaming updates directly, so we need to use a foreachBatch function
+// Save the flatMapGroupsWithState result to a Delta table.  
 flatMapGroupsWithStateResultDf.writeStream
   .foreachBatch(updateCounts _)
   .option("checkpointLocation", f"$outputPath/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
-  .queryName("flatMapGroups")  //query name will show up in Spark UI
+  .queryName("flatMapGroups")
   .start()
 
 // COMMAND ----------
@@ -225,13 +231,18 @@ flatMapGroupsWithStateResultDf.writeStream
 flatMapGroupsWithStateResultDf.writeStream
   .option("checkpointLocation", f"$outputPath/checkpoint2")
   .trigger(Trigger.ProcessingTime("10 seconds"))
-  .queryName("flatMapGroupsHistoryTable")  //query name will show up in Spark UI
+  .queryName("flatMapGroupsHistoryTable")
   .table(history_table_name)
 
 // COMMAND ----------
 
 // MAGIC %sql
-// MAGIC select * from transaction_count_ft order by eventTimestamp desc
+// MAGIC select
+// MAGIC   *
+// MAGIC from
+// MAGIC   transaction_count_ft
+// MAGIC order by
+// MAGIC   eventTimestamp desc
 
 // COMMAND ----------
 
