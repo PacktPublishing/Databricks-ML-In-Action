@@ -33,15 +33,19 @@ time_window = window(
 ).alias("time_window")
               
 max_price_df = (
-    raw_transactions_df.withColumn("TransactionHour", date_trunc('hour',to_timestamp("TransactionTimestamp")))
-    .groupBy(col("Product"),time_window)
-    .agg(max(col("Amount")).alias("MaxProductAmount"))
-    .withColumn("TransactionHour", date_trunc('hour',col("time_window.end") + expr('INTERVAL 1 HOUR')))
-    .drop("time_window")
+    raw_transactions_df
+      .withColumn("TransactionHour", 
+                   date_trunc('hour',to_timestamp("TransactionTimestamp")))
+      .groupBy(col("Product"),time_window)
+      .agg(max(col("Amount")).alias("MaxProductAmount"))
+      .withColumn("TransactionHour", 
+                  date_trunc('hour',
+                            col("time_window.end") + expr('INTERVAL 1 HOUR')))
+      .drop("time_window")
 )
 
 # Create feature table with Product as the primary key
-# We're using the convention of appending featurlakehouse_in_action.synthetic_transactions.product_max_price_fte table names with "_ft"
+# We're using the convention of appending feature table names with "_ft"
 fe.create_table(
   df=max_price_df,
   name='product_3hour_max_price_ft',
