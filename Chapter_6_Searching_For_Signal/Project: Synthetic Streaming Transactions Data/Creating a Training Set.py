@@ -35,7 +35,8 @@ fe.set_feature_table_tag(name="transaction_count_history", key="FE_role", value=
 training_feature_lookups = [
     FeatureLookup(
       table_name="transaction_count_history",
-      lookup_key=["CustomerID","eventTimestamp"],
+      lookup_key=["CustomerID"],
+      timestamp_lookup_key=["eventTimestamp"],
       feature_names=["transactionCount", "isTimeout"]
     ),
     FeatureLookup(
@@ -44,21 +45,31 @@ training_feature_lookups = [
     ),
     FeatureFunction(
       udf_name="product_difference_ratio_on_demand_feature",
-      input_bindings={"max_price":"n1", "transaction_amount":"n2"},
+      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
       output_name="max_difference_ratio"
     ),
 ]
 
 # COMMAND ----------
 
+from pyspark.sql.functions import date_trunc, to_timestamp
+raw_transactions_df = spark.table("lakehouse_in_action.synthetic_transactions.labeled_transactions")
+raw_transactions_df = raw_transactions_df.withColumn("TransactionHour", date_trunc('hour',to_timestamp("TransactionTimestamp")))
+
+# COMMAND ----------
+
 # DBTITLE 1,Create the training set
 training_set = fe.create_training_set(
-    df=spark.table("hive_metastore.lakehouse_prod_in_action.synthetic_transactions"),
+    df=raw_transactions_df,
     feature_lookups=training_feature_lookups,
-    label=label_name,
+    label="Label",
 )
 training_df = training_set.load_df()
 
 # COMMAND ----------
 
 display(training_df)
+
+# COMMAND ----------
+
+

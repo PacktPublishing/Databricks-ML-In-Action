@@ -163,14 +163,14 @@ def updateState(
 
 // DBTITLE 1,Schema for checking type
 import org.apache.spark.sql.types.{StringType, 
-          StructField, StructType, LongType, 
+          StructField, StructType, IntegerType, 
           DoubleType, TimestampType}
 
 // The schema for the incoming records
 val schema = StructType(Array(
               StructField("Source", StringType, true),
               StructField("TransactionTimestamp", StringType, true),
-              StructField("CustomerID", LongType, true),
+              StructField("CustomerID", IntegerType, true),
               StructField("Amount", DoubleType, true),
               StructField("Product", StringType, true)
                               ))
