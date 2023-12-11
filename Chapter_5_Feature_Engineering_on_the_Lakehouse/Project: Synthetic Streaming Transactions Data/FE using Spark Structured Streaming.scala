@@ -172,7 +172,8 @@ val schema = StructType(Array(
               StructField("TransactionTimestamp", StringType, true),
               StructField("CustomerID", IntegerType, true),
               StructField("Amount", DoubleType, true),
-              StructField("Product", StringType, true)
+              StructField("Product", StringType, true),
+              StructField("Label", IntegerType, true),
                               ))
 
 // COMMAND ----------
