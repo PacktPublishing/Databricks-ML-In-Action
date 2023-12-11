@@ -12,7 +12,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
@@ -44,16 +44,16 @@ display(raw_data.take(10))
 # DBTITLE 1,Create a list of FeatureLookups
 model_feature_lookups = [
     FeatureLookup(
-      table_name="lakehouse_in_action.favorita_forecasting.oil_10d_lag_ft",
+      table_name="oil_10d_lag_ft",
       lookup_key="date",
       feature_names="lag10_oil_price"
     ),
     FeatureLookup(
-      table_name="lakehouse_in_action.favorita_forecasting.store_holidays_ft",
+      table_name="store_holidays_ft",
       lookup_key=["date","store_nbr"]
     ),
     FeatureLookup(
-      table_name="lakehouse_in_action.favorita_forecasting.stores_ft",
+      table_name="stores_ft",
       lookup_key="store_nbr",
       feature_names=["cluster","store_type"]
     ),

@@ -10,15 +10,18 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions
 
 # COMMAND ----------
 
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
 fe = FeatureEngineeringClient()
 
-fe.set_feature_table_tag(name="transaction_count_ft", key="FE_role", value="online_serving")
-fe.set_feature_table_tag(name="transaction_count_history", key="FE_role", value="training_data")
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DROP TABLE product_3hour_max_price_ft
 
 # COMMAND ----------
 
@@ -53,7 +56,7 @@ training_feature_lookups = [
 # COMMAND ----------
 
 from pyspark.sql.functions import date_trunc, to_timestamp
-raw_transactions_df = spark.table("lakehouse_in_action.synthetic_transactions.labeled_transactions")
+raw_transactions_df = spark.table("labeled_transactions")
 raw_transactions_df = raw_transactions_df.withColumn("TransactionHour", date_trunc('hour',to_timestamp("TransactionTimestamp")))
 
 # COMMAND ----------
