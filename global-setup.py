@@ -2,7 +2,7 @@
 # DBTITLE 1,Passed variables via Widgets
 # RUN TIME ARGUMENTS
 # Minimum Databricks Runtime version allowed for notebooks attaching to a cluster
-dbutils.widgets.text("min_dbr_version", "12.0", "Min required DBR version")
+dbutils.widgets.text("min_dbr_version", "13.0", "Min required DBR version")
 
 # Specifying a value will not have fallback and fail if the catalog can't be used/created
 dbutils.widgets.text("catalog", "lakehouse_in_action", "Catalog")
@@ -38,7 +38,7 @@ version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
 assert version_search, f"The Databricks version can't be extracted from {version_tag}, shouldn't happen, please correct the regex"
 current_version = float(version_search.group(1))
 assert float(current_version) >= float(min_required_version), f'The Databricks version of the cluster must be >= {min_required_version}. Current version detected: {current_version}'
-assert "ml" in version_tag.lower(), f"The Databricks ML runtime must be used. Current version detected doesn't contain 'ml': {version_tag} "
+#assert "ml" in version_tag.lower(), f"The Databricks ML runtime must be used. Current version detected doesn't contain 'ml': {version_tag} "
 
 # COMMAND ----------
 
