@@ -12,7 +12,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+# MAGIC %run ../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
@@ -247,7 +247,7 @@ df = sql("""
 df.limit(5).display()
 
 fe.create_table(
-    name = f"{database_name}.store_holidays_ft",
+    name = f"store_holidays_ft",
     primary_keys=["date", "store_nbr"],
     df=df,
     description="Holidays in Ecuador by date and store number. Table includes holiday types for national, regional, and local. Nulls indicate non-holiday days.",
@@ -274,7 +274,7 @@ df = sql(
 )
 
 fe.create_table(
-    name=f"{database_name}.oil_10d_lag_ft",
+    name=f"oil_10d_lag_ft",
     primary_keys=["date"],
     df=df,
     description="The lag10_oil_price is the price of oil 10 days after date. The price date is the actual date of the oil price. The oil prices were imputed to replace nulls with the previous day's price. The stock market is not open on weekends and holidays.",
