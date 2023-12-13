@@ -27,7 +27,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 # DBTITLE 1,Notebook Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
-destination_path = "{}/data".format(volume_file_path)  #this changed
+destination_path = "{}/raw_transactions/data".format(volume_file_path)  #this changed
 temp_path = "{}/temp".format(volume_file_path)
 sleepIntervalSeconds = 1
 
@@ -58,7 +58,7 @@ def define_specs(Product, Label, currentTimestamp = datetime.now()):
   pVars = Product_vars[Product]
   if Product == "None":
     if Label:
-      return (dg.DataGenerator(spark, name="syn_trans", rows=nRows, partitions=4)
+      return (dg.DataGenerator(spark, name="syn_trans", rows=nRows)
         .withColumn("CustomerID", IntegerType(), nullable=False,
                     minValue=CustomerID_vars["min"], maxValue=CustomerID_vars["max"], random=True)
         .withColumn("TransactionTimestamp", "timestamp", 
@@ -133,7 +133,7 @@ def generateRecordSet(Products):
 
 
 # Generate a set of data, convert it to a Dataframe, write it out as one json file to the temp path. Then move that file to the destination_path
-def writeJsonFile(destination_path, Products = ["None"]):
+def writeJsonFile(destination_path, Products = list(Product_vars.keys())):
   recordDF = generateRecordSet(Products)
   recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
   recordDF.coalesce(1).write.format("json").save(temp_path)
@@ -148,12 +148,20 @@ def writeJsonFile(destination_path, Products = ["None"]):
 # DBTITLE 1,Loop for Generating Data
 import time
 
-Products = Product_vars.keys()
-t=1
+Products = list(Product_vars.keys())
+t=0
 total = 200
 while(t<total):
   writeJsonFile(destination_path,Products=Products)
-  t = t+1
   if not (t % 10):
     print(f"t={t}")
+  t = t+1
   time.sleep(sleepIntervalSeconds)
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+

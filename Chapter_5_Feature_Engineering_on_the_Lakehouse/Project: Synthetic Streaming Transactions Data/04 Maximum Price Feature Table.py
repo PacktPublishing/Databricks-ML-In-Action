@@ -15,8 +15,8 @@
 
 # COMMAND ----------
 
-# parametrize
-raw_transactions_df = spark.sql("select * from synthetic_transactions")
+sql("DROP TABLE product_3hour_max_price_ft")
+raw_transactions_df = spark.sql("select * from raw_transactions")
 
 # COMMAND ----------
 
@@ -35,8 +35,8 @@ time_window = window(
 max_price_df = (
   raw_transactions_df
     .groupBy(col("Product"),time_window)
-    .agg(max(col("Amount")).alias("MaxProductAmount"))
-    .withColumn("TransactionTimestamp", 
+    .agg(max(col("Amount")).cast("float").alias("MaxProductAmount"))
+    .withColumn("LookupTimestamp", 
                 date_trunc('hour',
                           col("time_window.end") + expr('INTERVAL 1 HOUR')))
     .drop("time_window")
@@ -47,7 +47,8 @@ max_price_df = (
 fe.create_table(
   df=max_price_df,
   name='product_3hour_max_price_ft',
-  primary_keys=['Product','TransactionTimestamp'],
+  primary_keys=['Product','LookupTimestamp'],
+  timeseries_columns='LookupTimestamp',
   schema=max_price_df.schema,
   description="Maximum price per product over the last 3 hours for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last hour's 3 hour rolling max"
 )
@@ -80,7 +81,7 @@ display(max_price_df)
 
 # DBTITLE 1,Testing out the function.
 # MAGIC %sql
-# MAGIC select product_difference_ratio_on_demand_feature(15, 100) as difference_ratio
+# MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
 
 # COMMAND ----------
 

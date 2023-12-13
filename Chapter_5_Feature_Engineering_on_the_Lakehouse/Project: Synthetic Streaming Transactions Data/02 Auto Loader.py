@@ -22,8 +22,8 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 # COMMAND ----------
 
 # DBTITLE 1,Variables
-table_name = "synthetic_transactions"
-raw_data_location = f"{volume_file_path}/data/"  # this changed
+table_name = "raw_transactions"
+raw_data_location = f"{volume_file_path}/{table_name}/data/"  # this changed
 schema_location = f"{volume_file_path}/{table_name}/schema"
 checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
 
@@ -49,7 +49,7 @@ spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", True)
 stream = spark.readStream \
   .format("cloudFiles") \
   .option("cloudFiles.format", "json") \
-  .option("cloudFiles.schemaHints","CustomerID int, Amount double, TransactionTimestamp timestamp") \
+  .option("cloudFiles.schemaHints","CustomerID int, Amount float, TransactionTimestamp timestamp, Product string") \
   .option("cloudFiles.inferColumnTypes","true") \
   .option("cloudFiles.schemaEvolutionMode", "addNewColumns") \
   .option("cloudFiles.schemaLocation", schema_location) \
@@ -62,13 +62,3 @@ stream = spark.readStream \
   .option("mergeSchema", "true") \
   .trigger(processingTime="10 seconds") \
   .toTable(tableName=table_name)
-
-# COMMAND ----------
-
-# DBTITLE 1,Viewing data in table while stream is running
-# MAGIC %sql
-# MAGIC SELECT * FROM synthetic_transactions ORDER BY TransactionTimestamp DESC LIMIT 10
-
-# COMMAND ----------
-
-

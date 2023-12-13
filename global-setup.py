@@ -4,7 +4,6 @@
 # Minimum Databricks Runtime version allowed for notebooks attaching to a cluster
 dbutils.widgets.text("min_dbr_version", "13.0", "Min required DBR version")
 
-# Specifying a value will not have fallback and fail if the catalog can't be used/created
 dbutils.widgets.text("catalog", "ml_in_action", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
