@@ -14,17 +14,6 @@
 
 # COMMAND ----------
 
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
-fe = FeatureEngineeringClient()
-
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC DROP TABLE product_3hour_max_price_ft
-
-# COMMAND ----------
-
 # MAGIC %sql
 # MAGIC SHOW TABLES
 
@@ -35,33 +24,131 @@ fe = FeatureEngineeringClient()
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC SELECT * FROM raw_transactions LIMIT 10
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
+fe = FeatureEngineeringClient()
+
 training_feature_lookups = [
     FeatureLookup(
       table_name="transaction_count_history",
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
       lookup_key=["CustomerID"],
-      timestamp_lookup_key=["eventTimestamp"],
-      feature_names=["transactionCount", "isTimeout"]
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
     ),
     FeatureLookup(
       table_name="product_3hour_max_price_ft",
-      lookup_key=['Product','TransactionHour']
+      rename_outputs={
+          "LookupTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=['Product'],
+      timestamp_lookup_key='TransactionTimestamp'
+    )
+]
+
+inference_feature_lookups = [
+    FeatureLookup(
+      table_name="transaction_count_ft",
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=["CustomerID","TransactionTimestamp"],
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
+    ),
+    FeatureFunction(
+      udf_name="product_difference_ratio_on_demand_feature",
+      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+      output_name="MaxDifferenceRatio"
+    )
+]
+
+# COMMAND ----------
+
+# DBTITLE 1,Create the training set
+raw_transactions_df = spark.table("raw_transactions")
+
+training_set = fe.create_training_set(
+    df=raw_transactions_df,
+    feature_lookups=training_feature_lookups,
+    label="Label",
+)
+training_df = training_set.load_df()
+
+# COMMAND ----------
+
+# DBTITLE 1,Create the training set
+raw_transactions_df = spark.table("raw_transactions")
+
+training_set = fe.create_training_set(
+    df=raw_transactions_df,
+    feature_lookups=training_feature_lookups,
+    label="Label",
+)
+training_df = training_set.load_df()
+
+# COMMAND ----------
+
+display(training_df)
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
+fe = FeatureEngineeringClient()
+
+training_feature_lookups = [
+    FeatureLookup(
+      table_name="transaction_count_history",
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=["CustomerID"],
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
+    ),
+    FeatureLookup(
+      table_name="product_3hour_max_price_ft",
+      rename_outputs={
+          "LookupTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=['Product'],
+      timestamp_lookup_key='TransactionTimestamp'
     ),
     FeatureFunction(
       udf_name="product_difference_ratio_on_demand_feature",
       input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
       output_name="max_difference_ratio"
+    )
+]
+
+inference_feature_lookups = [
+    FeatureLookup(
+      table_name="transaction_count_ft",
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=["CustomerID","TransactionTimestamp"],
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
     ),
+    FeatureFunction(
+      udf_name="product_difference_ratio_on_demand_feature",
+      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+      output_name="MaxDifferenceRatio"
+    )
 ]
 
 # COMMAND ----------
 
-from pyspark.sql.functions import date_trunc, to_timestamp
-raw_transactions_df = spark.table("labeled_transactions")
-raw_transactions_df = raw_transactions_df.withColumn("TransactionHour", date_trunc('hour',to_timestamp("TransactionTimestamp")))
-
-# COMMAND ----------
-
 # DBTITLE 1,Create the training set
+raw_transactions_df = spark.table("raw_transactions")
+
 training_set = fe.create_training_set(
     df=raw_transactions_df,
     feature_lookups=training_feature_lookups,

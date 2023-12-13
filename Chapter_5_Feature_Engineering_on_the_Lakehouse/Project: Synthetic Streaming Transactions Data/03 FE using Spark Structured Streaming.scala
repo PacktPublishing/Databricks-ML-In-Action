@@ -37,7 +37,8 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 // MAGIC table_name = "transaction_count_ft"
 // MAGIC history_table_name = "transaction_count_history"
 // MAGIC if bool(dbutils.widgets.get('Reset')):
-// MAGIC   dbutils.fs.rm(f"{volume_file_path}/table_feature_outputs/", True)
+// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
+// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
 // MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
 // MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
 
@@ -45,15 +46,25 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Set up table, paths, and variables
 // variables passed from the setup file are in python
-val volumePath = "/Volumes/ml_in_action/synthetic_transactions/files/"
-val outputPath = f"$volumePath/table_feature_outputs/"
-val inputTable = "ml_in_action.synthetic_transactions.synthetic_transactions"
-
 val table_name = "transaction_count_ft"
-sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Long, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+val history_table_name = "transaction_count_history"
+val volumePath = "/Volumes/ml_in_action/synthetic_transactions/files/"
+val outputPath = f"$volumePath/$table_name/streaming_outputs/"
+val outputPath2 = f"$volumePath/$history_table_name/streaming_outputs/"
+val inputTable = "ml_in_action.synthetic_transactions.raw_transactions"
+
+//// maybe we need a try catch here
+sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+sql(f"""ALTER TABLE $table_name ALTER COLUMN CustomerID SET NOT NULL""")
+sql(f"""ALTER TABLE $table_name ALTER COLUMN eventTimestamp SET NOT NULL""")
+sql(f"""ALTER TABLE $table_name ADD PRIMARY KEY(CustomerID, eventTimestamp TIMESERIES)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
-val history_table_name = "transaction_count_history"
+
+sql(f"""CREATE OR REPLACE TABLE $history_table_name (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+sql(f"""ALTER TABLE $history_table_name ALTER COLUMN CustomerID SET NOT NULL""")
+sql(f"""ALTER TABLE $history_table_name ALTER COLUMN eventTimestamp SET NOT NULL""")
+sql(f"""ALTER TABLE $history_table_name ADD PRIMARY KEY(CustomerID, eventTimestamp TIMESERIES)""")
 
 // aggregate transactions for windowMinutes
 val windowMinutes = 2
@@ -62,9 +73,18 @@ val maxWaitMinutes = 1
 
 // COMMAND ----------
 
+// MAGIC %python
+// MAGIC from databricks.feature_engineering import FeatureEngineeringClient
+// MAGIC fe = FeatureEngineeringClient()
+// MAGIC
+// MAGIC fe.set_feature_table_tag(name=f"{table_name}", key="FE_role", value="online_serving")
+// MAGIC fe.set_feature_table_tag(name=f"{history_table_name}", key="FE_role", value="training_data")
+
+// COMMAND ----------
+
 // DBTITLE 1,Aggregating transactions for each customerID
 // The structure of the input data - a user and a transaction
-case class InputRow(CustomerID: Long, 
+case class InputRow(CustomerID: Integer, 
                     TransactionTimestamp: java.time.Instant)
 
 // This is what the stream is storing so that it can count the number of transactions for a customer within the last window minutes
@@ -72,7 +92,7 @@ case class TransactionCountState(latestTimestamp: java.time.Instant,
                                   currentTransactions: List[InputRow])
 
 // The structure of the values being emitted - includes the event datetime that triggered this update and a boolean indicating whether the update was triggered by a timeout, meaning a record wasn't received for a customer in a minute
-case class TransactionCount(CustomerID: Long, 
+case class TransactionCount(CustomerID: Integer, 
                             transactionCount: Integer, 
                             eventTimestamp: java.time.Instant, 
                             isTimeout: Boolean) 
@@ -109,7 +129,7 @@ def dropExpiredRecords(newLatestTimestamp: java.time.Instant, currentTransaction
 }
 
 def updateState(
-  CustomerID: Long,
+  CustomerID: Integer,
   values: Iterator[InputRow],
   state: GroupState[TransactionCountState]): Iterator[TransactionCount] = {
   
@@ -164,14 +184,14 @@ def updateState(
 // DBTITLE 1,Schema for checking type
 import org.apache.spark.sql.types.{StringType, 
           StructField, StructType, IntegerType, 
-          DoubleType, TimestampType}
+          FloatType, TimestampType}
 
 // The schema for the incoming records
 val schema = StructType(Array(
               StructField("Source", StringType, true),
               StructField("TransactionTimestamp", StringType, true),
               StructField("CustomerID", IntegerType, true),
-              StructField("Amount", DoubleType, true),
+              StructField("Amount", FloatType, true),
               StructField("Product", StringType, true),
               StructField("Label", IntegerType, true),
                               ))
@@ -189,8 +209,7 @@ val inputDf =
     .format("delta")
     .schema(schema)
     .table(inputTable)
-    .selectExpr("CustomerID", 
-      "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
+    .selectExpr("CustomerID", "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
     .as[InputRow]
 
 // We're allowing data to be 30 seconds late before it is dropped
@@ -229,25 +248,10 @@ flatMapGroupsWithStateResultDf.writeStream
 
 // DBTITLE 1,Writing the history of transaction counts to a table
 flatMapGroupsWithStateResultDf.writeStream
-  .option("checkpointLocation", f"$outputPath/checkpoint2")
+  .option("checkpointLocation", f"$outputPath2/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
   .queryName("flatMapGroupsHistoryTable")
   .table(history_table_name)
-
-// COMMAND ----------
-
-// MAGIC %sql
-// MAGIC select
-// MAGIC   *
-// MAGIC from
-// MAGIC   transaction_count_ft
-// MAGIC order by
-// MAGIC   eventTimestamp desc
-
-// COMMAND ----------
-
-// MAGIC %sql
-// MAGIC SELECT * FROM transaction_count_history LIMIT 10
 
 // COMMAND ----------
 
