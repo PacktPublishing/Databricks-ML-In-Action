@@ -24,7 +24,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 
 # COMMAND ----------
 
-# DBTITLE 1,Notebooke Variables
+# DBTITLE 1,Notebook Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
 destination_path = "{}/no_product_data".format(volume_file_path)
