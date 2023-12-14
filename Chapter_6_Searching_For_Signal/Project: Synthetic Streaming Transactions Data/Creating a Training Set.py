@@ -20,12 +20,12 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM transaction_count_history LIMIT 10
+# MAGIC SELECT MIN(eventTimestamp) FROM transaction_count_history LIMIT 5
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM raw_transactions LIMIT 10
+# MAGIC SELECT * FROM raw_transactions LIMIT 5
 
 # COMMAND ----------
 
@@ -72,6 +72,7 @@ inference_feature_lookups = [
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
+from pyspark.sql.functions import col
 raw_transactions_df = spark.table("raw_transactions")
 
 training_set = fe.create_training_set(
@@ -83,82 +84,32 @@ training_df = training_set.load_df()
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the training set
-raw_transactions_df = spark.table("raw_transactions")
+display(training_df.groupBy("transactionCount").count())
 
-training_set = fe.create_training_set(
-    df=raw_transactions_df,
-    feature_lookups=training_feature_lookups,
-    label="Label",
+# COMMAND ----------
+
+training_df.write.mode("overwrite").saveAsTable("training_data")
+
+# COMMAND ----------
+
+FeatureFunction(
+  udf_name="product_difference_ratio_on_demand_feature",
+  input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+  output_name="MaxDifferenceRatio"
 )
-training_df = training_set.load_df()
 
 # COMMAND ----------
 
-display(training_df)
+# MAGIC %pip install dbdemos
 
 # COMMAND ----------
 
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
-fe = FeatureEngineeringClient()
-
-training_feature_lookups = [
-    FeatureLookup(
-      table_name="transaction_count_history",
-      rename_outputs={
-          "eventTimestamp": "TransactionTimestamp"
-        },
-      lookup_key=["CustomerID"],
-      feature_names=["transactionCount", "isTimeout"],
-      timestamp_lookup_key = "TransactionTimestamp"
-    ),
-    FeatureLookup(
-      table_name="product_3hour_max_price_ft",
-      rename_outputs={
-          "LookupTimestamp": "TransactionTimestamp"
-        },
-      lookup_key=['Product'],
-      timestamp_lookup_key='TransactionTimestamp'
-    ),
-    FeatureFunction(
-      udf_name="product_difference_ratio_on_demand_feature",
-      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-      output_name="max_difference_ratio"
-    )
-]
-
-inference_feature_lookups = [
-    FeatureLookup(
-      table_name="transaction_count_ft",
-      rename_outputs={
-          "eventTimestamp": "TransactionTimestamp"
-        },
-      lookup_key=["CustomerID","TransactionTimestamp"],
-      feature_names=["transactionCount", "isTimeout"],
-      timestamp_lookup_key = "TransactionTimestamp"
-    ),
-    FeatureFunction(
-      udf_name="product_difference_ratio_on_demand_feature",
-      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-      output_name="MaxDifferenceRatio"
-    )
-]
+import dbdemos
+dbdemos.list_demos()
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the training set
-raw_transactions_df = spark.table("raw_transactions")
-
-training_set = fe.create_training_set(
-    df=raw_transactions_df,
-    feature_lookups=training_feature_lookups,
-    label="Label",
-)
-training_df = training_set.load_df()
-
-# COMMAND ----------
-
-display(training_df)
+dbdemos.install('feature-store')
 
 # COMMAND ----------
 

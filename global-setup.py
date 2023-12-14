@@ -20,7 +20,7 @@ import re
 
 # REQUIRES A PROJECT NAME -------------------------
 project_name = dbutils.widgets.get('project_name')
-possible_projects = ["synthetic_transactions","favorita_forecasting"]
+possible_projects = ["synthetic_transactions","favorita_forecasting","rag_chatbot"]
 assert len(project_name) > 0, "project_name is a required variable"
 assert project_name in possible_projects, "project_name unknown, did you type correctly? You can add new projects to the list in the setup file."
 
