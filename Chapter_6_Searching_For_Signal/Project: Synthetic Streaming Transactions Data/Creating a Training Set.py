@@ -10,15 +10,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions $catalog=lakehouse_in_action
-
-# COMMAND ----------
-
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
-fe = FeatureEngineeringClient()
-
-fe.set_feature_table_tag(name="transaction_count_ft", key="FE_role", value="online_serving")
-fe.set_feature_table_tag(name="transaction_count_history", key="FE_role", value="training_data")
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions
 
 # COMMAND ----------
 
@@ -28,37 +20,97 @@ fe.set_feature_table_tag(name="transaction_count_history", key="FE_role", value=
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM transaction_count_history LIMIT 10
+# MAGIC SELECT MIN(eventTimestamp) FROM transaction_count_history LIMIT 5
 
 # COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM raw_transactions LIMIT 5
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
+fe = FeatureEngineeringClient()
 
 training_feature_lookups = [
     FeatureLookup(
       table_name="transaction_count_history",
-      lookup_key=["CustomerID","eventTimestamp"],
-      feature_names=["transactionCount", "isTimeout"]
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=["CustomerID"],
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
     ),
     FeatureLookup(
       table_name="product_3hour_max_price_ft",
-      lookup_key=['Product','TransactionHour']
+      rename_outputs={
+          "LookupTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=['Product'],
+      timestamp_lookup_key='TransactionTimestamp'
+    )
+]
+
+inference_feature_lookups = [
+    FeatureLookup(
+      table_name="transaction_count_ft",
+      rename_outputs={
+          "eventTimestamp": "TransactionTimestamp"
+        },
+      lookup_key=["CustomerID","TransactionTimestamp"],
+      feature_names=["transactionCount", "isTimeout"],
+      timestamp_lookup_key = "TransactionTimestamp"
     ),
     FeatureFunction(
       udf_name="product_difference_ratio_on_demand_feature",
-      input_bindings={"max_price":"n1", "transaction_amount":"n2"},
-      output_name="max_difference_ratio"
-    ),
+      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+      output_name="MaxDifferenceRatio"
+    )
 ]
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
+from pyspark.sql.functions import col
+raw_transactions_df = spark.table("raw_transactions")
+
 training_set = fe.create_training_set(
-    df=spark.table("hive_metastore.lakehouse_prod_in_action.synthetic_transactions"),
+    df=raw_transactions_df,
     feature_lookups=training_feature_lookups,
-    label=label_name,
+    label="Label",
 )
 training_df = training_set.load_df()
 
 # COMMAND ----------
 
-display(training_df)
+display(training_df.groupBy("transactionCount").count())
+
+# COMMAND ----------
+
+training_df.write.mode("overwrite").saveAsTable("training_data")
+
+# COMMAND ----------
+
+FeatureFunction(
+  udf_name="product_difference_ratio_on_demand_feature",
+  input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+  output_name="MaxDifferenceRatio"
+)
+
+# COMMAND ----------
+
+# MAGIC %pip install dbdemos
+
+# COMMAND ----------
+
+import dbdemos
+dbdemos.list_demos()
+
+# COMMAND ----------
+
+dbdemos.install('feature-store')
+
+# COMMAND ----------
+
+

@@ -75,7 +75,7 @@ def update_state(customer_id, values, state):
 
 schema = StructType([
     StructField("TransactionTimestamp", StringType(), True),
-    StructField("CustomerID", LongType(), True),
+    StructField("CustomerID", IntgerType(), True),
     StructField("Amount", DoubleType(), True),
     StructField("Product", StringType(), True)
 ])

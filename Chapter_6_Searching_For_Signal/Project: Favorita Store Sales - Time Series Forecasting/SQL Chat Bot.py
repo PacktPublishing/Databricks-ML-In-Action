@@ -28,7 +28,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=sql-bot $catalog=lakehouse_in_action
+# MAGIC %run ../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
@@ -56,8 +56,6 @@ chat = ChatOpenAI(model_name="gpt-3.5-turbo")
 
 # COMMAND ----------
 
-schema = "favorita_forecasting"
-
 table_schemas = spark.sql(
 f"""
 select
@@ -66,7 +64,7 @@ from
   system.information_schema.columns 
 where
   table_catalog = '{catalog}'
-  and table_schema = '{schema}'
+  and table_schema = '{database_name}'
 order by
   table_name,
   ordinal_position;
@@ -105,7 +103,7 @@ def table_def(table):
     )
 
 def table_records(table):
-    records = spark.sql(f"select * from {catalog}.{schema}.{table} limit 2")
+    records = spark.sql(f"select * from {catalog}.{database_name}.{table} limit 2")
 
     return f"Example records for {table}: \ncolumn_index" + records.toPandas().to_csv(
         sep="|"

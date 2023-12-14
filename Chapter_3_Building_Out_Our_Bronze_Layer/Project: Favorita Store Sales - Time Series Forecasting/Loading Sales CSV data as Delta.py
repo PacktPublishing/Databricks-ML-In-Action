@@ -12,12 +12,12 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting $catalog=lakehouse_in_action
+# MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
 # DBTITLE 1,Set the data path and displaying the files
-raw_data_path = volume_data_path + '/raw_data/store-sales-time-series-forecasting/'
+raw_data_path = volume_file_path + '/raw_data/store-sales-time-series-forecasting/'
 display(dbutils.fs.ls(raw_data_path))
 
 # COMMAND ----------
