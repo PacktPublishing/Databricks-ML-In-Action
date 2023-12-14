@@ -56,8 +56,7 @@ val inputTable = "ml_in_action.synthetic_transactions.raw_transactions"
 //// maybe we need a try catch here
 sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 sql(f"""ALTER TABLE $table_name ALTER COLUMN CustomerID SET NOT NULL""")
-sql(f"""ALTER TABLE $table_name ALTER COLUMN eventTimestamp SET NOT NULL""")
-sql(f"""ALTER TABLE $table_name ADD PRIMARY KEY(CustomerID, eventTimestamp TIMESERIES)""")
+sql(f"""ALTER TABLE $table_name ADD PRIMARY KEY(CustomerID)""")
 sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 
 

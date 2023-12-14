@@ -15,30 +15,34 @@
 
 # COMMAND ----------
 
-sql("DROP TABLE product_3hour_max_price_ft")
-raw_transactions_df = spark.sql("select * from raw_transactions")
+sql("DROP TABLE IF EXISTS product_3minute_max_price_ft")
+raw_transactions_df = spark.table("raw_transactions")
 
 # COMMAND ----------
 
 # DBTITLE 1,Creating a feature table of product maximum prices.
 from databricks.feature_engineering import FeatureEngineeringClient
-from pyspark.sql.functions import max, to_date, col, window, date_trunc, to_timestamp, expr
+import pyspark.sql.functions as F 
+from itertools import chain
+
+mapping = {"A": 0, "B": 1,"C": 2}
+mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
 
 fe = FeatureEngineeringClient()
 
-time_window = window(
-    col("TransactionTimestamp"),
-    windowDuration="3 hours",
-    slideDuration="1 hour",
+time_window = F.window(
+    F.col("TransactionTimestamp"),
+    windowDuration="3 minutes",
+    slideDuration="1 minute",
 ).alias("time_window")
               
 max_price_df = (
   raw_transactions_df
-    .groupBy(col("Product"),time_window)
-    .agg(max(col("Amount")).cast("float").alias("MaxProductAmount"))
+    .groupBy(F.col("Product"),time_window)
+    .agg(F.max(F.col("Amount")).cast("float").alias("MaxProductAmount"))
     .withColumn("LookupTimestamp", 
-                date_trunc('hour',
-                          col("time_window.end") + expr('INTERVAL 1 HOUR')))
+                F.date_trunc('minute',
+                          F.col("time_window.end") + F.expr('INTERVAL 1 MINUTE')))
     .drop("time_window")
 )
 
@@ -46,16 +50,27 @@ max_price_df = (
 # We're using the convention of appending feature table names with "_ft"
 fe.create_table(
   df=max_price_df,
-  name='product_3hour_max_price_ft',
+  name='product_3minute_max_price_ft',
   primary_keys=['Product','LookupTimestamp'],
   timeseries_columns='LookupTimestamp',
   schema=max_price_df.schema,
-  description="Maximum price per product over the last 3 hours for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last hour's 3 hour rolling max"
+  description="Maximum price per product over the last 3 minutes for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last minute's 3 minute rolling max"
 )
 
 # COMMAND ----------
 
-display(max_price_df)
+a
+mapping = {"A": 0, "B": 1,"C": 2}
+def translate(dictionary): 
+    return F.udf(lambda col: dictionary.get(col), 
+               IntegerType()) 
+mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
+
+    # .withColumn("ProductNumber", mapping_expr[F.col("Product")])
+
+# COMMAND ----------
+
+display(max_price_df.withColumn("ProductNumber2", translate(mapping)("Product")))
 
 # COMMAND ----------
 
