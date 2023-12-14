@@ -103,7 +103,7 @@ Chapter 7:
 Chapter 8:
 * Create a Lakeview dashboard of the forecast and actuals.
 
-### Project: American Sign Language Fingerspelling Recognition
+### Project: RAG ---nothing up to date under this
 Our second dataset is the ASL Fingerspelling dataset, also hosted on [Kaggle](https://www.kaggle.com/competitions/asl-fingerspelling).
 
 Chapter 2:
