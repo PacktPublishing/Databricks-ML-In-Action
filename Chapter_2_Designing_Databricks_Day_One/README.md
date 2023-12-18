@@ -1,16 +1,25 @@
 # Chapter 2: Designing Databricks Day One
 
 **Here is what you will learn as part of this chapter:**
-
 1. Planning your Lakehouse 
 2. Leading with business value 
 3. Applying our learning
-- Technical Requirements
-- Setting up your workspace
-- Starting the projects
+ 
+## Technical requirements 
 
-## Links in the chapter
+Here are the technical requirements needed to complete the hands-on examples in this chapter:
+- We utilize a Python package, opendatasets, to download the data we need from the Kaggle API with ease: [opendatasets](https://pypi.org/project/opendatasets/)
+- To use the Kaggle API, you must download your credential file, kaggle.json. [Kaggle API](https://www.kaggle.com/docs/api)
+- A GitHub account is very helpful for connecting Databricks and the code repository for the book: [GitHub](https://github.com/)
+- In addition to a GitHub account, it is ideal to fork the book repository into your GitHub account: [Databricks Lakehouse ML in Action repository](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action)
+- [Databricks Secrets API](https://docs.databricks.com/en/security/secrets/secrets.html)
+- [What is the Databricks CLI?](https://docs.databricks.com/en/dev-tools/cli/index.html)
+- [Install or update the Databricks CLI]( https://docs.databricks.com/en/dev-tools/cli/install.html)
+- You will need to download the Tensorlite wheel from Kaggle to get the specific version used in competition: [Tensorlite wheel](https://www.kaggle.com/datasets/philculliton/tflite-wheels-2140)
 
+## Links 
+
+**In the chapter**
 - [Run queries using Lakehouse Federation](https://docs.databricks.com/en/query-federation/index.html)
 - [What is Unity Catalog?](https://docs.databricks.com/data-governance/unity-catalog/index.html)
 - [Share models across workspaces](https://docs.databricks.com/applications/machine-learning/manage-model-lifecycle/multiple-workspaces.html)
@@ -22,19 +31,7 @@
 - [System Tables: Billing Forecast, Usage Analytics, and Access Auditing With Databricks Unity Catalog](https://www.databricks.com/resources/demos/tutorials/governance/system-tables)
 - [Azure Marketplace](https://azure.microsoft.com/en-us/products/databricks), [AWS Marketplace](https://aws.amazon.com/marketplace/pp/prodview-wtyi5lgtce6n6), [Try Databricks](https://www.databricks.com/try-databricks)
 
-
-## Technical requirements
-
-- We utilize a Python package, opendatasets, to download the data we need from the Kaggle API with ease: [opendatasets](https://pypi.org/project/opendatasets/)
-- To use the Kaggle API, you must download your credential file, kaggle.json. [Kaggle API](https://www.kaggle.com/docs/api)
-- A GitHub account is very helpful for connecting Databricks and the code repository for the book: [GitHub](https://github.com/)
-- In addition to a GitHub account, it is ideal to fork the book repository into your GitHub account: [Databricks Lakehouse ML in Action repository](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action)
-- [Databricks Secrets API](https://docs.databricks.com/en/security/secrets/secrets.html)
-- [What is the Databricks CLI?](https://docs.databricks.com/en/dev-tools/cli/index.html)
-- [Install or update the Databricks CLI]( https://docs.databricks.com/en/dev-tools/cli/install.html)
-- You will need to download the Tensorlite wheel from Kaggle to get the specific version used in competition: [Tensorlite wheel](https://www.kaggle.com/datasets/philculliton/tflite-wheels-2140)
-
-## Further Reading
+**Further Reading**
 - [Lakehouse Monitoring demo](https://youtu.be/3TLBZSKeYTk?t=560)
 - [UC has a more centralized method of managing the model lifecycle than HMS](https://docs.databricks.com/machine-learning/manage-model-lifecycle/index.html)
 - [In depth UC setup on Azure](https://youtu.be/itGKRVHdNPo)
