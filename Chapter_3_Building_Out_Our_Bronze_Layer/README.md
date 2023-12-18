@@ -1,29 +1,31 @@
-# Building Out Our Bronze Layer 
+# Chapter 3: Building Out Our Bronze Layer 
 
-**Here is what you will learn as part of this chapter:**
+Here is what you will learn as part of this chapter:
 
 1. Revising the Medallion architecture pattern
 2. Transforming data to Delta with Auto Loaders
 3. Schema Evolution and Delta Live Tables
 4. Applying our learning
-- Technical Requirements
-- Working on Projects
-
-## Links in the chapter
-- [Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
-- [Delta Live Tables](https://docs.databricks.com/en/delta-live-tables/index.html)
-- [Advanced Cluster Options: Spark configuration](https://docs.databricks.com/en/clusters/configure.html#spark-configuration)
-- [Spark configurations in the cluster's advanced options](https://docs.databricks.com/en/clusters/configure.html#spark-configuration)
 
 ## Technical requirements 
+
+Here are the technical requirements needed to complete the hands-on examples in this chapter:
 - Databricks ML Runtime includes several pre-installed libraries useful for machine learning and data science projects. For this reason, we will be using clusters with an [ML Runtime](https://docs.databricks.com/runtime/mlruntime.html#introduction-to-databricks-runtime-for-machine-learning).
 - [Pandas](https://pandas.pydata.org/)
 - [Pandas API on Spark](https://spark.apache.org/docs/latest/api/python/user_guide/pandas_on_spark/index.html)
 - [Delta Live Tables (DLT)](https://docs.databricks.com/en/delta-live-tables/index.html)
 - [Volumes](https://docs.databricks.com/en/sql/language-manual/sql-ref-volumes.html) 
+  
+## Links
 
-## Further Reading
--[DLT Databricks Demo](https://www.databricks.com/resources/demos/tutorials/lakehouse-platform/full-delta-live-table-pipeline))
+**In the chapter**
+- [Spark Structured Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
+- [Delta Live Tables](https://docs.databricks.com/en/delta-live-tables/index.html)
+- [Advanced Cluster Options: Spark configuration](https://docs.databricks.com/en/clusters/configure.html#spark-configuration)
+- [Spark configurations in the cluster's advanced options](https://docs.databricks.com/en/clusters/configure.html#spark-configuration)
+
+**Further Reading**
+- [DLT Databricks Demo](https://www.databricks.com/resources/demos/tutorials/lakehouse-platform/full-delta-live-table-pipeline))
 - [AutoLoader options](https://docs.databricks.com/ingestion/auto-loader/options.html)
 - [Schema evolution with Auto Loader](https://docs.databricks.com/ingestion/auto-loader/schema.html#configure-schema-inference-and-evolution-in-auto-loader)
 - [Common loading patterns with Auto Loader](https://docs.databricks.com/ingestion/auto-loader/patterns.html)
