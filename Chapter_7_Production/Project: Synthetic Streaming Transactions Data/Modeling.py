@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ## Synthetic data - Modeling
+# MAGIC ## Synthetic data - Creating a training set
 
 # COMMAND ----------
 
@@ -19,13 +19,18 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT MIN(eventTimestamp) FROM transaction_count_history
+# MAGIC %md
+# MAGIC ### Creating the training set
+# MAGIC
+# MAGIC With the timeserires features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we must have a value for the max product, but not necessarily for the transaction count. We will make sure both have values.
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### Creating the training set
+display(sql("SELECT MIN(lookupTimestamp) as ts FROM product_3minute_max_price_ft"))
+
+# COMMAND ----------
+
+display(sql("SELECT MIN(eventTimestamp) as ts FROM transaction_count_history"))
 
 # COMMAND ----------
 
@@ -49,14 +54,20 @@ training_feature_lookups = [
           "LookupTimestamp": "TransactionTimestamp"
         },
       lookup_key=['Product'],
+      
       timestamp_lookup_key='TransactionTimestamp'
+    ),
+    FeatureFunction(
+      udf_name="product_difference_ratio_on_demand_feature",
+      input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
+      output_name="MaxDifferenceRatio"
     )
 ]
 
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
-raw_transactions_df = spark.table("raw_transactions")
+raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
@@ -73,21 +84,13 @@ display(training_df)
 # COMMAND ----------
 
 #we may or may not do this
-training_df.write.mode("overwrite").saveAsTable("training_data")
-
-# COMMAND ----------
-
-FeatureFunction(
-  udf_name="product_difference_ratio_on_demand_feature",
-  input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-  output_name="MaxDifferenceRatio"
-)
+training_df.write.mode("overwrite").saveAsTable("training_data_snapshot")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC
-# MAGIC ### Registering the model
+# MAGIC ### Training & Registering the model
 
 # COMMAND ----------
 

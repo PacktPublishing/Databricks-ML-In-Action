@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 5: Feature Engineering
+# MAGIC Chapter 6: Searching for Signal
 # MAGIC
-# MAGIC ##Synthetic data - Creating a Training Set
+# MAGIC ## Synthetic data - Creating a training set
 
 # COMMAND ----------
 
@@ -19,16 +19,22 @@
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT MIN(eventTimestamp) FROM transaction_count_history LIMIT 5
+# MAGIC %md
+# MAGIC ### Creating the training set
+# MAGIC
+# MAGIC With the timeserires features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we must have a value for the max product, but not necessarily for the transaction count. We will make sure both have values.
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC SELECT * FROM raw_transactions LIMIT 5
+display(sql("SELECT MIN(lookupTimestamp) as ts FROM product_3minute_max_price_ft"))
 
 # COMMAND ----------
 
+display(sql("SELECT MIN(eventTimestamp) as ts FROM transaction_count_history"))
+
+# COMMAND ----------
+
+# DBTITLE 1,Define the feature lookups
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureFunction, FeatureLookup
 fe = FeatureEngineeringClient()
 
@@ -43,24 +49,13 @@ training_feature_lookups = [
       timestamp_lookup_key = "TransactionTimestamp"
     ),
     FeatureLookup(
-      table_name="product_3hour_max_price_ft",
+      table_name="product_3minute_max_price_ft",
       rename_outputs={
           "LookupTimestamp": "TransactionTimestamp"
         },
       lookup_key=['Product'],
+      
       timestamp_lookup_key='TransactionTimestamp'
-    )
-]
-
-inference_feature_lookups = [
-    FeatureLookup(
-      table_name="transaction_count_ft",
-      rename_outputs={
-          "eventTimestamp": "TransactionTimestamp"
-        },
-      lookup_key=["CustomerID","TransactionTimestamp"],
-      feature_names=["transactionCount", "isTimeout"],
-      timestamp_lookup_key = "TransactionTimestamp"
     ),
     FeatureFunction(
       udf_name="product_difference_ratio_on_demand_feature",
@@ -72,45 +67,21 @@ inference_feature_lookups = [
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
-from pyspark.sql.functions import col
-raw_transactions_df = spark.table("raw_transactions")
+raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
     feature_lookups=training_feature_lookups,
     label="Label",
+    exclude_columns="_rescued_data"
 )
 training_df = training_set.load_df()
 
 # COMMAND ----------
 
-display(training_df.groupBy("transactionCount").count())
+display(training_df)
 
 # COMMAND ----------
 
-training_df.write.mode("overwrite").saveAsTable("training_data")
-
-# COMMAND ----------
-
-FeatureFunction(
-  udf_name="product_difference_ratio_on_demand_feature",
-  input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-  output_name="MaxDifferenceRatio"
-)
-
-# COMMAND ----------
-
-# MAGIC %pip install dbdemos
-
-# COMMAND ----------
-
-import dbdemos
-dbdemos.list_demos()
-
-# COMMAND ----------
-
-dbdemos.install('feature-store')
-
-# COMMAND ----------
-
-
+# DBTITLE 1,Write the training data to a table we will need this in the next chapter
+training_df.write.mode("overwrite").saveAsTable("training_data_snapshot")
