@@ -12,21 +12,22 @@ This book is an essential guide to leveraging the Databricks Lakehouse for a dev
 
 This book is for machine learning engineers, data scientists and analysts that want to learn hands-on about implementing and leveraging the Databricks Lakehouse Platform to create data products.
 
-## Executing the code samples
+## Code Samples and Chapter Links
 
-These are the code samples provided:
+Each chapter folder contains code examples shared in the book using one of our data sources, and the links shared in the README file:
 
+* [Chapter 1 - Getting Started](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_1_Getting_Started)
 * [Chapter 2 - Designing Databricks Day One](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_2_Setting_up)
 * [Chapter 3 - Building Out Our Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
 * [Chapter 4 - Exploring and Cleaning Toward a Silver Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
 * [Chapter 5 - Feature Engineering on the Lakehouse](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_5_Feature_engineering)
 * [Chapter 6 - Searching for Signal](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_6_Searching_for_signal)
 * [Chapter 7 - Productionizing Machine Learning](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_7_Production)
-  
+* [Chapter 8 - Sharing Insights](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_8_Sharing_Insights) 
 
 ### What do you need to run the examples?
 
-Each chapter folder contains code examples shared in the book using one of our data sources. You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks community Edition](https://docs.databricks.com/en/getting-started/community-edition.html) that you can use to run the provided notebooks and code.
+You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks community Edition](https://docs.databricks.com/en/getting-started/community-edition.html) that you can use to run the provided notebooks and code.
 
 
 ### Disclaimer
@@ -52,6 +53,8 @@ Her data career has also included contributing to and leading a team in creating
 A graduate of the MS Data Science program at Southern Methodist University in Dallas, Texas, USA, she is now a capstone advisor to students in their final semesters of the program.  
 
 <i>I’d like to thank my husband, Kevin, and my sons Dyson and Dalton for their encouragement and enthusiastic support.</i>  
+
+[Anastasia Prokaieva](https://www.linkedin.com/in/anastasiia-prokaieva/)
 
 ### Thanks for purchasing the book!
 
