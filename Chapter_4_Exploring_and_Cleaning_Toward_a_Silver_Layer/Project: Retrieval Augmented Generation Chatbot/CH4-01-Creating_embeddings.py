@@ -2,8 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 4: Exploring and cleaning toward the silver layer
 # MAGIC
-# MAGIC ## Retrieval Augmented Generation Chatbot - Downloading data
-# MAGIC
+# MAGIC ## Retrieval Augmented Generation Chatbot - Creating embeddings
 # MAGIC https://arxiv.org/pdf
 
 # COMMAND ----------
@@ -14,6 +13,10 @@
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=rag_chatbot
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -89,6 +92,9 @@ def get_embedding(contents: pd.Series) -> pd.Series:
 # MAGIC   ) TBLPROPERTIES (delta.enableChangeDataFeed = true); 
 
 # COMMAND ----------
+
+import pyspark.sql.functions as F
+df = spark.table("pdf_raw")
 
 df_chunk_emd = (df
                 .withColumn("content", F.explode(read_as_chunk("content")))
