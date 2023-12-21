@@ -16,16 +16,13 @@
 
 # COMMAND ----------
 
-dbutils.library.restartPython()
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC
 # MAGIC ### Convert text chunks to embeddings
 
 # COMMAND ----------
 
+from mlia_utils.rag_funcs import extract_doc_text
 from pyspark.sql.functions import pandas_udf
 from llama_index.langchain_helpers.text_splitter import SentenceSplitter
 from llama_index import Document, set_global_tokenizer
@@ -105,4 +102,4 @@ display(df_chunk_emd)
 
 # COMMAND ----------
 
-df_chunk_emd.write.mode("append").saveAsTable(f"{CATALOG}.{SCHEMA}.pdf_documentation")
+df_chunk_emd.write.mode("append").saveAsTable(f"{catalog}.{database_name}.pdf_documentation")
