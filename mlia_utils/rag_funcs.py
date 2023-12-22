@@ -1,4 +1,5 @@
 from unstructured.partition.auto import partition
+import re
 import io
 
 def extract_doc_text(x : bytes) -> str:
