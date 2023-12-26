@@ -11,7 +11,7 @@
 
 # COMMAND ----------
 
-
+# MAGIC
 # MAGIC %pip install --upgrade scikit-learn==1.4.0rc1
 
 # COMMAND ----------
@@ -83,7 +83,7 @@ cat_columns = ["Product","isTimeout","CustomerID"]
 
 # COMMAND ----------
 
-
+# MAGIC
 # MAGIC %md 
 # MAGIC ### Creating an inference training set
 
@@ -225,9 +225,9 @@ def preprocess_data(df, numeric_columns,fitted_scaler,cat_columns, encoder):
 
 def fit(X, y):
   import lightgbm as lgb
-  _clf = lgb.LGBMClassifier(boosting_type='gbdt', metrics=['binary_logloss', 'auc'],objective= 'binary')
+  _clf = lgb.LGBMClassifier()
   lgbm_model = _clf.fit(X, y)
-  mlflow.log_image(lgb.plot_metric(lgbm_model))
+  # mlflow.log_image(lgb.plot_metric(lgbm_model))
   return lgbm_model
 
 # COMMAND ----------
@@ -293,41 +293,3 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
-
-# COMMAND ----------
-
-# display(ohe.transform(X_train[cat_columns]))
-import lightgbm as lgb
-lgb.plot_metric(lgbm_model)
-
-# COMMAND ----------
-
-
-# schema = StructType([
-#     StructField("restaurant_id", IntegerType(), True),
-#     StructField("json_blob", StringType(), True),
-#     StructField("ts", TimestampType(), False),
-# ])
-# data = [
-#   (2, '{"user_x_coord": 37.79122896768446, "user_y_coord": -122.39362610820227}', datetime(2023, 9, 26, 12, 0, 0)), 
-# ]
-
-# scoring_df = spark.createDataFrame(data, schema)
-
-# result = fs.score_batch( 
-#   model_uri = f"models:/{registered_model_name}/1",
-#   df = scoring_df,
-#   result_type = 'bool'
-# )
-
-# display(result)
-
-# COMMAND ----------
-
-from mlia_utils import get_latest_model_version
-
-scored = fs.score_batch(
-  f"models:/{model_name}/{get_latest_model_version(model_name)}",
-  test_labels,
-  result_type="float",
-)
