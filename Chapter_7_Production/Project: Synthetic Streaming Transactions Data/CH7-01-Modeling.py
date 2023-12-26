@@ -11,6 +11,7 @@
 
 # COMMAND ----------
 
+
 # MAGIC %pip install --upgrade scikit-learn==1.4.0rc1
 
 # COMMAND ----------
@@ -70,6 +71,7 @@ training_set = fe.create_training_set(
 
 # COMMAND ----------
 
+
 display(training_set.load_df())
 
 # COMMAND ----------
@@ -80,6 +82,7 @@ numeric_columns = []
 cat_columns = ["Product","isTimeout","CustomerID"]
 
 # COMMAND ----------
+
 
 # MAGIC %md 
 # MAGIC ### Creating an inference training set
@@ -132,6 +135,7 @@ display(inferencing_set.load_df())
 
 # COMMAND ----------
 
+
 import pandas as pd
 import mlflow
 mlflow.set_registry_uri("databricks-uc")
@@ -154,6 +158,7 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
   ????The model declares current local versions of XGBoost and pillow as dependencies in its
   conda environment file.  
   '''
+  
   def __init__(self, model, X, y, numeric_columns,cat_columns):
     self.model = model
 
@@ -167,7 +172,6 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     from sklearn.preprocessing import OneHotEncoder  
     ohe = OneHotEncoder(sparse_output=False).set_output(transform="pandas")
     self.encoder = ohe.fit(X_train[self.cat_columns])
-
 
     ## Numerical scaling
     from sklearn.preprocessing import StandardScaler 
@@ -297,6 +301,7 @@ import lightgbm as lgb
 lgb.plot_metric(lgbm_model)
 
 # COMMAND ----------
+
 
 # schema = StructType([
 #     StructField("restaurant_id", IntegerType(), True),

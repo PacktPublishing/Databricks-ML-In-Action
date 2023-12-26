@@ -33,6 +33,7 @@ sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
+# DBTITLE 1,Check the Reset Widget Value
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(temp_path, recurse=True)
   dbutils.fs.rm(destination_path, recurse=True)
@@ -174,7 +175,3 @@ display(usercounts.orderBy("CustomerID"))
 
 # DBTITLE 1,Display the Data Generated
 display(spark.read.format("text").load(destination_path))
-
-# COMMAND ----------
-
-

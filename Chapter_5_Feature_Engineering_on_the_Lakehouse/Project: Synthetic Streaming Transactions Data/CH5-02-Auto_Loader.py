@@ -4,7 +4,7 @@
 # MAGIC
 # MAGIC ## Synthetic Data - Streaming as Delta into a table using Auto Loader
 # MAGIC
-# MAGIC We have create a feature for our model based on the Product column so we no longer create the nulls.
+# MAGIC We have created a feature for our model based on the Product column so we no longer create the nulls.
 
 # COMMAND ----------
 
