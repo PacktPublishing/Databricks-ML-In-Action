@@ -20,15 +20,19 @@ import re
 
 # REQUIRES A PROJECT NAME -------------------------
 project_name = dbutils.widgets.get('project_name')
-possible_projects = ["synthetic_transactions","favorita_forecasting","rag_chatbot"]
+possible_projects = ["synthetic_transactions", "favorita_forecasting", "rag_chatbot", "cv_clf"]
 assert len(project_name) > 0, "project_name is a required variable"
 assert project_name in possible_projects, "project_name unknown, did you type correctly? You can add new projects to the list in the setup file."
+
 
 # VERIFY DATABRICKS VERSION COMPATIBILITY ----------
 try:
   min_required_version = dbutils.widgets.get("min_dbr_version")
 except:
   min_required_version = "13.0"
+
+if project_name in ["rag_chatbot", "cv_clf"]:
+  min_required_version == "14.0"
 
 version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
 version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
@@ -116,5 +120,23 @@ print(f"use volume_file_path {volume_file_path}")
 # import os
 
 # os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-
 # os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
+
+# COMMAND ----------
+
+if project_name == "cv_clf":
+  try:
+    print("You are required to set your token and host if you want to use MLFlow tracking while using DDP")
+    # This is needed for later in the notebook
+    db_host = (
+        dbutils.notebook.entry_point.getDbutils()
+        .notebook()
+        .getContext()
+        .extraContext()
+        .apply("api_url")
+    )
+    db_token = (
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+    )
+  except:
+    print("Your MLFLow logging may not function correctly due to the missing db_host and db_token variables")

@@ -73,18 +73,11 @@ def load_file(file_uri, file_name, library_folder):
 pdfs = {'2203.02155.pdf':'https://arxiv.org/pdf/2203.02155.pdf',
         '2302.09419.pdf': 'https://arxiv.org/pdf/2302.09419.pdf',
         '2303.10130.pdf':'https://arxiv.org/pdf/2303.10130.pdf',
+        '2302.06476.pdf':'https://arxiv.org/pdf/2312.00506.pdf',
         '2302.06476.pdf':'https://arxiv.org/pdf/2302.06476.pdf',
-        '2302.06476.pdf':'https://arxiv.org/pdf/2302.06476.pdf',
-        '2303.04671.pdf':'https://arxiv.org/pdf/2303.04671.pdf',
+        '2303.10130.pdf':'https://arxiv.org/pdf/2303.10130.pdf',
         '2209.07753.pdf':'https://arxiv.org/pdf/2209.07753.pdf',
-        '2302.07842.pdf':'https://arxiv.org/pdf/2302.07842.pdf',
-        '2302.07842.pdf':'https://arxiv.org/pdf/2302.07842.pdf',
-        '2204.01691.pdf':'https://arxiv.org/pdf/2204.01691.pdf'}
-
-# select from those articles : 
-# https://arxiv.org/pdf/2312.00506.pdf
-# https://arxiv.org/pdf/2303.10130.pdf
-# https://arxiv.org/pdf/2304.07683.pdf 
+        '2304.07683.pdf':'https://arxiv.org/pdf/2304.07683.pdf'}
 
 for pdf in pdfs.keys():
     load_file(pdfs[pdf], pdf, library_folder)
