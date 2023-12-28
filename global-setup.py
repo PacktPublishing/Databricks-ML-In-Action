@@ -121,3 +121,22 @@ print(f"use volume_file_path {volume_file_path}")
 
 # os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
 # os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
+
+# COMMAND ----------
+
+if project_name == "cv_clf":
+  try:
+    print("You are required to set your token and host if you want to use MLFlow tracking while using DDP")
+    # This is needed for later in the notebook
+    db_host = (
+        dbutils.notebook.entry_point.getDbutils()
+        .notebook()
+        .getContext()
+        .extraContext()
+        .apply("api_url")
+    )
+    db_token = (
+        dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
+    )
+  except:
+    print("Your MLFLow logging may not function correctly due to the missing db_host and db_token variables")

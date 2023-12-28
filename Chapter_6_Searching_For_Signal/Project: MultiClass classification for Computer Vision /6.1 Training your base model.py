@@ -4,33 +4,21 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
+# MAGIC %run ../../global-setup $project_name=cv_clf
+
+# COMMAND ----------
+
 import os
 import numpy as np
 import io
 import logging
 from math import ceil
-
-import torch
-from torch import nn
-from torch.autograd import Variable
-from torch.nn import functional as F
-from torch.nn.parallel import DistributedDataParallel
-from torch.optim import Optimizer
-from torch.utils.data import DataLoader
-from torchvision import transforms, models
-import pytorch_lightning as pl
-from torchmetrics import Accuracy
-
 from pyspark.sql.functions import col
 from PIL import Image
 
-import mlflow
-from deltatorch import create_pytorch_dataloader, FieldSpec
 
-# COMMAND ----------
-
-train_delta_path = "/Volumes/{catalog_name}}/{schema_name}/intel_image_clf/train_imgs_main.delta"
-val_delta_path = "/Volumes/{catalog_name}/{schema_name}/intel_image_clf/valid_imgs_main.delta"
+train_delta_path = "/Volumes/{catalog}}/{database_name}/intel_image_clf/train_imgs_main.delta"
+val_delta_path = "/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta"
 
 train_df = (spark.read.format("delta")
             .load(train_delta_path)
@@ -41,52 +29,43 @@ display(train_df)
 # COMMAND ----------
 
 import mlflow
+from mlia_utils import mlflow_funcs
 
-username = spark.sql("SELECT current_user()").first()["current_user()"]
-experiment_path = f"/Users/{username}/intel-clf-training_action"
-
-# This is needed for later in the notebook
-db_host = (
-    dbutils.notebook.entry_point.getDbutils()
-    .notebook()
-    .getContext()
-    .extraContext()
-    .apply("api_url")
-)
-db_token = (
-    dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
-)
-
-# create experiment if does not exist 
-def mlflow_set_experiment(experiment_path:str = None):
-    try:
-        print(f"Setting our existing experiment {experiment_path}")
-        mlflow.set_experiment(experiment_path)
-        experiment = mlflow.get_experiment_by_name(experiment_path)
-    except:
-        print("Creating a new experiment and setting it")
-        experiment = mlflow.create_experiment(name = experiment_path)
-        mlflow.set_experiment(experiment_id=experiment_path)
-
-mlflow_set_experiment(experiment_path) 
+experiment_path = f"/Users/{current_user}/intel-clf-training_action"
+mlflow_funcs.mlflow_set_experiment(experiment_path) 
 log_path = "/Volumes/ap/cv_uc/intel_image_clf/intel_training_logger_board"
-
 
 # COMMAND ----------
 
+
+import torch
 import torchvision
+import pytorch_lightning as pl
+from torch import nn, optim, Tensor, manual_seed, argmax
+from torch.autograd import Variable
+from torch.nn import functional as F
+from torch.nn.parallel import DistributedDataParallel
+from torch.optim import Optimizer
+from torch.utils.data import TensorDataset, DataLoader
+from torchmetrics.classification import Accuracy, MulticlassConfusionMatrix
+from torchvision import transforms, models
+from pytorch_lightning.utilities.model_summary import ModelSummary
+
+
 class LitCVNet(pl.LightningModule):
         # we can also define model in this Module or we can define in standard pytorch Module
         # then wrap with Pytorch-Lightning Module , You can save & load model weights without 
         # altering pytorch / Lightning module . You will learn in the later series .
-        def __init__(self, num_classes = 6, learning_rate= 0.0001, family = "resnext", momentum = 0.8):
+        def __init__(self, num_classes = 6, learning_rate= 0.001, family = "resnext", momentum = 0.1,  dropout_rate = 0):
             super().__init__()
-            self.family = family
+            self.family = family # we do not use familit explicitly, but you could play with 2 different family models using 1 script 
             self.momentum = momentum
-            self.accuracy = Accuracy(task="multiclass", num_classes=6)
+            self.accuracy = Accuracy(task="multiclass", num_classes=num_classes)
             self.learning_rate = learning_rate 
             self.model = self.get_model(num_classes)
-            self.criterion = nn.CrossEntropyLoss()
+            self.loss = nn.CrossEntropyLoss()
+            self.confusion_matrix = MulticlassConfusionMatrix(num_classes=num_classes)
+            self.test_pred = []  # collect predictions
 
         def get_model(self, num_classes):
             """
@@ -105,43 +84,62 @@ class LitCVNet(pl.LightningModule):
             x  = self.model(x)
             return x
         
-        def training_step(self,batch,batch_idx):
+        def training_step(self, batch, batch_idx):
             x = batch["content"]
             y = batch["label_id"]
-            outputs = self.forward(x)
-            loss = self.criterion(outputs,y)
-            acc = self.accuracy(outputs,y)
-            self.log("train_loss", torch.tensor([loss]), on_step=True, on_epoch=True, logger=True)
-            self.log("train_acc", torch.tensor([acc]), on_step=True, on_epoch=True, logger=True)
-            return loss
+            logits = self.forward(x)
+            loss = self.loss(logits,y)
+            # Track accuracy
+            acc = self.accuracy(logits, y)
+            # required format
+            self.log("loss", torch.tensor([loss]), on_step=True, on_epoch=True, logger=True)
+            self.log("acc", torch.tensor([acc]), on_step=True, on_epoch=True, logger=True)
+            return  {"loss": loss, "acc": acc}
         
-        def validation_step(self,batch,batch_idx):
+        def validation_step(self,batch, batch_idx):
             x = batch["content"]
             y = batch["label_id"]
-            outputs = self.forward(x)
-            loss = self.criterion(outputs,y)
-            acc = self.accuracy(outputs, y)
+            logits = self.forward(x)
+            loss = self.loss(logits, y)
+            acc = self.accuracy(logits, y)
+            # required format
             self.log("val_loss", torch.tensor([loss]), on_step=True, logger=True)
             self.log("val_acc", torch.tensor([acc]), prog_bar=True, logger=True)
-            return {"loss": loss, "acc": acc}
+            return {"val_loss": loss, "val_acc": acc}
         
-        # predict_step is optional unless you are doing some predictions
-        def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        def test_step(self, batch, batch_idx):
             x = batch["content"]
             y = batch["label_id"]
-            preds = self.model(x)
-            return preds
+            # Evaluate model
+            logits = self.forward(x)
+            # Track loss
+            loss = self.loss(logits, y)
+            self.log('test_loss', loss)
+            # Track accuracy
+            acc = self.accuracy(logits, y)
+            self.log('test_accuracy', acc)
+            # Collect predictions
+            self.test_pred.extend(logits.cpu().numpy())
+            # Update confusion matrix
+            self.confusion_matrix.update(logits, y)
+
+        # # predict_step is optional unless you are doing some predictions
+        # def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        #     x,y = batch
+        #     preds = self.forward(x)
+        #     return preds
         
         def configure_optimizers(self):
             params = self.model.fc.parameters()
-            #optimizer = torch.optim.AdamW(params, lr=self.learning_rate)
-            optimizer = torch.optim.SGD(params, lr=self.learning_rate)
+            optimizer = torch.optim.AdamW(params, lr=self.learning_rate)
             lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[4,6], gamma=0.06)
-            # {"optimizer": `Optimizer`, (optional) "lr_scheduler": `LRScheduler`}
+            # required format 
             return {"optimizer":optimizer, "lr_scheduler":lr_scheduler}
 
 
 # COMMAND ----------
+
+from deltatorch import create_pytorch_dataloader, FieldSpec
 
 class DeltaDataModule(pl.LightningDataModule):
     """
@@ -175,14 +173,14 @@ class DeltaDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return self.dataloader(
             train_delta_path,
-            batch_size=100,
+            batch_size=50,
         )
 
     def val_dataloader(self):
-        return self.dataloader(val_delta_path, batch_size=50)
+        return self.dataloader(val_delta_path, batch_size=100)
 
     def test_dataloader(self):
-        return self.dataloader(val_delta_path, batch_size=30)
+        return self.dataloader(val_delta_path, batch_size=50)
 
 # COMMAND ----------
 
@@ -192,13 +190,20 @@ class DeltaDataModule(pl.LightningDataModule):
 # MAGIC
 # MAGIC ```
 # MAGIC
+# MAGIC import torchvision.transforms as transforms 
+# MAGIC from torchvision.transforms import ToTensor,Normalize, RandomHorizontalFlip, Resize
+# MAGIC from torch.utils.data import DataLoader
+# MAGIC from torch.utils.data.sampler import SubsetRandomSampler
+# MAGIC from torch.autograd import Variable
+# MAGIC
 # MAGIC class DeltaDataModule(pl.LightningDataModule):
 # MAGIC     """
 # MAGIC     Creating a Data loading module with Delta Torch loader 
 # MAGIC     """
-# MAGIC     def __init__(self, train_dir, valid_dir):
+# MAGIC     def __init__(self, trainining_dir, validation_dir, valid_size = 0.15):
 # MAGIC         super().__init__()
-# MAGIC
+# MAGIC         self.train_dir = trainining_dir
+# MAGIC         self.valid_dir = validation_dir
 # MAGIC         self.transform = transforms.Compose([
 # MAGIC                 transforms.Resize((150,150)),
 # MAGIC                 transforms.RandomHorizontalFlip(p=0.5), # randomly flip and rotate
@@ -213,10 +218,9 @@ class DeltaDataModule(pl.LightningDataModule):
 # MAGIC                 transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
 # MAGIC                 ])
 # MAGIC         # ImageFloder function uses for make dataset by passing dir adderess as an argument
-# MAGIC         self.train_data = torchvision.datasets.ImageFolder(root=train_dir, transform=self.transform)
-# MAGIC         self.test_data = torchvision.datasets.ImageFolder(root=valid_dir, transform=self.transform_tests)
-# MAGIC         
-# MAGIC         self.train_sampler, self.valid_sampler = self.shuffle_data(self.train_data,)
+# MAGIC         self.train_data = torchvision.datasets.ImageFolder(root=self.train_dir, transform=self.transform)
+# MAGIC         self.test_data = torchvision.datasets.ImageFolder(root=self.valid_dir, transform=self.transform_tests)
+# MAGIC         self.train_sampler, self.valid_sampler = self.shuffle_data(self.train_data, valid_size = 0.15)
 # MAGIC         
 # MAGIC     def shuffle_data(self, train_data, valid_size = 0.15):
 # MAGIC
@@ -241,8 +245,6 @@ class DeltaDataModule(pl.LightningDataModule):
 # MAGIC
 # MAGIC     def test_dataloader(self):
 # MAGIC         return DataLoader(self.test_data, batch_size=32, sampler=None, num_workers=2)
-# MAGIC
-# MAGIC
 # MAGIC
 # MAGIC ```
 
@@ -276,12 +278,12 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         save_top_k=2,
         mode="min",
-        monitor="train_loss", # this has been saved under the Model Trainer - inside the validation_step function 
+        monitor="val_loss", # this has been saved under the Model Trainer - inside the validation_step function 
         dirpath=log_path,
         filename="sample-cvops-{epoch:02d}-{val_loss:.2f}"
     )
     early_stop_callback = pl.callbacks.EarlyStopping(
-        monitor="train_acc",
+        monitor="val_acc",
         min_delta=EARLY_STOP_MIN_DELTA,
         patience=EARLY_STOP_PATIENCE,
         stopping_threshold=0.1,
