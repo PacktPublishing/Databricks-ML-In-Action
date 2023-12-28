@@ -12,12 +12,15 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting
+
+# MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
 # DBTITLE 1,Set the data path
-raw_data_path = volume_data_path + 'raw_data'
+
+raw_data_path = volume_file_path + 'raw_data'
+
 dbutils.fs.mkdirs(raw_data_path)
 
 # COMMAND ----------
@@ -32,3 +35,9 @@ dbutils.fs.mkdirs(raw_data_path)
 import opendatasets as od
 
 od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecasting/data",raw_data_path)
+
+
+# COMMAND ----------
+
+dbutils.fs.ls(raw_data_path + "/store-sales-time-series-forecasting/")
+

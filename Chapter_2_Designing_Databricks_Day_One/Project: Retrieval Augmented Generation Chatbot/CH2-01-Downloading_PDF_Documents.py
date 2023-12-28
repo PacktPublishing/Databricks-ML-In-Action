@@ -92,7 +92,3 @@ for pdf in pdfs.keys():
 # COMMAND ----------
 
 dbutils.fs.ls(library_folder)
-
-# COMMAND ----------
-
-

@@ -65,45 +65,6 @@ display(sql(f"SELECT * FROM {table_name} LIMIT 2"))
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ### -------- Notes to MLIA Ladies ----------
-# MAGIC We can move the install piece to the beginning, show how to use init scripts, install on single node until a later chapter? all of the above??
-
-# COMMAND ----------
-
-#install poppler on the cluster (should be done by init scripts)
-def install_ocr_on_nodes():
-    """
-    install poppler on the cluster (should be done by init scripts)
-    """
-    # from pyspark.sql import SparkSession
-    import subprocess
-    num_workers = max(1,int(spark.conf.get("spark.databricks.clusterUsageTags.clusterWorkers")))
-    command = "sudo rm -r /var/cache/apt/archives/* /var/lib/apt/lists/* && sudo apt-get clean && sudo apt-get update && sudo apt-get install poppler-utils tesseract-ocr -y" 
-    subprocess.check_output(command, shell=True)
-
-    def run_command(iterator):
-        for x in iterator:
-            yield subprocess.check_output(command, shell=True)
-
-    # spark = SparkSession.builder.getOrCreate()
-    data = spark.sparkContext.parallelize(range(num_workers), num_workers) 
-    # Use mapPartitions to run command in each partition (worker)
-    output = data.mapPartitions(run_command)
-    try:
-        output.collect();
-        return True
-    except Exception as e:
-        print(f"Couldn't install on all node: {e}")
-        return False
-
-# COMMAND ----------
-
-#For production use-case, install the libraries at your cluster level with an init script instead. 
-install_ocr_on_nodes()
-
-# COMMAND ----------
-
 # DBTITLE 1,Basic extracting
 from unstructured.partition.auto import partition
 import io

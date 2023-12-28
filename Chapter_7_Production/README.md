@@ -6,14 +6,18 @@
 3. Automating the ML Lifecycle
 4. Applying our learning
 
-## Links in the chapter:**
-- [MLFLow Model Registry Webhooks on Databricks](https://docs.databricks.com/en/mlflow/model-registry-webhooks.html)
-
 ## Technical requirements 
+
+Here are the technical requirements needed to complete the hands-on examples in this chapter:
 - [On-demand features require the use of DBR ML 13.1 or higher.
 - [Python UDFs](https://docs.databricks.com/en/udf/unity-catalog.html) are created and governed in UC; hence, Unity Catalog must be enabled for the workspace.
+  
+## Links
 
-**Further Reading:**
+**In the chapter**
+- [MLFLow Model Registry Webhooks on Databricks](https://docs.databricks.com/en/mlflow/model-registry-webhooks.html)
+
+**Further Reading**
 - [The big book of machine learning use case](https://www.databricks.com/resources/ebook/big-book-of-machine-learning-use-cases)
 - [Databricks Model Serving](https://www.databricks.com/blog/2023/03/07/announcing-general-availability-databricks-model-serving.html)
 - [Model Evaluation in MLFLow](https://www.databricks.com/blog/2022/04/19/model-evaluation-in-mlflow.html)
