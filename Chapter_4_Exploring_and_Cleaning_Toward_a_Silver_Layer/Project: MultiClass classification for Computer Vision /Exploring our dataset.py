@@ -2,21 +2,20 @@
 # MAGIC %md
 # MAGIC
 # MAGIC Chapter 4
+# MAGIC
+# MAGIC ## Intel Multilable Image Classification - Explore your dataset.
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog_name", "")
-dbutils.widgets.text("schema_name", "")
+# MAGIC %run ../../global-setup $project_name=cv_clf
 
 # COMMAND ----------
 
 import os 
 
-catalog_name = dbutils.widgets.get("catalog_name")
-schema_name = dbutils.widgets.get("schema_name")
 
-MAIN_DIR_UC = f"/Volumes/{catalog_name}/{schema_name}/intel_image_clf/raw_images"
-MAIN_DIR2Write = "/Volumes/{catalog_name}/{schema_name}/intel_image_clf/"
+MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
+MAIN_DIR2Write = "/Volumes/{catalog}/{database_name}/intel_image_clf/"
 data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
 data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
 data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
@@ -30,6 +29,38 @@ labels_dict_valid = {f"{f}":len(os.listdir(os.path.join(valid_dir, f))) for f in
 
 outcomes = os.listdir(train_dir)
 print(outcomes)
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$schema/intel_image_clf/valid_imgs_main.delta`
+
+# COMMAND ----------
+
+train_delta_path = f"/Volumes/{catalog}/{database_name}/intel_image_clf/train_imgs_main.delta"
+val_delta_path = f"/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta"
+
+train_df = (spark.read.format("delta")
+            .load(train_delta_path))
+            
+unique_object_ids = train_df.select("label_name").distinct().collect()
+object_id_to_class_mapping = {
+    unique_object_ids[idx].label_name: idx for idx in range(len(unique_object_ids))}
+object_id_to_class_mapping
+
+# COMMAND ----------
+
+from PIL import Image
+import matplotlib.pyplot as plt
+
+def display_image(path, dpi=50):
+    img = Image.open(path)
+    width, height = img.size
+    plt.figure(figsize=(width / dpi, height / dpi))
+    plt.imshow(img, interpolation="nearest", aspect="auto")
+
+display_image(f"{train_dir}/forest/17856.jpg")
+display_image(f"{train_dir}/street/15478.jpg")
 
 # COMMAND ----------
 
@@ -76,5 +107,6 @@ proportion_labels(labels_dict_train)
 proportion_labels(labels_dict_valid)
 
 # COMMAND ----------
+
 
 

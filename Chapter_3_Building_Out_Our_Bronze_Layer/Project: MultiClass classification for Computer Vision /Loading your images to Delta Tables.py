@@ -18,7 +18,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 import os 
 # be sure you have executed your code in Ch2! 
 MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
-MAIN_DIR2Write = "/Volumes/{catalog}/{database_name}/intel_image_clf/"
+MAIN_DIR2Write = f"/Volumes/{catalog}/{database_name}/intel_image_clf/"
 data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
 data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
 data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
@@ -37,7 +37,7 @@ print(outcomes)
 
 delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
-
+# we are keeping Delta tables with a PATH 
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_train_name}")
   dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_val_name}")
