@@ -2,11 +2,11 @@
 # MAGIC %md 
 # MAGIC Chapter 2 
 # MAGIC
-# MAGIC
-# MAGIC We will download data from Kaggle Dataset: https://www.kaggle.com/datasets/puneet6060/intel-image-classification/data
+# MAGIC ##  Intel image multilabel classification - Dowloanding our images to the Volumes
+# MAGIC We will download data from Kaggle Dataset: [Kaggle competition link](https://www.kaggle.com/datasets/puneet6060/intel-image-classification/data) 
 # MAGIC It's a classical multiclass classification problem. 
 # MAGIC
-# MAGIC We then will ingest images into a delta table and prepare our labels for training. 
+# MAGIC In the next chapter, we will ingest images into a delta table and prepare our labels for training. 
 
 # COMMAND ----------
 
@@ -15,33 +15,20 @@
 
 # COMMAND ----------
 
-# set your catalog name and the schema name 
-# if you are using dbfs you dont need this 
-dbutils.widgets.text("catalog_name", "")
-dbutils.widgets.text("schema_name", "")
-
-def use_and_create_db(catalog, schemaName):
-  print(f"USE CATALOG `{catalog}`")
-  spark.sql(f"USE CATALOG `{catalog}`")
-  spark.sql(f"""create database if not exists `{schemaName}` """)
-  print(f"USE SCHEMA '{schema_name}'")
-  spark.sql(f"USE {schemaName}")
-
-catalog_name = dbutils.widgets.get("catalog_name")
-schema_name = dbutils.widgets.get("schema_name")
-use_and_create_db(catalog_name, schema_name)
+# MAGIC %run ../../global-setup $project_name=cv_clf
 
 # COMMAND ----------
 
+# DBTITLE 1,Add your credentials to connect to the Kaggle Account 
 import os
 
 os.environ[
     "kaggle_username"
-] = dbutils.secrets.get("mlaction", "kaggle_name")  # replace with your own credential here temporarily or set up a secret scope with your credential
+] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")  # replace with your own credential here temporarily or set up a secret scope with your credential
 
 os.environ[
     "kaggle_key"
-] = dbutils.secrets.get("mlaction", "kaggle_key")  # replace with your own credential here temporarily or set up a secret scope with your credential
+] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")  # replace with your own credential here temporarily or set up a secret scope with your credential
 
 # COMMAND ----------
 
@@ -53,8 +40,10 @@ os.environ[
 
 # COMMAND ----------
 
-!mkdir /Volumes/{catalog_name}/{schema_name}/intel_image_clf/raw_images
+# DBTITLE 1,Unzip your data under Volumes 
+!mkdir /Volumes/{catalog}/{database_name}/intel_image_clf/
+!mkdir /Volumes/{catalog}/{database_name}/intel_image_clf/raw_images
 
 # this can take up to 1h 
 # or load a few examples to the UC on your own if the time is a constraint 
-!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/ap/cv_uc/intel_image_clf/raw_images 
+!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/intel_image_clf/raw_images 

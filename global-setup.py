@@ -20,15 +20,19 @@ import re
 
 # REQUIRES A PROJECT NAME -------------------------
 project_name = dbutils.widgets.get('project_name')
-possible_projects = ["synthetic_transactions","favorita_forecasting","rag_chatbot"]
+possible_projects = ["synthetic_transactions", "favorita_forecasting", "rag_chatbot", "cv_clf"]
 assert len(project_name) > 0, "project_name is a required variable"
 assert project_name in possible_projects, "project_name unknown, did you type correctly? You can add new projects to the list in the setup file."
+
 
 # VERIFY DATABRICKS VERSION COMPATIBILITY ----------
 try:
   min_required_version = dbutils.widgets.get("min_dbr_version")
 except:
   min_required_version = "13.0"
+
+if project_name in ["rag_chatbot", "cv_clf"]:
+  min_required_version == "14.0"
 
 version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
 version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
@@ -116,5 +120,4 @@ print(f"use volume_file_path {volume_file_path}")
 # import os
 
 # os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-
 # os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
