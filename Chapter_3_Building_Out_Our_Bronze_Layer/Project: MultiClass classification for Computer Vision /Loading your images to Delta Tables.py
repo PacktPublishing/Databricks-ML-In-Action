@@ -1,26 +1,24 @@
 # Databricks notebook source
 # MAGIC %md 
 # MAGIC Chapter 3 
+# MAGIC
+# MAGIC ## Intel Mulilable Image Classification - Ingest your data into Delta 
+# MAGIC
 
 # COMMAND ----------
 
-
+dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Drop previous table")
 
 # COMMAND ----------
 
-dbutils.widgets.text("catalog_name", "")
-dbutils.widgets.text("schema_name", "")
-
+# MAGIC %run ../../global-setup $project_name=cv_clf
 
 # COMMAND ----------
 
 import os 
-
-catalog_name = dbutils.widgets.get("catalog_name")
-schema_name = dbutils.widgets.get("schema_name")
-
-MAIN_DIR_UC = f"/Volumes/{catalog_name}/{schema_name}/intel_image_clf/raw_images"
-MAIN_DIR2Write = "/Volumes/{catalog_name}/{schema_name}/intel_image_clf/"
+# be sure you have executed your code in Ch2! 
+MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
+MAIN_DIR2Write = "/Volumes/{catalog}/{database_name}/intel_image_clf/"
 data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
 data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
 data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
@@ -34,6 +32,15 @@ labels_dict_valid = {f"{f}":len(os.listdir(os.path.join(valid_dir, f))) for f in
 
 outcomes = os.listdir(train_dir)
 print(outcomes)
+
+# COMMAND ----------
+
+delta_train_name = "train_imgs_main.delta"
+delta_val_name = "valid_imgs_main.delta"
+
+if bool(dbutils.widgets.get('Reset')):
+  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_train_name}")
+  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_val_name}")
 
 # COMMAND ----------
 
@@ -71,18 +78,28 @@ def prep_data2delta(
             )
         )
         if write2delta:
-            # As of now DeltaTorch Loader reuqires you to have tables in delta format under Volumes when UC is used
-            # in the future the functionality will involve. 
             df.write.format("delta").mode("append").save("{path2write}{name2write}")
         if returnDF:
             return df
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC #### Note 
+# MAGIC
+# MAGIC  As of now DeltaTorch Loader requires you to have tables in delta format under Volumes when UC is used in the future the functionality will involve. It's simply due to some security permissions on the read/write that UC has. <br>
+# MAGIC  If you are not using UC you should be able to read delta tables directly from the managed tables. 
+# MAGIC
+# MAGIC  You could also simply keep filenames under your Delta Table instead of images itself and collect them to pass to the main trainer. Why keeping anything under Delta is important, simply to avoid having duplicates and to control the list that have been used during the training as you can pass the Delta version to the MLFlow during the tracking. 
+# MAGIC
+# MAGIC  There is also an option to read your data using Petastorm library, but today it's not recommended as it requires you to carefully read the doc to understand pitfals it has (mainly memory usage due to the dat caching and the fact it's using parquet files and not Delta, so you are consuming all versions of your files). 
+
+# COMMAND ----------
+
 prep_data2delta(
     train_dir,
     outcomes,
-    "train_imgs_main.delta",
+    delta_train_name,
     write2detla=True,
     path2write=MAIN_DIR2Write
     returnDF=None,
@@ -93,7 +110,7 @@ prep_data2delta(
 prep_data2delta(
     valid_dir,
     outcomes,
-    "valid_imgs_main.delta",
+    delta_val_name,
     path2write=MAIN_DIR2Write
     write2detla=True,
     returnDF=None,
@@ -107,18 +124,23 @@ prep_data2delta(
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC OPTIMIZE delta.`/Volumes/YOURCATALOG/YOURSCHEMA/intel_image_clf/valid_imgs_main.delta`
+# MAGIC OPTIMIZE delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta`
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC OPTIMIZE delta.`/Volumes/YOURCATALOG/YOURSCHEMA/intel_image_clf/train_imgs_main.delta`
+# MAGIC OPTIMIZE delta.`/Volumes/$catalog/$database_name/intel_image_clf/train_imgs_main.delta`
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC ALTER TABLE delta.`/Volumes/YOURCATALOG/YOURSCHEMA/intel_image_clf/train_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
-# MAGIC ALTER TABLE delta.`/Volumes/YOURCATALOG/YOURSCHEMA/intel_image_clf/valid_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
+# MAGIC ALTER TABLE delta.`/Volumes/$catalog/$database_name/intel_image_clf/train_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
+# MAGIC ALTER TABLE delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$schema/intel_image_clf/valid_imgs_main.delta`
 
 # COMMAND ----------
 
