@@ -20,6 +20,7 @@ display(spark.read.format("text").load('/Volumes/ml_in_action/synthetic_transact
 
 from databricks.feature_engineering import FeatureEngineeringClient
 from mlia_utils.mlflow_funcs import get_latest_model_version
+from pyspark.sql.types import *
 import json
 import pandas as pd
 import mlflow
@@ -29,14 +30,14 @@ fe = FeatureEngineeringClient()
 model_name = f"{catalog}.{database_name}.packaged_transaction_model"
 schema = StructType([
     StructField("CustomerID", IntegerType(), False),
-    StructField("TransactionTimestamp", StringType(), False),
+    StructField("TransactionTimestamp", TimestampType(), False),
     StructField("Product", StringType(), True),
     StructField("Amount", FloatType(),False)
 ])
-data = '[{"CustomerID":1240,"TransactionTimestamp":"2023-12-12T23:42:07.571Z","Product":"Product A","Amount":10.0}]'
+data = '[{"CustomerID":1240,"TransactionTimestamp": "2023-12-12T23:42:07.571Z","Product":"Product A","Amount":10.0}]'
 print(json.loads(data))
 scoring_df = pd.json_normalize(json.loads(data))
-
+scoring_df["TransactionTimestamp"] = pd.to_datetime(scoring_df["TransactionTimestamp"])
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",

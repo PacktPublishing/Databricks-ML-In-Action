@@ -247,9 +247,9 @@ mlflow.autolog(
 )
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
-  mlflow.log_param('Input-table-location', f"{catalog}.{database_name}.raw_transactions")
-  mlflow.log_param('Training-feature-lookups',training_feature_lookups)
-  mlflow.log_param('Inference-feature-lookups',inference_feature_lookups)
+  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.raw_transactions",
+                    'Training-feature-lookups': training_feature_lookups, 
+                    'Inference-feature-lookups': inference_feature_lookups})
   
   from sklearn.model_selection import train_test_split
   training_data = training_set.load_df().toPandas()
