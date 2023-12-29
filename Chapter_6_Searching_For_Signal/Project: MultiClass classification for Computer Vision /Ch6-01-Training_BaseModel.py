@@ -76,7 +76,7 @@ class LitCVNet(pl.LightningModule):
             for param in backbone.parameters():
                 param.required_grad = False
             num_ftrt = backbone.fc.in_features
-            backbone.fc = nn.Linear(num_ftrt, 6)
+            backbone.fc = nn.Linear(num_ftrt, num_classes)
             return backbone
 
         # We do not overwrite our forward pass 
@@ -148,7 +148,11 @@ class DeltaDataModule(pl.LightningDataModule):
     def __init__(self):
         super().__init__()
         self.num_classes = 6
-
+        # Here we are applying the same Transformation 
+        # in Production case scenario you probably would like to have to separate transformers for your data
+        # 1 for Train and another one for test. 
+        # See the Native Torch example below. 
+        
         self.transform = transforms.Compose([
                 transforms.Resize((150,150)),
                 transforms.RandomHorizontalFlip(p=0.5), # randomly flip and rotate
@@ -308,6 +312,7 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
         logger=None,
         callbacks=[
            checkpoint_callback,
+           early_stop_callback,
            tqdm_callback
         ],
     )
@@ -322,25 +327,31 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     print("Training done!")
 
     print("Test done!")
+    
+    # Uncomment this if you are using DDP. 
+    # AutoLog does not yet work well with the DDP. 
+    # The best Practice with DDP would be to track your loss/acc with the Logger 
+    # and then log your best_checkpoint back to the mlflow. 
+    # In our case we use single node training so you will spot that the acc and loss were tracked. 
+    if strategy == "ddp":
+        if trainer.global_rank == 0:
+            # AutoLog does not work with DDP 
+            from mlflow.models.signature import infer_signature
+            with mlflow.start_run(run_name="running_cv_uc") as run:
+                
+                # Train the model ⚡🚅⚡
+                print("We are logging our model")
+                reqs = mlflow.pytorch.get_default_pip_requirements() + [
+                    "pytorch-lightning==" + pl.__version__,
+                    "deltalake==0.14.0","deltatorch==0.0.3"
+                ]
 
-    if trainer.global_rank == 0:
-        # AutoLog does not work with DDP 
-        from mlflow.models.signature import infer_signature
-        with mlflow.start_run(run_name="running_cv_uc") as run:
-            
-            # Train the model ⚡🚅⚡
-            print("We are logging our model")
-            reqs = mlflow.pytorch.get_default_pip_requirements() + [
-                "pytorch-lightning==" + pl.__version__,
-                "deltalake==0.14.0","deltatorch==0.0.3"
-            ]
-
-            mlflow.pytorch.log_model(
-                artifact_path="model_cv_uc",
-                pytorch_model=model.model,
-                pip_requirements=reqs,
-            )
-            mlflow.set_tag("ml2action", "cv_uc")
+                mlflow.pytorch.log_model(
+                    artifact_path="model_cv_uc",
+                    pytorch_model=model.model,
+                    pip_requirements=reqs,
+                )
+                mlflow.set_tag("ml2action", "cv_uc")
 
 
 # COMMAND ----------

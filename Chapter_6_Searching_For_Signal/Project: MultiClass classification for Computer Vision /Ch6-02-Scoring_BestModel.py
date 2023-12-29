@@ -4,6 +4,10 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
+# MAGIC %run ../../global-setup $project_name=cv_clf
+
+# COMMAND ----------
+
 import os
 import numpy as np
 import io
@@ -28,11 +32,10 @@ import mlflow
 from deltatorch import create_pytorch_dataloader, FieldSpec
 
 
-train_delta_path = "/Volumes/ap/cv_uc/intel_image_clf/train_imgs_main.delta"
-val_delta_path = "/Volumes/ap/cv_uc/intel_image_clf/valid_imgs_main.delta"
+train_delta_path =f"/Volumes/{catalog}/{database_name}/intel_image_clf/train_imgs_main.delta"
+val_delta_path = f"/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta"
 
-train_df = (spark.read.format("delta")
-            .load(train_delta_path))
+train_df = (spark.read.format("delta").load(train_delta_path))
             
 unique_object_ids = train_df.select("label_name").distinct().collect()
 object_id_to_class_mapping = {
@@ -41,11 +44,10 @@ object_id_to_class_mapping
 
 # COMMAND ----------
 
-username = spark.sql("SELECT current_user()").first()["current_user()"]
-experiment_path = f"/Users/{username}/intel-clf-training_action"
+experiment_path = f"/Users/{current_user}/intel-clf-training_action"
 mlflow.set_experiment(experiment_path)
 
-MAIN_DIR_UC = "/Volumes/ap/cv_uc/intel_image_clf/raw_images"
+MAIN_DIR_UC = "/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
 data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
 data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
 data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
@@ -58,16 +60,14 @@ outcomes = os.listdir(train_dir)
 
 # COMMAND ----------
 
-import os
-import torch
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 
 best_model = mlflow.search_runs(
     filter_string=f'attributes.status = "FINISHED"',
-    order_by=["metrics.train_acc DESC"],
+    order_by=["metrics.acc DESC"],
     max_results=10,
 ).iloc[0]
-model_uri = "runs:/{}/model_cv_uc".format(best_model.run_id)
+model_uri = "runs:/{}/model".format(best_model.run_id)
 
 local_path = mlflow.artifacts.download_artifacts(model_uri)
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -88,13 +88,8 @@ loaded_model
 
 # COMMAND ----------
 
-import torchvision
-
-transform_tests = torchvision.transforms.Compose([
-    transforms.Resize((150,150)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
-    ])
+from mlia_utils import cv_clf_funcs as cv_funcs
+transform_tests = cv_funcs.transform_imgs()
 
 test_data = torchvision.datasets.ImageFolder(root=valid_dir, transform=transform_tests)
 test_loader= DataLoader(test_data, batch_size=32, shuffle=False, num_workers=2)
@@ -129,12 +124,6 @@ print("\n Model Accuracy in % =",(correct_count/all_count)*100)
 
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
-
-transform_tests = torchvision.transforms.Compose([
-    transforms.Resize((150,150)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
-    ])
   
 def pred_class(img):
     # transform images
@@ -151,6 +140,10 @@ def pred_class(img):
 
 # COMMAND ----------
 
+import matplotlib.pyplot as plt
+from torch.autograd import Variable
+pred_class_func = cv_funcs.pred_class(img)
+
 classes = {k:v for k , v in enumerate(sorted(outcomes))}
 loaded_model.eval()
 
@@ -159,7 +152,7 @@ for i, images in enumerate(pred_files[:10]):
     # just want 25 images to print
     if i > 24:break
     img = Image.open(images)
-    index = pred_class(img)
+    index = pred_class_func(img)
     plt.subplot(5,5,i+1)
     plt.title(classes[index])
     plt.axis('off')
@@ -182,15 +175,17 @@ from typing import Iterator
 
 def feature_extractor(img):
     image = Image.open(io.BytesIO(img))
-    transform = transforms.Compose([
-    transforms.Resize((150,150)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
-    ])
+    transform = transform_tests = torchvision.transforms.Compose([
+        transforms.Resize((150,150)),
+        transforms.RandomHorizontalFlip(p=0.8), # randomly flip and rotate
+        transforms.ColorJitter(0.3,0.4,0.4,0.2),
+        transforms.ToTensor(),
+        transforms.Normalize((0.425, 0.415, 0.405), (0.205, 0.205, 0.205))
+        ])
     return transform(image)
 
 # to reduce time on loading we broadcast our model to each executor 
-model_b = sc.broadcast(loaded_model)
+model_b = sc.broadcast(loaded_model.model)
 
 @pandas_udf("struct< label: int, labelName: string>")
 def apply_vit(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
@@ -231,7 +226,7 @@ def apply_vit(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
 # also take into account that some models may use Batch Inference natively - check API of your Framework. 
 # 
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 32)
-predictions_df = spark.read.format("delta").load("/Volumes/ap/cv_uc/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_vit("content"))
+predictions_df = spark.read.format("delta").load(f"/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_vit("content"))
 display(predictions_df)
 
 # COMMAND ----------
