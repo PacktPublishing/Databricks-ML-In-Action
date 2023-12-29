@@ -31,11 +31,6 @@ from PIL import Image
 import mlflow
 from deltatorch import create_pytorch_dataloader, FieldSpec
 
-catalog = "ap"
-database_name = "cv_uc" 
-train_delta_path =f"/Volumes/{catalog}/{database_name}/intel_image_clf/train_imgs_main.delta"
-val_delta_path = f"/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta"
-
 experiment_path = f"/Users/{current_user}/intel-clf-training_action"
 mlflow.set_experiment(experiment_path)
 
@@ -210,7 +205,7 @@ def apply_vit(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
 # with the Brodcasted model we won a few minutes, but it's because we do not have a big dataset, in a case of a big set this could significantly speed up things. 
 # also take into account that some models may use Batch Inference natively - check API of your Framework. 
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 32)
-predictions_df = spark.read.format("delta").load(f"/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_vit("content"))
+predictions_df = spark.read.format("delta").load(f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_vit("content"))
 display(predictions_df)
 
 # COMMAND ----------

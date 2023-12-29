@@ -17,8 +17,8 @@ from pyspark.sql.functions import col
 from PIL import Image
 
 
-train_delta_path = "/Volumes/{catalog}}/{database_name}/intel_image_clf/train_imgs_main.delta"
-val_delta_path = "/Volumes/{catalog}/{database_name}/intel_image_clf/valid_imgs_main.delta"
+train_delta_path = "/Volumes/{catalog}}/{database_name}/files/intel_image_clf/train_imgs_main.delta"
+val_delta_path = "/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta"
 
 train_df = (spark.read.format("delta")
             .load(train_delta_path)
@@ -33,7 +33,8 @@ from mlia_utils import mlflow_funcs
 
 experiment_path = f"/Users/{current_user}/intel-clf-training_action"
 mlflow_funcs.mlflow_set_experiment(experiment_path) 
-log_path = "/Volumes/ap/cv_uc/intel_image_clf/intel_training_logger_board"
+log_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/intel_training_logger_board"
+!mkdir {log_path}
 
 # COMMAND ----------
 

@@ -15,26 +15,6 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 
 # COMMAND ----------
 
-import os 
-# be sure you have executed your code in Ch2! 
-MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
-MAIN_DIR2Write = f"/Volumes/{catalog}/{database_name}/intel_image_clf/"
-data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
-data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
-data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
-
-train_dir = data_dir_Train + "/seg_train"
-valid_dir = data_dir_Test + "/seg_test"
-pred_files = [os.path.join(data_dir_pred, f) for f in os.listdir(data_dir_pred)]
-
-labels_dict_train = {f"{f}":len(os.listdir(os.path.join(train_dir, f))) for f in os.listdir(train_dir)}
-labels_dict_valid = {f"{f}":len(os.listdir(os.path.join(valid_dir, f))) for f in os.listdir(valid_dir)}
-
-outcomes = os.listdir(train_dir)
-print(outcomes)
-
-# COMMAND ----------
-
 delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
 # we are keeping Delta tables with a PATH 
@@ -140,7 +120,7 @@ prep_data2delta(
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$schema/intel_image_clf/valid_imgs_main.delta`
+# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta`
 
 # COMMAND ----------
 

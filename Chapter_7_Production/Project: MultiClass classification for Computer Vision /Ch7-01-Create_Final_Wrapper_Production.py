@@ -104,10 +104,9 @@ def load_best_model()
 
 # COMMAND ----------
 
-username = spark.sql("SELECT current_user()").first()["current_user()"]
-experiment_path = f"/Users/{username}/intel-clf-training_action"
-mlflow.set_experiment(experiment_path)
 
+experiment_path = f"/Users/{current_user}/intel-clf-training_action"
+mlflow.set_experiment(experiment_path)
 
 loaded_model = torch.load(local_path+"/data/model.pth", map_location=torch.device(device))
 
@@ -120,14 +119,10 @@ wrapper = CVModelWrapper(loaded_model)
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 import base64
 import pandas as pd
 
-images = spark.read.format("delta").load("/Volumes/ap/cv_uc/intel_image_clf/valid_imgs_main.delta").take(25)
+images = spark.read.format("delta").load(val_delta_path).take(25)
 
 b64image1 = base64.b64encode(images[0]["content"]).decode("ascii")
 b64image2 = base64.b64encode(images[1]["content"]).decode("ascii")
@@ -147,7 +142,7 @@ import mlflow
 # Set the registry URI to "databricks-uc" to configure
 # the MLflow client to access models in UC
 mlflow.set_registry_uri("databricks-uc")
-model_name = "ap.cv_uc.cvops_model_mlaction"
+model_name = f"{catalog}.{database_name}.cvops_model_mlaction"
 
 from mlflow.models.signature import infer_signature,set_signature
 img = df_input['data']
@@ -189,7 +184,7 @@ import numpy as np
 import pandas as pd
 import json
 
-serving_endpoint_name = f"mlaction_endpoint_cv_uc"[:63]
+serving_endpoint_name = f"mlaction_endpoint_cv_uc"
 
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 #db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
@@ -202,7 +197,7 @@ def create_tf_serving_json(data):
   return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
 
 def score_model(dataset):
-  url = 'https://adb-984752964297111.11.azuredatabricks.net/serving-endpoints/mlaction_endpoint_cv_uc/invocations'
+  url = "YOUR_ENDPOINT"
   headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
   ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
   data_json = json.dumps(ds_dict, allow_nan=True)
@@ -213,3 +208,7 @@ def score_model(dataset):
 
 
 score_model(df_input)
+
+# COMMAND ----------
+
+#ADD HERE SDK SERVING 

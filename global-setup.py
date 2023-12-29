@@ -143,8 +143,8 @@ if project_name == "cv_clf":
 
 if project_name == "cv_clf": 
 
-  MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/intel_image_clf/raw_images"
-  MAIN_DIR2Write = "/Volumes/{catalog}/{database_name}/intel_image_clf/"
+  MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images"
+  MAIN_DIR2Write = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/"
   print(f"Your Main dir for UC Volumes is :{MAIN_DIR_UC} \n")
   print(f"Your main dir to write is :{MAIN_DIR2Write} \n")
   try:  
@@ -161,5 +161,9 @@ if project_name == "cv_clf":
 
     outcomes = os.listdir(train_dir)
     print(outcomes)
+
+    train_delta_path =f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/train_imgs_main.delta"
+    val_delta_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta"
+
   except: 
     print("Verify you have downloaded your images and extracted them under Volumes \n")
