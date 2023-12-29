@@ -17,6 +17,7 @@ dbutils.widgets.text("db", "", "Database")
 # DBTITLE 1,Running checks
 from pyspark.sql.types import *
 import re
+import os
 
 # REQUIRES A PROJECT NAME -------------------------
 project_name = dbutils.widgets.get('project_name')
@@ -117,17 +118,15 @@ print(f"use volume_file_path {volume_file_path}")
 
 # COMMAND ----------
 
-# import os
 
-# os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-# os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
 
 # COMMAND ----------
 
 if project_name == "cv_clf":
   try:
-    print("You are required to set your token and host if you want to use MLFlow tracking while using DDP")
+    print("You are required to set your token and host if you want to use MLFlow tracking while using DDP \n")
     # This is needed for later in the notebook
+    print("Setting your db_token and db_host \n")
     db_host = (
         dbutils.notebook.entry_point.getDbutils()
         .notebook()
@@ -139,4 +138,32 @@ if project_name == "cv_clf":
         dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
     )
   except:
-    print("Your MLFLow logging may not function correctly due to the missing db_host and db_token variables")
+    print("Your MLFLow logging may not function correctly due to the missing db_host and db_token variables \n")
+
+
+if project_name == "cv_clf": 
+
+  MAIN_DIR_UC = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images"
+  MAIN_DIR2Write = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/"
+  print(f"Your Main dir for UC Volumes is :{MAIN_DIR_UC} \n")
+  print(f"Your main dir to write is :{MAIN_DIR2Write} \n")
+  try:  
+    data_dir_Train = f"{MAIN_DIR_UC}/seg_train"
+    data_dir_Test = f"{MAIN_DIR_UC}/seg_test"
+    data_dir_pred = f"{MAIN_DIR_UC}/seg_pred/seg_pred"
+
+    train_dir = data_dir_Train + "/seg_train"
+    valid_dir = data_dir_Test + "/seg_test"
+    pred_files = [os.path.join(data_dir_pred, f) for f in os.listdir(data_dir_pred)]
+
+    labels_dict_train = {f"{f}":len(os.listdir(os.path.join(train_dir, f))) for f in os.listdir(train_dir)}
+    labels_dict_valid = {f"{f}":len(os.listdir(os.path.join(valid_dir, f))) for f in os.listdir(valid_dir)}
+
+    outcomes = os.listdir(train_dir)
+    print(outcomes)
+
+    train_delta_path =f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/train_imgs_main.delta"
+    val_delta_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta"
+
+  except: 
+    print("Verify you have downloaded your images and extracted them under Volumes \n")

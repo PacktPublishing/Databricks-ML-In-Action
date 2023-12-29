@@ -24,11 +24,11 @@ import os
 
 os.environ[
     "kaggle_username"
-] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")  # replace with your own credential here temporarily or set up a secret scope with your credential
+] = dbutils.secrets.get("mlaction", "kaggle_name")  # replace with your own credential here temporarily or set up a secret scope with your credential
 
 os.environ[
     "kaggle_key"
-] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")  # replace with your own credential here temporarily or set up a secret scope with your credential
+] = dbutils.secrets.get("mlaction", "kaggle_key")  # replace with your own credential here temporarily or set up a secret scope with your credential
 
 # COMMAND ----------
 
@@ -41,9 +41,13 @@ os.environ[
 # COMMAND ----------
 
 # DBTITLE 1,Unzip your data under Volumes 
-!mkdir /Volumes/{catalog}/{database_name}/intel_image_clf/
-!mkdir /Volumes/{catalog}/{database_name}/intel_image_clf/raw_images
+!mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/
+!mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images
 
-# this can take up to 1h 
+# this can take up to few hours  
 # or load a few examples to the UC on your own if the time is a constraint 
-!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/intel_image_clf/raw_images 
+!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images 
+
+# COMMAND ----------
+
+

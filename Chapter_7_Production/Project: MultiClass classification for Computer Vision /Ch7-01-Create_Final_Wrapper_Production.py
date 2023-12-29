@@ -3,6 +3,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../../global-setup $project_name=cv_clf
+
+# COMMAND ----------
+
 import os
 import numpy as np
 import io
@@ -37,77 +41,73 @@ class CVModelWrapper(mlflow.pyfunc.PythonModel):
         self.model = model.eval()
 
     def feature_extractor(self, image):
-        transform = transforms.Compose([
-                    transforms.Resize((150,150)),
-                    transforms.ToTensor(),
-                    transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
-                    ])
-        #return transform(Image.open(io.BytesIO(data)))
+        transform = torchvision.transforms.Compose([
+            transforms.Resize((150,150)),
+            transforms.RandomHorizontalFlip(p=p), # randomly flip and rotate
+            transforms.ColorJitter(0.3,0.4,0.4,0.2),
+            transforms.ToTensor(),
+            transforms.Normalize((0.425, 0.415, 0.405), (0.205, 0.205, 0.205))
+            ])
+        # Pay attention here as we will pass oue images in encoded format 
+        # this is the  required format by the Serving as of now (has to be DF, array or JSON)
+        # so we require to pass a string format. 
         return transform(Image.open(BytesIO(base64.b64decode(image)))) 
 
     def predict(self, context, images):
-        id2label = {0: 'buildings',
+        id2label = {
+            0: 'buildings',
             1: 'forest',
             2: 'glacier',
             3: 'mountain',
             4: 'sea',
-            5: 'street'}
+            5: 'street'
+            }
         with torch.set_grad_enabled(False):
      
           # add here check if this is a DataFrame 
           # if this is an image remove iterrows 
           pil_images = torch.stack([self.feature_extractor(row[0]) for _, row in images.iterrows()])
-          #pil_images = images.map(lambda x: self.feature_extractor(x))
           pil_images = pil_images.to(torch.device("cpu"))
           outputs = self.model(pil_images)
           preds = torch.max(outputs, 1)[1]
           probs = torch.nn.functional.softmax(outputs, dim=-1)[:, 1]
           labels = [id2label[pred] for pred in preds.tolist()]
 
-          return pd.DataFrame( data=dict(
-            label=preds,
-            labelName=labels)
-          )
+          return pd.DataFrame( 
+                              data=dict(
+                                label=preds,
+                                labelName=labels
+                                )
+                            )
 
 
 
 # COMMAND ----------
 
-username = spark.sql("SELECT current_user()").first()["current_user()"]
-experiment_path = f"/Users/{username}/intel-clf-training_action"
-mlflow.set_experiment(experiment_path)
 
+import os
+import mlflow
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlia_utils.cv_clf_funcs import select_best_model
 
-best_model = mlflow.search_runs(
-    filter_string=f'attributes.status = "FINISHED"',
-    order_by=["metrics.train_acc DESC"],
-    max_results=10,
-).iloc[0]
-model_uri = "runs:/{}/model_cv_uc".format(best_model.run_id)
-
-local_path = mlflow.artifacts.download_artifacts(model_uri)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+experiment_path = f"/Users/{current_user}/intel-clf-training_action"
+local_path = select_best_model(experiment_path)
 
 requirements_path = os.path.join(local_path, "requirements.txt")
 if not os.path.exists(requirements_path):
   dbutils.fs.put("file:" + requirements_path, "", True)
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 loaded_model = torch.load(local_path+"/data/model.pth", map_location=torch.device(device))
 
-loaded_model = torch.load(
-    local_path + "/data/model.pth", map_location=torch.device("cpu")
-)
-
 wrapper = CVModelWrapper(loaded_model)
-
 
 # COMMAND ----------
 
 import base64
 import pandas as pd
 
-images = spark.read.format("delta").load("/Volumes/ap/cv_uc/intel_image_clf/valid_imgs_main.delta").take(25)
+images = spark.read.format("delta").load(val_delta_path).take(25)
 
 b64image1 = base64.b64encode(images[0]["content"]).decode("ascii")
 b64image2 = base64.b64encode(images[1]["content"]).decode("ascii")
@@ -127,7 +127,7 @@ import mlflow
 # Set the registry URI to "databricks-uc" to configure
 # the MLflow client to access models in UC
 mlflow.set_registry_uri("databricks-uc")
-model_name = "ap.cv_uc.cvops_model_mlaction"
+model_name = f"{catalog}.{database_name}.cvops_model_mlaction"
 
 from mlflow.models.signature import infer_signature,set_signature
 img = df_input['data']
@@ -163,13 +163,20 @@ loaded_model_uc = mlflow.pyfunc.load_model(model_version_uri) # runiid / model_r
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC ## Create your serving endpoint 
+# MAGIC
+# MAGIC **Note** Here we have used UI to set the serving endpoint. You could also use REST API or SDK. 
+
+# COMMAND ----------
+
 import os
 import requests
 import numpy as np
 import pandas as pd
 import json
 
-serving_endpoint_name = f"mlaction_endpoint_cv_uc"[:63]
+serving_endpoint_name = f"cvops_model_mlaction_endpoint"
 
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 #db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
@@ -182,7 +189,7 @@ def create_tf_serving_json(data):
   return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
 
 def score_model(dataset):
-  url = 'https://adb-984752964297111.11.azuredatabricks.net/serving-endpoints/mlaction_endpoint_cv_uc/invocations'
+  url = f"{host}/serving-endpoints/{serving_endpoint_name}/invocations"
   headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
   ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
   data_json = json.dumps(ds_dict, allow_nan=True)
@@ -193,3 +200,7 @@ def score_model(dataset):
 
 
 score_model(df_input)
+
+# COMMAND ----------
+
+#ADD HERE SDK SERVING 
