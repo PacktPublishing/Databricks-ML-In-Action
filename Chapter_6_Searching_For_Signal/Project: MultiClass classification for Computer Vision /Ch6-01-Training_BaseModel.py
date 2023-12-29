@@ -264,6 +264,9 @@ MAX_EPOCH_COUNT = 10
 STEPS_PER_EPOCH = 5
 EARLY_STOP_MIN_DELTA = 0.1
 EARLY_STOP_PATIENCE = 10
+STRATEGY = "auto"
+EARLY_STOP_METRIC = "val_acc"
+MODEL_CHECKPOINT_METRIC = "val_loss"
 
 from pytorch_lightning.loggers import TensorBoardLogger
 
@@ -282,12 +285,12 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         save_top_k=2,
         mode="min",
-        monitor="val_loss", # this has been saved under the Model Trainer - inside the validation_step function 
+        monitor=MODEL_CHECKPOINT_METRIC, # this has been saved under the Model Trainer - inside the validation_step function 
         dirpath=log_path,
         filename="sample-cvops-{epoch:02d}-{val_loss:.2f}"
     )
     early_stop_callback = pl.callbacks.EarlyStopping(
-        monitor="val_acc",
+        monitor=EARLY_STOP_METRIC,
         min_delta=EARLY_STOP_MIN_DELTA,
         patience=EARLY_STOP_PATIENCE,
         stopping_threshold=0.1,
@@ -356,7 +359,7 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
 
 # COMMAND ----------
 
-train_distributed(10, "auto")
+train_distributed(MAX_EPOCH_COUNT, STRATEGY)
 
 # COMMAND ----------
 
@@ -371,5 +374,9 @@ train_distributed(10, "auto")
 # MAGIC distributed.run(train_distributed, 1, "ddp")
 # MAGIC ```
 # MAGIC
-# MAGIC Warning: this package works with 1 GPU per process. 
+# MAGIC Warning: this package works with 1 GPU per process, and it's in general not recommended to mix nthreads when you have more than 1 process.  
 # MAGIC
+
+# COMMAND ----------
+
+

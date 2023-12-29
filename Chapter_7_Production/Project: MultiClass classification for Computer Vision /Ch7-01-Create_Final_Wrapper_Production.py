@@ -3,6 +3,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ../../global-setup $project_name=cv_clf
+
+# COMMAND ----------
+
 import os
 import numpy as np
 import io
@@ -37,38 +41,65 @@ class CVModelWrapper(mlflow.pyfunc.PythonModel):
         self.model = model.eval()
 
     def feature_extractor(self, image):
-        transform = transforms.Compose([
-                    transforms.Resize((150,150)),
-                    transforms.ToTensor(),
-                    transforms.Normalize((0.425, 0.415, 0.405), (0.255, 0.245, 0.235))
-                    ])
-        #return transform(Image.open(io.BytesIO(data)))
+        transform = torchvision.transforms.Compose([
+            transforms.Resize((150,150)),
+            transforms.RandomHorizontalFlip(p=p), # randomly flip and rotate
+            transforms.ColorJitter(0.3,0.4,0.4,0.2),
+            transforms.ToTensor(),
+            transforms.Normalize((0.425, 0.415, 0.405), (0.205, 0.205, 0.205))
+            ])
+        # Pay attention here as we will pass oue images in encoded format 
+        # this is the  required format by the Serving as of now (has to be DF, array or JSON)
+        # so we require to pass a string format. 
         return transform(Image.open(BytesIO(base64.b64decode(image)))) 
 
     def predict(self, context, images):
-        id2label = {0: 'buildings',
+        id2label = {
+            0: 'buildings',
             1: 'forest',
             2: 'glacier',
             3: 'mountain',
             4: 'sea',
-            5: 'street'}
+            5: 'street'
+            }
         with torch.set_grad_enabled(False):
      
           # add here check if this is a DataFrame 
           # if this is an image remove iterrows 
           pil_images = torch.stack([self.feature_extractor(row[0]) for _, row in images.iterrows()])
-          #pil_images = images.map(lambda x: self.feature_extractor(x))
           pil_images = pil_images.to(torch.device("cpu"))
           outputs = self.model(pil_images)
           preds = torch.max(outputs, 1)[1]
           probs = torch.nn.functional.softmax(outputs, dim=-1)[:, 1]
           labels = [id2label[pred] for pred in preds.tolist()]
 
-          return pd.DataFrame( data=dict(
-            label=preds,
-            labelName=labels)
-          )
+          return pd.DataFrame( 
+                              data=dict(
+                                label=preds,
+                                labelName=labels
+                                )
+                            )
 
+
+
+# COMMAND ----------
+
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+
+def load_best_model()
+  best_model = mlflow.search_runs(
+      filter_string=f'attributes.status = "FINISHED"',
+      order_by=["metrics.acc DESC"],
+      max_results=10,
+  ).iloc[0]
+  model_uri = "runs:/{}/model".format(best_model.run_id)
+
+  local_path = mlflow.artifacts.download_artifacts(model_uri)
+  device = "cuda" if torch.cuda.is_available() else "cpu"
+
+  requirements_path = os.path.join(local_path, "requirements.txt")
+  if not os.path.exists(requirements_path):
+    dbutils.fs.put("file:" + requirements_path, "", True)
 
 
 # COMMAND ----------
@@ -77,21 +108,6 @@ username = spark.sql("SELECT current_user()").first()["current_user()"]
 experiment_path = f"/Users/{username}/intel-clf-training_action"
 mlflow.set_experiment(experiment_path)
 
-from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-
-best_model = mlflow.search_runs(
-    filter_string=f'attributes.status = "FINISHED"',
-    order_by=["metrics.train_acc DESC"],
-    max_results=10,
-).iloc[0]
-model_uri = "runs:/{}/model_cv_uc".format(best_model.run_id)
-
-local_path = mlflow.artifacts.download_artifacts(model_uri)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-requirements_path = os.path.join(local_path, "requirements.txt")
-if not os.path.exists(requirements_path):
-  dbutils.fs.put("file:" + requirements_path, "", True)
 
 loaded_model = torch.load(local_path+"/data/model.pth", map_location=torch.device(device))
 
@@ -100,6 +116,10 @@ loaded_model = torch.load(
 )
 
 wrapper = CVModelWrapper(loaded_model)
+
+
+# COMMAND ----------
+
 
 
 # COMMAND ----------
