@@ -232,6 +232,7 @@ def fit(X, y):
 
 # COMMAND ----------
 
+from mlflow.models import infer_signature
 import json
 context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
 experiment_name = context['extraContext']['notebook_path']
@@ -275,12 +276,17 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   #Train a model
   lgbm_model = fit(X=X_train_processed, y=y_train)
   
-  #
-  from sklearn.metrics import *
-  y_pred=lgbm_model.predict(X_test_processed)
-  test_accuracy=accuracy_score(y_pred, y_test)
-  test_roc=roc_auc_score(y_test, y_pred)
-  #test_f1=
+  y_preds=lgbm_model.predict(X_test_processed)
+  signature = infer_signature(X_test_processed, y_preds)
+  eval_data = X_test_processed
+  eval_data["Label"] = y_test
+  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature)
+  result = mlflow.evaluate(
+       model_info.model_uri,
+       eval_data,
+       targets="Label",
+       model_type="classifier"
+   )
 
   ##------- log pyfunc custom model -------##
    # make an instance of the Pyfunc Class
@@ -293,3 +299,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
+
+# COMMAND ----------
+
+
