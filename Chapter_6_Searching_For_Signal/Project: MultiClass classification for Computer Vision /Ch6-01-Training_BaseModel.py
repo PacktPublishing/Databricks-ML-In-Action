@@ -8,6 +8,22 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
+import torch
+import torchvision
+import pytorch_lightning as pl
+from torch import nn, optim, Tensor, manual_seed, argmax
+from torch.autograd import Variable
+from torch.nn import functional as F
+from torch.nn.parallel import DistributedDataParallel
+from torch.optim import Optimizer
+from torch.utils.data import TensorDataset, DataLoader
+from torchmetrics.classification import Accuracy, MulticlassConfusionMatrix
+from torchvision import transforms, models
+from pytorch_lightning.utilities.model_summary import ModelSummary
+
+
+# COMMAND ----------
+
 import os
 import numpy as np
 import io
@@ -34,27 +50,13 @@ log_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/intel_trai
 
 # COMMAND ----------
 
-
-import torch
-import torchvision
-import pytorch_lightning as pl
-from torch import nn, optim, Tensor, manual_seed, argmax
-from torch.autograd import Variable
-from torch.nn import functional as F
-from torch.nn.parallel import DistributedDataParallel
-from torch.optim import Optimizer
-from torch.utils.data import TensorDataset, DataLoader
-from torchmetrics.classification import Accuracy, MulticlassConfusionMatrix
-from torchvision import transforms, models
-from pytorch_lightning.utilities.model_summary import ModelSummary
-
-
 class LitCVNet(pl.LightningModule):
         # we can also define model in this Module or we can define in standard pytorch Module
         # then wrap with Pytorch-Lightning Module , You can save & load model weights without 
         # altering pytorch / Lightning module . You will learn in the later series .
-        def __init__(self, num_classes = 6, learning_rate= 0.001, family = "resnext", momentum = 0.1,  dropout_rate = 0):
+        def __init__(self, num_classes = 6, learning_rate= 0.0001, family = "resnext", momentum = 0.1,  dropout_rate = 0):
             super().__init__()
+            self.save_hyperparameters()
             self.family = family # we do not use familit explicitly, but you could play with 2 different family models using 1 script 
             self.momentum = momentum
             self.accuracy = Accuracy(task="multiclass", num_classes=num_classes)
@@ -93,16 +95,16 @@ class LitCVNet(pl.LightningModule):
             self.log("acc", torch.tensor([acc]), on_step=True, on_epoch=True, logger=True)
             return  {"loss": loss, "acc": acc}
         
-        def validation_step(self,batch, batch_idx):
+        def validation_step(self, batch, batch_idx):
             x = batch["content"]
             y = batch["label_id"]
             logits = self.forward(x)
             loss = self.loss(logits, y)
             acc = self.accuracy(logits, y)
             # required format
-            self.log("val_loss", torch.tensor([loss]), on_step=True, logger=True)
-            self.log("val_acc", torch.tensor([acc]), prog_bar=True, logger=True)
-            return {"val_loss": loss, "val_acc": acc}
+            self.log("val_loss", torch.tensor([loss]), prog_bar=True, on_step=True, on_epoch=True, logger=True)
+            self.log("val_acc", torch.tensor([acc]), prog_bar=True, on_step=True, on_epoch=True, logger=True)
+            return {"val_loss": loss, "val_acc": acc} 
         
         def test_step(self, batch, batch_idx):
             x = batch["content"]
@@ -120,11 +122,12 @@ class LitCVNet(pl.LightningModule):
             # Update confusion matrix
             self.confusion_matrix.update(logits, y)
 
-        # # predict_step is optional unless you are doing some predictions
-        # def predict_step(self, batch, batch_idx, dataloader_idx=0):
-        #     x,y = batch
-        #     preds = self.forward(x)
-        #     return preds
+        # predict_step is optional unless you are doing some predictions
+        def predict_step(self, batch, batch_idx, dataloader_idx=0):
+            x = batch["content"]
+            y = batch["label_id"]
+            preds = self.forward(x)
+            return preds
         
         def configure_optimizers(self):
             params = self.model.fc.parameters()
@@ -133,6 +136,11 @@ class LitCVNet(pl.LightningModule):
             # required format 
             return {"optimizer":optimizer, "lr_scheduler":lr_scheduler}
 
+
+# COMMAND ----------
+
+model = LitCVNet()
+ModelSummary(model, max_depth=4)
 
 # COMMAND ----------
 
@@ -167,21 +175,18 @@ class DeltaDataModule(pl.LightningDataModule):
                 FieldSpec("content", load_image_using_pil=True, transform=self.transform),
                 FieldSpec("label_id"),
             ],
-            shuffle=False,
+            shuffle=True,
             batch_size=batch_size,
         )
 
     def train_dataloader(self):
-        return self.dataloader(
-            train_delta_path,
-            batch_size=50,
-        )
+        return self.dataloader(train_delta_path, batch_size=64)
 
     def val_dataloader(self):
-        return self.dataloader(val_delta_path, batch_size=100)
+        return self.dataloader(val_delta_path, batch_size=64)
 
     def test_dataloader(self):
-        return self.dataloader(val_delta_path, batch_size=50)
+        return self.dataloader(val_delta_path)
 
 # COMMAND ----------
 
@@ -257,13 +262,11 @@ if not torch.cuda.is_available(): # is gpu
 
 # COMMAND ----------
 
-MAX_EPOCH_COUNT = 10
+MAX_EPOCH_COUNT = 30
 STEPS_PER_EPOCH = 5
-EARLY_STOP_MIN_DELTA = 0.1
+EARLY_STOP_MIN_DELTA = 0.05
 EARLY_STOP_PATIENCE = 10
 STRATEGY = "auto"
-EARLY_STOP_METRIC = "val_acc"
-MODEL_CHECKPOINT_METRIC = "val_loss"
 
 from pytorch_lightning.loggers import TensorBoardLogger
 
@@ -282,12 +285,12 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         save_top_k=2,
         mode="min",
-        monitor=MODEL_CHECKPOINT_METRIC, # this has been saved under the Model Trainer - inside the validation_step function 
+        monitor="acc", # this has been saved under the Model Trainer - inside the validation_step function 
         dirpath=log_path,
         filename="sample-cvops-{epoch:02d}-{val_loss:.2f}"
     )
     early_stop_callback = pl.callbacks.EarlyStopping(
-        monitor=EARLY_STOP_METRIC,
+        monitor="loss",
         min_delta=EARLY_STOP_MIN_DELTA,
         patience=EARLY_STOP_PATIENCE,
         stopping_threshold=0.1,
@@ -311,9 +314,9 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
         max_epochs=max_epochs,
         logger=None,
         callbacks=[
-           checkpoint_callback,
-           early_stop_callback,
-           tqdm_callback
+            early_stop_callback,
+            checkpoint_callback,
+            tqdm_callback
         ],
     )
 
@@ -323,7 +326,8 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
 
     dm = DeltaDataModule()
     model = LitCVNet(num_classes=6)
-    trainer.fit(model, dm)
+    #trainer.fit(model, dm)
+    trainer.fit(model, train_dataloaders=dm.train_dataloader(), val_dataloaders=dm.val_dataloader())
     print("Training done!")
 
     print("Test done!")

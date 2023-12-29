@@ -54,6 +54,10 @@ loaded_model
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
 # MAGIC %md 
 # MAGIC ### Score your model on accuracy 
 # MAGIC
@@ -84,17 +88,16 @@ def pred_class(img):
 
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
-pred_class_func = cv_funcs.pred_class(img)
 
 classes = {k:v for k , v in enumerate(sorted(outcomes))}
 loaded_model.eval()
 
 plt.figure(figsize=(20,20))
-for i, images in enumerate(pred_files[:10]):
+for i, images in enumerate(pred_files[:50]):
     # just want 25 images to print
     if i > 24:break
     img = Image.open(images)
-    index = pred_class_func(img)
+    index = pred_class(img)
     plt.subplot(5,5,i+1)
     plt.title(classes[index])
     plt.axis('off')
@@ -153,6 +156,7 @@ import numpy as np
 import io
 from pyspark.sql.functions import pandas_udf
 from typing import Iterator
+import torchvision
 
 def feature_extractor(img):
     image = Image.open(io.BytesIO(img))

@@ -19,8 +19,8 @@ delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
 # we are keeping Delta tables with a PATH 
 if bool(dbutils.widgets.get('Reset')):
-  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_train_name}", recursive=True)
-  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_val_name}", recursive=True)
+  !rm -rf {MAIN_DIR2Write}{delta_train_name}
+  !rm -rf {MAIN_DIR2Write}{delta_val_name}
 
 # COMMAND ----------
 
@@ -32,7 +32,7 @@ def prep_data2delta(
     outcomes,
     name2write,
     path2write="YOUR_PATH",
-    write2detla=True,
+    write2delta=True,
     returnDF=None,
 ):
 
@@ -52,13 +52,13 @@ def prep_data2delta(
             .load(f"{dir_name}/{LABEL_NAME}")
             .withColumn("label_name", f.lit(f"{LABEL_NAME}"))
             .withColumn("label_id", f.lit(f"{mapping_dict[LABEL_NAME]}").astype("int"))
-            .withColumn("image_name", f.split(f.col("path"), "/").getItem(9))
+            .withColumn("image_name", f.split(f.col("path"), "/").getItem(10))
             .withColumn(
                 "id", f.split(f.col("image_name"), ".jpg").getItem(0).astype("int")
             )
         )
         if write2delta:
-            df.write.format("delta").mode("append").save("{path2write}{name2write}")
+            df.write.format("delta").mode("append").save(f"{path2write}{name2write}")
         if returnDF:
             return df
 
@@ -80,8 +80,8 @@ prep_data2delta(
     train_dir,
     outcomes,
     delta_train_name,
-    write2detla=True,
-    path2write=MAIN_DIR2Write
+    write2delta=True,
+    path2write=MAIN_DIR2Write,
     returnDF=None,
 )
 
@@ -91,8 +91,8 @@ prep_data2delta(
     valid_dir,
     outcomes,
     delta_val_name,
-    path2write=MAIN_DIR2Write
-    write2detla=True,
+    path2write=MAIN_DIR2Write,
+    write2delta=True,
     returnDF=None,
 )
 
@@ -104,23 +104,25 @@ prep_data2delta(
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC OPTIMIZE delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta`
+# MAGIC -- you can set up a widget to a notebook and consume widgets via $ variables with SQL
+# MAGIC --OPTIMIZE delta.`/Volumes/$catalog/$database_name/files/intel_image_clf/valid_imgs_main.delta`
+# MAGIC OPTIMIZE delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/train_imgs_main.delta`
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC OPTIMIZE delta.`/Volumes/$catalog/$database_name/intel_image_clf/train_imgs_main.delta`
+# MAGIC OPTIMIZE delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/valid_imgs_main.delta`
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC ALTER TABLE delta.`/Volumes/$catalog/$database_name/intel_image_clf/train_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
-# MAGIC ALTER TABLE delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
+# MAGIC ALTER TABLE delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/train_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
+# MAGIC ALTER TABLE delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/valid_imgs_main.delta` SET TBLPROPERTIES ('delta.enableDeletionVectors' = false);
 
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta`
+# MAGIC SELECT * FROM delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/valid_imgs_main.delta`
 
 # COMMAND ----------
 

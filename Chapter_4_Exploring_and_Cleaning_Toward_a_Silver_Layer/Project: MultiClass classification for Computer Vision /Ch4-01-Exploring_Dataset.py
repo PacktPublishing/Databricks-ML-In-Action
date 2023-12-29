@@ -11,14 +11,11 @@
 
 # COMMAND ----------
 
-# MAGIC %sql 
-# MAGIC SELECT * FROM delta.`/Volumes/$catalog/$database_name/intel_image_clf/valid_imgs_main.delta`
-
-# COMMAND ----------
-
 from mlia_utils.cv_clf_funcs import *
+
 train_df = (spark.read.format("delta").load(train_delta_path))
 print(idx_class(train_df))
+display(train_df)
 
 # COMMAND ----------
 
@@ -35,3 +32,7 @@ proportion_labels(labels_dict_train)
 # COMMAND ----------
 
 proportion_labels(labels_dict_valid)
+
+# COMMAND ----------
+
+
