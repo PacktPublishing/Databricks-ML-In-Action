@@ -84,38 +84,23 @@ class CVModelWrapper(mlflow.pyfunc.PythonModel):
 
 # COMMAND ----------
 
+
+import os
+import mlflow
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
-
-def load_best_model()
-  best_model = mlflow.search_runs(
-      filter_string=f'attributes.status = "FINISHED"',
-      order_by=["metrics.acc DESC"],
-      max_results=10,
-  ).iloc[0]
-  model_uri = "runs:/{}/model".format(best_model.run_id)
-
-  local_path = mlflow.artifacts.download_artifacts(model_uri)
-  device = "cuda" if torch.cuda.is_available() else "cpu"
-
-  requirements_path = os.path.join(local_path, "requirements.txt")
-  if not os.path.exists(requirements_path):
-    dbutils.fs.put("file:" + requirements_path, "", True)
-
-
-# COMMAND ----------
-
+from mlia_utils.cv_clf_funcs import select_best_model
 
 experiment_path = f"/Users/{current_user}/intel-clf-training_action"
-mlflow.set_experiment(experiment_path)
+local_path = select_best_model(experiment_path)
 
+requirements_path = os.path.join(local_path, "requirements.txt")
+if not os.path.exists(requirements_path):
+  dbutils.fs.put("file:" + requirements_path, "", True)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
 loaded_model = torch.load(local_path+"/data/model.pth", map_location=torch.device(device))
 
-loaded_model = torch.load(
-    local_path + "/data/model.pth", map_location=torch.device("cpu")
-)
-
 wrapper = CVModelWrapper(loaded_model)
-
 
 # COMMAND ----------
 
@@ -178,13 +163,20 @@ loaded_model_uc = mlflow.pyfunc.load_model(model_version_uri) # runiid / model_r
 
 # COMMAND ----------
 
+# MAGIC %md 
+# MAGIC ## Create your serving endpoint 
+# MAGIC
+# MAGIC **Note** Here we have used UI to set the serving endpoint. You could also use REST API or SDK. 
+
+# COMMAND ----------
+
 import os
 import requests
 import numpy as np
 import pandas as pd
 import json
 
-serving_endpoint_name = f"mlaction_endpoint_cv_uc"
+serving_endpoint_name = f"cvops_model_mlaction_endpoint"
 
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 #db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
@@ -197,7 +189,7 @@ def create_tf_serving_json(data):
   return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
 
 def score_model(dataset):
-  url = "YOUR_ENDPOINT"
+  url = f"{host}/serving-endpoints/{serving_endpoint_name}/invocations"
   headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
   ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
   data_json = json.dumps(ds_dict, allow_nan=True)

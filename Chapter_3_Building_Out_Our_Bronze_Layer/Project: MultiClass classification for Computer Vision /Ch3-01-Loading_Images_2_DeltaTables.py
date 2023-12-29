@@ -19,8 +19,8 @@ delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
 # we are keeping Delta tables with a PATH 
 if bool(dbutils.widgets.get('Reset')):
-  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_train_name}")
-  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_val_name}")
+  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_train_name}", recursive=True)
+  dbutils.fs.rm(f"{MAIN_DIR2Write}{delta_val_name}", recursive=True)
 
 # COMMAND ----------
 

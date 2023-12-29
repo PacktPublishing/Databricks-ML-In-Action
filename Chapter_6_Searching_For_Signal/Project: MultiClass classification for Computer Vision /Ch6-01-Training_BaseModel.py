@@ -16,10 +16,6 @@ from math import ceil
 from pyspark.sql.functions import col
 from PIL import Image
 
-
-train_delta_path = "/Volumes/{catalog}}/{database_name}/files/intel_image_clf/train_imgs_main.delta"
-val_delta_path = "/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta"
-
 train_df = (spark.read.format("delta")
             .load(train_delta_path)
             ).limit(10)

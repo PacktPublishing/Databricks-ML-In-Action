@@ -3,6 +3,10 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
 from PIL import Image
+import mlflow 
+from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+import os 
+
 
 def transform_imgs(p=0.5):
   return torchvision.transforms.Compose([
@@ -18,6 +22,17 @@ def idx_class(df):
     object_id_to_class_mapping = {
         unique_object_ids[idx].label_name: idx for idx in range(len(unique_object_ids))}
     return object_id_to_class_mapping
+
+def select_best_model(experiment_path, artiffact_name = "model"):
+  mlflow.set_experiment(experiment_path)
+  best_model = mlflow.search_runs(
+                filter_string=f'attributes.status = "FINISHED"',
+                order_by=["metrics.acc DESC"],
+                max_results=10,
+                ).iloc[0]
+  model_uri = "runs:/{0}/{1}".format(best_model.run_id, artiffact_name)
+  local_path = mlflow.artifacts.download_artifacts(model_uri)
+  return local_path 
 
 def display_image(path, dpi=50):
     img = Image.open(path)

@@ -44,7 +44,7 @@ os.environ[
 !mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/
 !mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images
 
-# this can take up to 1h 
+# this can take up to few hours  
 # or load a few examples to the UC on your own if the time is a constraint 
 !unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images 
 

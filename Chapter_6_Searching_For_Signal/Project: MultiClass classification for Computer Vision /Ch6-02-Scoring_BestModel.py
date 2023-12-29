@@ -28,11 +28,7 @@ from torchmetrics import Accuracy
 from pyspark.sql.functions import col
 from PIL import Image
 
-import mlflow
-from deltatorch import create_pytorch_dataloader, FieldSpec
-
-experiment_path = f"/Users/{current_user}/intel-clf-training_action"
-mlflow.set_experiment(experiment_path)
+# COMMAND ----------
 
 from mlia_utils.cv_clf_funcs import idx_class
 train_df = (spark.read.format("delta").load(train_delta_path))
@@ -40,22 +36,19 @@ print(idx_class(train_df))
 
 # COMMAND ----------
 
+import os
+import mlflow
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+from mlia_utils.cv_clf_funcs import select_best_model
 
-best_model = mlflow.search_runs(
-    filter_string=f'attributes.status = "FINISHED"',
-    order_by=["metrics.acc DESC"],
-    max_results=10,
-).iloc[0]
-model_uri = "runs:/{}/model".format(best_model.run_id)
-
-local_path = mlflow.artifacts.download_artifacts(model_uri)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+experiment_path = f"/Users/{current_user}/intel-clf-training_action"
+local_path = select_best_model(experiment_path)
 
 requirements_path = os.path.join(local_path, "requirements.txt")
 if not os.path.exists(requirements_path):
   dbutils.fs.put("file:" + requirements_path, "", True)
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 loaded_model = torch.load(local_path+"/data/model.pth", map_location=torch.device(device))
 loaded_model
 
@@ -68,43 +61,12 @@ loaded_model
 
 # COMMAND ----------
 
-from mlia_utils import cv_clf_funcs as cv_funcs
-transform_tests = cv_funcs.transform_imgs()
-
-test_data = torchvision.datasets.ImageFolder(root=valid_dir, transform=transform_tests)
-test_loader= DataLoader(test_data, batch_size=32, shuffle=False, num_workers=2)
-
-correct_count, all_count = 0,0
-pred_label_list = []
-proba_list = []
-for images, labels in test_loader:
-    for i in range(len(labels)):
-        if torch.cuda.is_available():
-            images = images.cuda()
-            labels = labels.cuda()
-        
-        img = images[i].view(1,3,150,150)
-        with torch.no_grad():
-            logps = loaded_model(img)
-            
-        ps = torch.exp(logps)
-        probab = list(ps.cpu()[0])
-        proba_list.append(probab)
-        pred_label = probab.index(max(probab))
-        pred_label_list.append(pred_label)
-        true_label = labels.cpu()[i]
-        if(true_label == pred_label):
-            correct_count += 1
-        all_count += 1
-        
-print("Number of images Tested=", all_count)
-print("\n Model Accuracy in % =",(correct_count/all_count)*100)
-
-# COMMAND ----------
-
 import matplotlib.pyplot as plt
 from torch.autograd import Variable
-  
+from mlia_utils import cv_clf_funcs as cv_funcs
+
+transform_tests = cv_funcs.transform_imgs()
+
 def pred_class(img):
     # transform images
     img_tens = transform_tests(img)
@@ -137,6 +99,45 @@ for i, images in enumerate(pred_files[:10]):
     plt.title(classes[index])
     plt.axis('off')
     plt.imshow(img)
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC
+# MAGIC **Note** you could also measure your accuracy using directly Lightning or Torch API. 
+# MAGIC Here is an example how you could calculate your score on the exact label prediction:
+# MAGIC
+# MAGIC ```
+# MAGIC
+# MAGIC test_data = torchvision.datasets.ImageFolder(root=valid_dir, transform=transform_tests)
+# MAGIC test_loader= DataLoader(test_data, batch_size=32, shuffle=False, num_workers=2)
+# MAGIC
+# MAGIC correct_count, all_count = 0,0
+# MAGIC pred_label_list = []
+# MAGIC proba_list = []
+# MAGIC for images, labels in test_loader:
+# MAGIC     for i in range(len(labels)):
+# MAGIC         if torch.cuda.is_available():
+# MAGIC             images = images.cuda()
+# MAGIC             labels = labels.cuda()
+# MAGIC         
+# MAGIC         img = images[i].view(1,3,150,150)
+# MAGIC         with torch.no_grad():
+# MAGIC             logps = loaded_model(img)
+# MAGIC             
+# MAGIC         ps = torch.exp(logps)
+# MAGIC         probab = list(ps.cpu()[0])
+# MAGIC         proba_list.append(probab)
+# MAGIC         pred_label = probab.index(max(probab))
+# MAGIC         pred_label_list.append(pred_label)
+# MAGIC         true_label = labels.cpu()[i]
+# MAGIC         if(true_label == pred_label):
+# MAGIC             correct_count += 1
+# MAGIC         all_count += 1
+# MAGIC         
+# MAGIC print("Number of images Tested=", all_count)
+# MAGIC print("\n Model Accuracy in % =",(correct_count/all_count)*100)
+# MAGIC ```
 
 # COMMAND ----------
 
