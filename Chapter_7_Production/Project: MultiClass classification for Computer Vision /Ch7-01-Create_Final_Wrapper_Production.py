@@ -124,10 +124,6 @@ display(df)
 
 # COMMAND ----------
 
-b64image1
-
-# COMMAND ----------
-
 from PIL import Image
 import matplotlib.pyplot as plt
 from mlia_utils.cv_clf_funcs import *
