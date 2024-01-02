@@ -19,8 +19,8 @@ delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
 # we are keeping Delta tables with a PATH 
 if bool(dbutils.widgets.get('Reset')):
-  !rm -rf {MAIN_DIR2Write}{delta_train_name}
-  !rm -rf {MAIN_DIR2Write}{delta_val_name}
+  !rm -rf {main_dir_2write}{delta_train_name}
+  !rm -rf {main_dir_2write}{delta_val_name}
 
 # COMMAND ----------
 
@@ -45,13 +45,13 @@ def prep_data2delta(
         "mountain": 5,
     }
     # As we have multi label problem we will loop over labels to save them all under 1 main training set 
-    for LABEL_NAME in outcomes:
+    for label_name in outcomes:
         df = (
             spark.read.format("binaryfile")
             .option("recursiveFileLookup", "true")
-            .load(f"{dir_name}/{LABEL_NAME}")
-            .withColumn("label_name", f.lit(f"{LABEL_NAME}"))
-            .withColumn("label_id", f.lit(f"{mapping_dict[LABEL_NAME]}").astype("int"))
+            .load(f"{dir_name}/{lable_name}")
+            .withColumn("label_name", f.lit(f"{label_name}"))
+            .withColumn("label_id", f.lit(f"{mapping_dict[label_name]}").astype("int"))
             .withColumn("image_name", f.split(f.col("path"), "/").getItem(10))
             .withColumn(
                 "id", f.split(f.col("image_name"), ".jpg").getItem(0).astype("int")
@@ -81,7 +81,7 @@ prep_data2delta(
     outcomes,
     delta_train_name,
     write2delta=True,
-    path2write=MAIN_DIR2Write,
+    path2write=main_dir_2write,
     returnDF=None,
 )
 
@@ -91,7 +91,7 @@ prep_data2delta(
     valid_dir,
     outcomes,
     delta_val_name,
-    path2write=MAIN_DIR2Write,
+    path2write=main_dir_2write,
     write2delta=True,
     returnDF=None,
 )
