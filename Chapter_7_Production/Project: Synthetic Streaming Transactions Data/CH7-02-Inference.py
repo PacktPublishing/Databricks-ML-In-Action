@@ -10,6 +10,14 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install --upgrade scikit-learn==1.4.0rc1
+
+# COMMAND ----------
+
+dbutils.library.restartPython()
+
+# COMMAND ----------
+
 # MAGIC %run ../../global-setup $project_name=synthetic_transactions
 
 # COMMAND ----------
@@ -35,9 +43,10 @@ schema = StructType([
     StructField("Amount", FloatType(),False)
 ])
 data = '[{"CustomerID":1240,"TransactionTimestamp": "2023-12-12T23:42:07.571Z","Product":"Product A","Amount":10.0}]'
-print(json.loads(data))
 scoring_df = pd.json_normalize(json.loads(data))
 scoring_df["TransactionTimestamp"] = pd.to_datetime(scoring_df["TransactionTimestamp"])
+
+print(f"Scoring model={model_name} version={get_latest_model_version(model_name)}")
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",

@@ -101,7 +101,6 @@ inference_feature_lookups = [
         "LookupTimestamp": "TransactionTimestamp"
       },
     lookup_key=['Product'],
-    
     timestamp_lookup_key='TransactionTimestamp'
   ),
   FeatureFunction(
@@ -159,7 +158,7 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
   conda environment file.  
   '''
   
-  def __init__(self, model, X, y, numeric_columns,cat_columns):
+  def __init__(self, model, X, y, numeric_columns, cat_columns):
     self.model = model
 
     ## Train test split
@@ -193,8 +192,8 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
       
     self.log_loss = _evaluation_metrics(model=self.model, X=self.X_test_processed, y=self.y_test)
   
-  def predict(self, input_data):
-    input_processed = self.preprocess_data(X=input_data, numeric_columns=self.numeric_columns, fitted_scaler=self.fitted_scaler ,cat_columns=cat_columns, encoder=self.encoder)
+  def predict(self, context, input_data):
+    input_processed = self._preprocess_data(df=input_data, numeric_columns=self.numeric_columns, fitted_scaler=self.fitted_scaler ,cat_columns=self.cat_columns, encoder=self.encoder)
     return pd.DataFrame(self.model.predict(input_processed), columns=['predicted'])
   
   def _preprocess_data(self, df, numeric_columns,fitted_scaler,cat_columns, encoder):
@@ -299,6 +298,10 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
+
+# COMMAND ----------
+
+myLGBM.predict(context=None,input_data=X_test)
 
 # COMMAND ----------
 

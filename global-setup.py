@@ -28,7 +28,7 @@ assert project_name in possible_projects, "project_name unknown, did you type co
 try:
   min_required_version = dbutils.widgets.get("min_dbr_version")
 except:
-  min_required_version = "13.0"
+  min_required_version = "14.0"
 
 version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
 version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
