@@ -177,7 +177,7 @@ if project_name == "cv_clf":
 
 # COMMAND ----------
 
-# DBTITLE 1,Temporary as we need routing to be in sdk
+# Temporary as we need routing to be in sdk
 class EndpointApiClient:
     def __init__(self):
         self.base_url =dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiUrl().get()
