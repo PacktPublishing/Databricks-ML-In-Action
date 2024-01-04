@@ -1,9 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Passed variables via Widgets
 # RUN TIME ARGUMENTS
-# Minimum Databricks Runtime version allowed for notebooks attaching to a cluster
-dbutils.widgets.text("min_dbr_version", "13.0", "Min required DBR version")
-
 dbutils.widgets.text("catalog", "ml_in_action", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
@@ -27,14 +24,7 @@ assert project_name in possible_projects, "project_name unknown, did you type co
 
 
 # VERIFY DATABRICKS VERSION COMPATIBILITY ----------
-try:
-  min_required_version = dbutils.widgets.get("min_dbr_version")
-except:
-  min_required_version = "14.0"
-
-if project_name in ["rag_chatbot", "cv_clf"]:
-  min_required_version == "14.0"
-
+min_required_version = "14.0"
 version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
 version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
 assert version_search, f"The Databricks version can't be extracted from {version_tag}, shouldn't happen, please correct the regex"
