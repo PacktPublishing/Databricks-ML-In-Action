@@ -100,21 +100,6 @@ spark.sql(f"GRANT CREATE, SELECT, USAGE on SCHEMA {catalog}.{database_name} TO `
 sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.files""")
 volume_file_path = f"/Volumes/{catalog}/{database_name}/files/"
 print(f"use volume_file_path {volume_file_path}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Get Kaggle credentials using secrets
-# import os
-# os.environ['kaggle_username'] = 'YOUR KAGGLE USERNAME HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
-# os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-
-# # os.environ['kaggle_key'] = 'YOUR KAGGLE KEY HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
-# os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
-
-# COMMAND ----------
-
-# import os
-
-# os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-
-# os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
+sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.models""")
+volume_model_path = f"/Volumes/{catalog}/{database_name}/models/"
+print(f"use volume_model_path {volume_model_path}")
