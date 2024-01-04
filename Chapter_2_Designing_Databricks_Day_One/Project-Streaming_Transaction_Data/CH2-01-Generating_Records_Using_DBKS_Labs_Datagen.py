@@ -1,9 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
 # MAGIC ## Synthetic data - Synthetic Data Source Record Generator
-# MAGIC We simulate streaming data by generating labeled JSON data. Then we write it to a folder in our volume.
+# MAGIC We simulate streaming data by generating labeled JSON data. We, at first, do not include the Product column. We write the JSON files to our volume.
 
 # COMMAND ----------
 
@@ -27,12 +27,13 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 # DBTITLE 1,Notebooke Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
-destination_path = "{}/schema_change_data".format(volume_data_path)
-temp_path = "{}/temp".format(volume_data_path)
+destination_path = "{}/no_product_data".format(volume_file_path)
+temp_path = "{}/temp".format(volume_file_path)
 sleepIntervalSeconds = 1
 
 # COMMAND ----------
 
+# DBTITLE 1,Check the Reset Widget Value
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(temp_path, recurse=True)
   dbutils.fs.rm(destination_path, recurse=True)
@@ -43,10 +44,7 @@ if bool(dbutils.widgets.get('Reset')):
 # DBTITLE 1,Data Variables
 CustomerID_vars = {"min": 1234, "max": 1260}
 
-Product_vars = {"None": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 10},
-                "A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 10},
-                "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 10, "beta": 4},
-                "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 10}}
+Product_vars = {"None": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 10}}
 
 # COMMAND ----------
 
@@ -124,7 +122,8 @@ def generateRecord(Product,Label):
   return (define_specs(Product=Product, Label=Label, currentTimestamp=datetime.now()))
   
 # Generate a list of records
-def generateRecordSet(Products):
+def generateRecordSet():
+  Products = ["None"]
   Labels = [0,1]
   recordSet = []
   for Prod in Products:
@@ -134,8 +133,8 @@ def generateRecordSet(Products):
 
 
 # Generate a set of data, convert it to a Dataframe, write it out as one json file to the temp path. Then move that file to the destination_path
-def writeJsonFile(destination_path, Products = ["None"]):
-  recordDF = generateRecordSet(Products)
+def writeJsonFile(destination_path):
+  recordDF = generateRecordSet()
   recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
   recordDF.coalesce(1).write.format("json").save(temp_path)
   
@@ -149,17 +148,11 @@ def writeJsonFile(destination_path, Products = ["None"]):
 # DBTITLE 1,Loop for Generating Data
 import time
 
-Products = ["None"]
 t=1
-total = 100
-while(t<total):
-  writeJsonFile(destination_path,Products=Products)
+while(t<5):
+  writeJsonFile(destination_path)
   t = t+1
-  if not (t % 4):
-    print(f"t={t}")
   time.sleep(sleepIntervalSeconds)
-  if (t > total/4):
-    Products = ["A","B","C"]
 
 # COMMAND ----------
 
@@ -170,13 +163,12 @@ while(t<total):
 # COMMAND ----------
 
 # DBTITLE 1,Count of Transactions per User
-display(spark.read.format("json").load(destination_path))
+df = spark.read.format("json").load(destination_path)
+usercounts = df.groupBy("CustomerID").count()
+display(usercounts.orderBy("CustomerID"))
+
 
 # COMMAND ----------
 
 # DBTITLE 1,Display the Data Generated
 display(spark.read.format("text").load(destination_path))
-
-# COMMAND ----------
-
-

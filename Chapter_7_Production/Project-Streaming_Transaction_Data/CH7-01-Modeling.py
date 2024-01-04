@@ -34,7 +34,7 @@ fe = FeatureEngineeringClient()
 
 training_feature_lookups = [
   FeatureLookup(
-    table_name="transaction_count_history",
+    table_name="prod_transaction_count_history",
     rename_outputs={
         "eventTimestamp": "TransactionTimestamp"
       },
@@ -60,7 +60,7 @@ training_feature_lookups = [
 
 # COMMAND ----------
 
-raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
+raw_transactions_df = sql("SELECT * FROM prod_raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
@@ -71,7 +71,6 @@ training_set = fe.create_training_set(
 
 # COMMAND ----------
 
-
 display(training_set.load_df())
 
 # COMMAND ----------
@@ -79,7 +78,7 @@ display(training_set.load_df())
 #columns we want to scale
 numeric_columns = []
 #columns we want to factorize
-cat_columns = ["Product","isTimeout","CustomerID"]
+cat_columns = ["Product","CustomerID"]
 
 # COMMAND ----------
 
@@ -91,7 +90,7 @@ cat_columns = ["Product","isTimeout","CustomerID"]
 
 inference_feature_lookups = [
   FeatureLookup(
-    table_name="transaction_count_ft",
+    table_name="prod_transaction_count_ft",
     lookup_key=["CustomerID"],
     feature_names=["transactionCount", "isTimeout"]
   ),
@@ -101,7 +100,6 @@ inference_feature_lookups = [
         "LookupTimestamp": "TransactionTimestamp"
       },
     lookup_key=['Product'],
-    
     timestamp_lookup_key='TransactionTimestamp'
   ),
   FeatureFunction(
@@ -113,7 +111,7 @@ inference_feature_lookups = [
 
 # COMMAND ----------
 
-inf_transactions_df = sql("SELECT * FROM raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
+inf_transactions_df = sql("SELECT * FROM prod_raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
 
 inferencing_set = fe.create_training_set(
     df=inf_transactions_df,
@@ -141,7 +139,17 @@ import mlflow
 mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
-model_artifact_path = volume_file_path + "/" + model_name
+model_artifact_path = volume_model_path +  model_name
+
+# env = mlflow.pyfunc.get_default_conda_env()
+## mode=x may be needed for the first run
+# with open(model_artifact_path+"/requirements.txt", 'r') as f:
+#     env['dependencies'][-1]['pip'] = f.read().split('\n')
+
+
+# COMMAND ----------
+
+!pip freeze > /Volumes/ml_in_action/synthetic_transactions/models/packaged_transaction_model/requirements.txt
 
 # COMMAND ----------
 
@@ -159,12 +167,14 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
   conda environment file.  
   '''
   
-  def __init__(self, model, X, y, numeric_columns,cat_columns):
+  def __init__(self, model, X, y, numeric_columns, cat_columns):
     self.model = model
 
     ## Train test split
     from sklearn.model_selection import train_test_split
-    self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.30, random_state=2024)
+    nrows = len(X)
+    split_row = round(.8*nrows)
+    self.X_train, self.X_test, self.y_train, self.y_test = X[:split_row],X[split_row:],y[:split_row],y[split_row:]
     self.numeric_columns = numeric_columns
     self.cat_columns = cat_columns
 
@@ -182,8 +192,8 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     else:
       self.fitted_scaler=None
     
-    self.X_train_processed = preprocess_data(self.X_train, self.numeric_columns, self.fitted_scaler,self.cat_columns, self.encoder)
-    self.X_test_processed  = preprocess_data(self.X_test, self.numeric_columns, self.fitted_scaler,self.cat_columns,self.encoder)
+    self.X_train_processed = TransactionModelWrapper.preprocess_data(self.X_train, self.numeric_columns, self.fitted_scaler,self.cat_columns, self.encoder)
+    self.X_test_processed  = TransactionModelWrapper.preprocess_data(self.X_test, self.numeric_columns, self.fitted_scaler,self.cat_columns,self.encoder)
 
     def _evaluation_metrics(model, X, y):
       from sklearn.metrics import log_loss
@@ -193,14 +203,21 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
       
     self.log_loss = _evaluation_metrics(model=self.model, X=self.X_test_processed, y=self.y_test)
   
-  def predict(self, input_data):
-    input_processed = self.preprocess_data(X=input_data, numeric_columns=self.numeric_columns, fitted_scaler=self.fitted_scaler ,cat_columns=cat_columns, encoder=self.encoder)
+  def predict(self, context, input_data: pd.DataFrame)->pd.DataFrame:
+    input_processed = TransactionModelWrapper.preprocess_data(df=input_data, numeric_columns=self.numeric_columns, fitted_scaler=self.fitted_scaler ,cat_columns=self.cat_columns, encoder=self.encoder)
     return pd.DataFrame(self.model.predict(input_processed), columns=['predicted'])
   
-  def _preprocess_data(self, df, numeric_columns,fitted_scaler,cat_columns, encoder):
-    one_hot_encoded = self.encoder.transform(df[cat_columns])
+  @staticmethod
+  def preprocess_data(df, numeric_columns,fitted_scaler,cat_columns, encoder):
+    if "TransactionTimestamp" in df.columns:
+      try:
+        df = df.drop("TransactionTimestamp",axis=1)
+      except:
+        df = df.drop("TransactionTimestamp")
+        
+    one_hot_encoded = encoder.transform(df[[cat_columns]])
     df = pd.concat([df,one_hot_encoded],axis=1).drop(columns=cat_columns)
-    
+    df["isTimeout"] = df["isTimeout"].astype('bool')
     
     ## scale the numeric columns with the pre-built scaler
     if len(numeric_columns):
@@ -209,26 +226,13 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     
     return df
   
-
-# COMMAND ----------
-
-def preprocess_data(df, numeric_columns,fitted_scaler,cat_columns, encoder):
-  one_hot_encoded = encoder.transform(df[cat_columns])
-  df = pd.concat([df,one_hot_encoded],axis=1).drop(columns=cat_columns)
-
-  ## scale the numeric columns with the pre-built scaler
-  if len(numeric_columns):
-    ndf = df[numeric_columns].copy()
-    df[numeric_columns] = fitted_scaler.transform(ndf[numeric_columns])
+  @staticmethod
+  def fit(X, y):
+    import lightgbm as lgb
+    _clf = lgb.LGBMClassifier()
+    lgbm_model = _clf.fit(X, y)
+    return lgbm_model
   
-  return df
-
-def fit(X, y):
-  import lightgbm as lgb
-  _clf = lgb.LGBMClassifier()
-  lgbm_model = _clf.fit(X, y)
-  # mlflow.log_image(lgb.plot_metric(lgbm_model))
-  return lgbm_model
 
 # COMMAND ----------
 
@@ -247,13 +251,13 @@ mlflow.autolog(
 )
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
-  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.raw_transactions",
+  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.prod_raw_transactions",
                     'Training-feature-lookups': training_feature_lookups, 
                     'Inference-feature-lookups': inference_feature_lookups})
   
   from sklearn.model_selection import train_test_split
   training_data = training_set.load_df().toPandas()
-  X = training_data.drop(["Label","TransactionTimestamp"], axis=1)
+  X = training_data.drop(["Label"], axis=1)
   y = training_data.Label.astype(int)
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=2024)
 
@@ -270,11 +274,11 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
     fitted_scaler = scaler.fit(X_train[numeric_columns])
   else:
     fitted_scaler=None
-  X_train_processed = preprocess_data(df=X_train, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
-  X_test_processed = preprocess_data(df=X_test, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
+  X_train_processed = TransactionModelWrapper.preprocess_data(df=X_train, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
+  X_test_processed = TransactionModelWrapper.preprocess_data(df=X_test, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
   
   #Train a model
-  lgbm_model = fit(X=X_train_processed, y=y_train)
+  lgbm_model = TransactionModelWrapper.fit(X=X_train_processed, y=y_train)
   
   y_preds=lgbm_model.predict(X_test_processed)
   signature = infer_signature(X_test_processed, y_preds)
@@ -299,6 +303,12 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
+
+# COMMAND ----------
+
+X = inf_transactions_df.drop("Label","_rescued_data")
+display(X)
+myLGBM.predict(context=None,input_data=X)
 
 # COMMAND ----------
 
