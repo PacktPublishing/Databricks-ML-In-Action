@@ -157,11 +157,3 @@ while(t<total):
     print(f"t={t}")
   t = t+1
   time.sleep(sleepIntervalSeconds)
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-

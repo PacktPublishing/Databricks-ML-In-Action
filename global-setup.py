@@ -1,9 +1,6 @@
 # Databricks notebook source
 # DBTITLE 1,Passed variables via Widgets
 # RUN TIME ARGUMENTS
-# Minimum Databricks Runtime version allowed for notebooks attaching to a cluster
-dbutils.widgets.text("min_dbr_version", "13.0", "Min required DBR version")
-
 dbutils.widgets.text("catalog", "ml_in_action", "Catalog")
 
 #ignored if db is set (we force the databse to the given value in this case)
@@ -27,14 +24,7 @@ assert project_name in possible_projects, "project_name unknown, did you type co
 
 
 # VERIFY DATABRICKS VERSION COMPATIBILITY ----------
-try:
-  min_required_version = dbutils.widgets.get("min_dbr_version")
-except:
-  min_required_version = "13.0"
-
-if project_name in ["rag_chatbot", "cv_clf"]:
-  min_required_version == "14.0"
-
+min_required_version = "14.0"
 version_tag = spark.conf.get("spark.databricks.clusterUsageTags.sparkVersion")
 version_search = re.search('^([0-9]*\.[0-9]*)', version_tag)
 assert version_search, f"The Databricks version can't be extracted from {version_tag}, shouldn't happen, please correct the regex"
@@ -105,18 +95,10 @@ spark.sql(f"GRANT CREATE, SELECT, USAGE on SCHEMA {catalog}.{database_name} TO `
 sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.files""")
 volume_file_path = f"/Volumes/{catalog}/{database_name}/files/"
 print(f"use volume_file_path {volume_file_path}")
+sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.models""")
+volume_model_path = f"/Volumes/{catalog}/{database_name}/models/"
+print(f"use volume_model_path {volume_model_path}")
 
-# COMMAND ----------
-
-# DBTITLE 1,Get Kaggle credentials using secrets
-# import os
-# os.environ['kaggle_username'] = 'YOUR KAGGLE USERNAME HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
-# os.environ['kaggle_username'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_username")
-
-# # os.environ['kaggle_key'] = 'YOUR KAGGLE KEY HERE' # replace with your own credential here temporarily or set up a secret scope with your credential
-# os.environ['kaggle_key'] = dbutils.secrets.get("lakehouse-in-action", "kaggle_key")
-
-# COMMAND ----------
 
 
 
@@ -287,3 +269,5 @@ class EndpointApiClient:
         print(r.text)
         r.raise_for_status()
       return r.json()
+   
+
