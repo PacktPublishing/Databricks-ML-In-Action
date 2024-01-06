@@ -43,7 +43,17 @@ max_price_df = (
 
 # Update feature table with Product as the primary key
 # We're using the convention of appending feature table names with "_ft"
-fe.write_table(
-  df=max_price_df,
-  name='product_3minute_max_price_ft'
-)
+try:
+  fe.create_table(
+    df=max_price_df,
+    name='product_3minute_max_price_ft',
+    primary_keys=['Product','LookupTimestamp'],
+    timeseries_columns='LookupTimestamp',
+    schema=max_price_df.schema,
+    description="Maximum price per product over the last 3 minutes for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last minute's 3 minute rolling max"
+    )
+except:
+  fe.write_table(
+    df=max_price_df,
+    name='product_3minute_max_price_ft'
+  )

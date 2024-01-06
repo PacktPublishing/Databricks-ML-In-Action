@@ -10,6 +10,7 @@
 
 # DBTITLE 1,Create Checkpoint and Schema reset widget
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 
 # COMMAND ----------
 
@@ -35,10 +36,8 @@ if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(checkpoint_location, True)
   sql(f"DROP TABLE IF EXISTS {table_name}")
 
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS prod_raw_transactions TBLPROPERTIES (delta.enableChangeDataFeed = true)
+if bool(dbutils.widgets.get('First Run')) or bool(dbutils.widgets.get('Reset')):
+  sql(f"CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
 
@@ -67,7 +66,3 @@ stream = spark.readStream \
   .option("mergeSchema", "true") \
   .trigger(processingTime="10 seconds") \
   .toTable(tableName=table_name)
-
-# COMMAND ----------
-
-

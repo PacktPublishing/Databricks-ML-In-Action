@@ -12,6 +12,7 @@
 # COMMAND ----------
 
 dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Delete previous data")
+dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 
 # COMMAND ----------
 
@@ -28,7 +29,6 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 nRows = 10
 nPositiveRows = round(nRows/3)
 destination_path = "{}/prod_raw_transactions/data".format(volume_file_path)
-# dbutils.fs.mkdirs(destination_path) ##only run the first time
 temp_path = "{}/temp".format(volume_file_path)
 sleepIntervalSeconds = 1
 
@@ -37,6 +37,9 @@ sleepIntervalSeconds = 1
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(temp_path, recurse=True)
   dbutils.fs.rm(destination_path, recurse=True)
+  dbutils.fs.mkdirs(destination_path)
+
+if bool(dbutils.widgets.get('First Run')):
   dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
@@ -122,13 +125,15 @@ from random import randrange
 import time
 
 t=1
-total = 100000000000000
+total = 1000
 
 while(t<total):
   writeJsonFile(destination_path)
   t = t+1
+  if not(t%10):
+    print(t)
   time.sleep(sleepIntervalSeconds)
-  if(t>200):
+  if(t>4000):
     Product_vars = {"A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 8},
                     "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 8, "beta": 4},
                     "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 8}}
