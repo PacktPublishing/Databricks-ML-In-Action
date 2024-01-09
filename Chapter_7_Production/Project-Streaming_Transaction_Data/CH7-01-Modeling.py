@@ -140,12 +140,7 @@ mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
 model_artifact_path = volume_model_path +  model_name
-
-# env = mlflow.pyfunc.get_default_conda_env()
-## mode=x may be needed for the first run
-# with open(model_artifact_path+"/requirements.txt", 'r') as f:
-#     env['dependencies'][-1]['pip'] = f.read().split('\n')
-
+dbutils.fs.mkdirs(model_artifact_path)
 
 # COMMAND ----------
 
@@ -214,16 +209,13 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
         df = df.drop("TransactionTimestamp",axis=1)
       except:
         df = df.drop("TransactionTimestamp")
-        
-    one_hot_encoded = encoder.transform(df[[cat_columns]])
+    one_hot_encoded = encoder.transform(df[cat_columns])
     df = pd.concat([df,one_hot_encoded],axis=1).drop(columns=cat_columns)
     df["isTimeout"] = df["isTimeout"].astype('bool')
-    
     ## scale the numeric columns with the pre-built scaler
     if len(numeric_columns):
       ndf = df[numeric_columns].copy()
       df[numeric_columns] = fitted_scaler.transform(ndf[numeric_columns])
-    
     return df
   
   @staticmethod
@@ -303,13 +295,3 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
-
-# COMMAND ----------
-
-X = inf_transactions_df.drop("Label","_rescued_data")
-display(X)
-myLGBM.predict(context=None,input_data=X)
-
-# COMMAND ----------
-
-

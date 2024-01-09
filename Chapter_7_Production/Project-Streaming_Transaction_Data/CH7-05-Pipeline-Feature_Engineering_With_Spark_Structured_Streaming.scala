@@ -8,6 +8,7 @@
 // COMMAND ----------
 
 // MAGIC %python
+// MAGIC dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 // MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
 
 // COMMAND ----------
@@ -32,7 +33,7 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // COMMAND ----------
 
-// DBTITLE 1,Resets
+// DBTITLE 1,Reset and first run setup
 // MAGIC %python
 // MAGIC table_name = "prod_transaction_count_ft"
 // MAGIC history_table_name = "prod_transaction_count_history"
@@ -41,29 +42,31 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
 // MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
 // MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
+// MAGIC
+// MAGIC if bool(dbutils.widgets.get('First Run')) or bool(dbutils.widgets.get('Reset')):
+// MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+// MAGIC   sql(f"""ALTER TABLE {table_name} ALTER COLUMN CustomerID SET NOT NULL""")
+// MAGIC   sql(f"""ALTER TABLE {table_name} ADD PRIMARY KEY(CustomerID)""")
+// MAGIC   sql(f"ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
+// MAGIC
+// MAGIC
+// MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {history_table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+// MAGIC   sql(f"""ALTER TABLE {history_table_name} ALTER COLUMN CustomerID SET NOT NULL""")
+// MAGIC   sql(f"""ALTER TABLE {history_table_name} ALTER COLUMN eventTimestamp SET NOT NULL""")
+// MAGIC   sql(f"""ALTER TABLE {history_table_name} ADD PRIMARY KEY(CustomerID, eventTimestamp TIMESERIES)""")
+// MAGIC
 
 // COMMAND ----------
 
-// DBTITLE 1,Set up table, paths, and variables
+// DBTITLE 1,Set up paths, and variables
 // variables passed from the setup file are in python
 val table_name = "prod_transaction_count_ft"
 val history_table_name = "prod_transaction_count_history"
 val volumePath = "/Volumes/ml_in_action/synthetic_transactions/files/"
-val outputPath = f"$volumePath/$table_name/streaming_outputs/"
-val outputPath2 = f"$volumePath/$history_table_name/streaming_outputs/"
+val outputPath = f"$volumePath/$table_name/table_feature_outputs/"
+val outputPath2 = f"$volumePath/$history_table_name/table_feature_outputs/"
 val inputTable = "ml_in_action.synthetic_transactions.prod_raw_transactions"
 
-//// maybe we need a try catch here
-sql(f"""CREATE OR REPLACE TABLE $table_name (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
-sql(f"""ALTER TABLE $table_name ALTER COLUMN CustomerID SET NOT NULL""")
-sql(f"""ALTER TABLE $table_name ADD PRIMARY KEY(CustomerID)""")
-sql(f"ALTER TABLE $table_name SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
-
-
-sql(f"""CREATE OR REPLACE TABLE $history_table_name (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
-sql(f"""ALTER TABLE $history_table_name ALTER COLUMN CustomerID SET NOT NULL""")
-sql(f"""ALTER TABLE $history_table_name ALTER COLUMN eventTimestamp SET NOT NULL""")
-sql(f"""ALTER TABLE $history_table_name ADD PRIMARY KEY(CustomerID, eventTimestamp TIMESERIES)""")
 
 // aggregate transactions for windowMinutes
 val windowMinutes = 2

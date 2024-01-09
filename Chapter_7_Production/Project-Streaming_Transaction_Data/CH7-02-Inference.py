@@ -22,6 +22,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
+# DBTITLE 1,Batch inference from table
 from databricks.feature_engineering import FeatureEngineeringClient
 from mlia_utils.mlflow_funcs import get_latest_model_version
 from pyspark.sql.types import *
@@ -48,6 +49,7 @@ display(scored)
 
 # COMMAND ----------
 
+# DBTITLE 1,Batch inference from new json data
 from databricks.feature_engineering import FeatureEngineeringClient
 from mlia_utils.mlflow_funcs import get_latest_model_version
 from pyspark.sql.types import *
