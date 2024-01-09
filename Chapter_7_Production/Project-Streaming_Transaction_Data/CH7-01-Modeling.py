@@ -58,6 +58,9 @@ training_feature_lookups = [
   )
 ]
 
+feature_spec_name = f"{catalog}.{database_name}.transaction_training_spec"
+fe.create_feature_spec(name=feature_spec_name, features=training_feature_lookups, exclude_columns="_rescued_data")
+
 # COMMAND ----------
 
 raw_transactions_df = sql("SELECT * FROM prod_raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
@@ -108,6 +111,9 @@ inference_feature_lookups = [
     output_name="MaxDifferenceRatio"
   )
 ]
+
+inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
+fe.create_feature_spec(name=inference_feature_spec_name, features=inference_feature_lookups, exclude_columns="_rescued_data")
 
 # COMMAND ----------
 
@@ -276,7 +282,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   signature = infer_signature(X_test_processed, y_preds)
   eval_data = X_test_processed
   eval_data["Label"] = y_test
-  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature)
+  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature,extra_pip_requirements=f"{model_artifact_path}/requirements.txt")
   result = mlflow.evaluate(
        model_info.model_uri,
        eval_data,
