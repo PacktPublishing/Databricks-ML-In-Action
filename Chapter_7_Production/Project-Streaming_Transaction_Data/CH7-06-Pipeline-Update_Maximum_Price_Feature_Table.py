@@ -57,3 +57,17 @@ except:
     df=max_price_df,
     name='product_3minute_max_price_ft'
   )
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC We want to sync this table to the Databricks Online Store. Triggered (or Continuous) sync mode, the source table must have Change data feed enabled.
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC ALTER TABLE `ml_in_action`.`synthetic_transactions`.`product_3minute_max_price_ft` SET TBLPROPERTIES (delta.enableChangeDataFeed = true)
+
+# COMMAND ----------
+
+dbutils.fs.rm('/Volumes/ml_in_action/synthetic_transactions/files/{table_name}',True)

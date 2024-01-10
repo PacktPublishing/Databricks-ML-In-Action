@@ -27,7 +27,11 @@ model_name = f"{catalog}.{database_name}.packaged_transaction_model"
 
 # COMMAND ----------
 
-# DBTITLE 1,Batch inference from table
+# MAGIC %md
+# MAGIC ### Batch inference from table
+
+# COMMAND ----------
+
 from databricks.feature_engineering import FeatureEngineeringClient
 from mlia_utils.mlflow_funcs import get_latest_model_version
 import mlflow
@@ -47,7 +51,12 @@ display(scored)
 
 # COMMAND ----------
 
-# DBTITLE 1,Batch inference from new json data
+# MAGIC %md
+# MAGIC ###Batch inference from new json data
+
+# COMMAND ----------
+
+# DBTITLE 0,Batch inference from new json data
 from pyspark.sql.types import *
 import pandas as pd
 import json
@@ -75,6 +84,7 @@ display(scored)
 
 # MAGIC %md
 # MAGIC ###Create a Feature & Function Serving endpoint
+# MAGIC If you are not using Databricks Model Serving, use Databricks Feature Serving
 
 # COMMAND ----------
 
@@ -88,10 +98,25 @@ from databricks.feature_engineering.entities.feature_serving_endpoint import (
 )
 
 # Create endpoint
-endpoint_name = "mlia-location"
+endpoint_name = f"{model}"
 
 status = fe.create_feature_serving_endpoint(name=endpoint_name, config=EndpointCoreConfig(served_entities=ServedEntity(feature_spec_name=inference_feature_spec_name)))
 print(status)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Databricks Feature Serving Clean Up
+
+# COMMAND ----------
+
+fe.delete_feature_spec(name=inference_feature_spec_name)
+fe.delete_feature_serving_endpoint(name=endpoint_name)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Databricks Model Serving
 
 # COMMAND ----------
 
@@ -116,13 +141,3 @@ def score_model(dataset):
     raise Exception(f'Request failed with status {response.status_code}, {response.text}')
 
   return response.json()
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ###Clean Up
-
-# COMMAND ----------
-
-fe.delete_feature_spec(name=inference_feature_spec_name)
-fe.delete_feature_serving_endpoint(name=endpoint_name)
