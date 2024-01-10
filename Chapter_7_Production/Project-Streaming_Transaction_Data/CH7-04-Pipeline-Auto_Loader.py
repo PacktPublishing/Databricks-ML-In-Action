@@ -4,12 +4,13 @@
 # MAGIC
 # MAGIC ## Synthetic Data - Streaming as Delta into a table using Auto Loader
 # MAGIC
-# MAGIC We have create a feature for our model based on the Product column so we no longer create the nulls.
+# MAGIC We have created a feature for our model based on the Product column so we no longer create the nulls.
 
 # COMMAND ----------
 
 # DBTITLE 1,Create Checkpoint and Schema reset widget
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 
 # COMMAND ----------
 
@@ -22,8 +23,8 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 # COMMAND ----------
 
 # DBTITLE 1,Variables
-table_name = "raw_transactions"
-raw_data_location = f"{volume_file_path}/{table_name}/data/"  # this changed
+table_name = "prod_raw_transactions"
+raw_data_location = f"{volume_file_path}/{table_name}/data/" 
 schema_location = f"{volume_file_path}/{table_name}/schema"
 checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
 
@@ -34,6 +35,9 @@ if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(schema_location, True)
   dbutils.fs.rm(checkpoint_location, True)
   sql(f"DROP TABLE IF EXISTS {table_name}")
+
+if bool(dbutils.widgets.get('First Run')) or bool(dbutils.widgets.get('Reset')):
+  sql(f"CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
 

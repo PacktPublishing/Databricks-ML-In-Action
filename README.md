@@ -54,7 +54,11 @@ A graduate of the MS Data Science program at Southern Methodist University in Da
 
 <i>I’d like to thank my husband, Kevin, and my sons Dyson and Dalton for their encouragement and enthusiastic support.</i>  
 
-[Anastasia Prokaieva](https://www.linkedin.com/in/anastasiia-prokaieva/)
+[Anastasia Prokaieva](https://www.linkedin.com/in/anastasiia-prokaieva/) began her career 9 years ago, as a research scientist at CEA (France), focusing on large data analysis and satellite data assimilation, treating terabytes of data. She has been working within the big data analysis and machine learning domain since then. In 2021, she joined Databricks and became the regional AI subject matter expert. <br>
+On a daily basis, Anastasia consults Databricks users on best practices implementation of AI projects end-to-end, she delivers trainings, workshops to democratize AI. Anastasia holds two MSc degrees in theoretical physics and energy science.
+
+<i>I would like to thank my partner, Julien, and my family for their tremendous support. My gratitude to my talented teammates all around the globe, as you inspire me every day!</i>
+
 
 ### Thanks for purchasing the book!
 

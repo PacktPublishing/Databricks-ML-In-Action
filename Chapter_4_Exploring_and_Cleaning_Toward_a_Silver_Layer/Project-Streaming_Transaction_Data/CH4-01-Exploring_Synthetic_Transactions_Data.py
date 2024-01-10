@@ -29,7 +29,3 @@
 import seaborn as sns
 g = sns.PairGrid(spark.table('raw_transactions').toPandas()[['CustomerID','Amount', 'Product','Label']], diag_sharey=False, hue="Label")
 g.map_lower(sns.kdeplot).map_diag(sns.kdeplot, lw=3).map_upper(sns.regplot).add_legend()
-
-# COMMAND ----------
-
-
