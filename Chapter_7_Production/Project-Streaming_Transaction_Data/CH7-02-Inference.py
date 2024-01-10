@@ -22,21 +22,23 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# DBTITLE 1,Batch inference from table
+inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
+model_name = f"{catalog}.{database_name}.packaged_transaction_model"
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Batch inference from table
+
+# COMMAND ----------
+
 from databricks.feature_engineering import FeatureEngineeringClient
 from mlia_utils.mlflow_funcs import get_latest_model_version
-from pyspark.sql.types import *
-import json
-import pandas as pd
 import mlflow
 mlflow.set_registry_uri("databricks-uc")
 fe = FeatureEngineeringClient()
 
-model_name = f"{catalog}.{database_name}.packaged_transaction_model"
-
 scoring_df = spark.table("prod_raw_transactions").drop("Label","_rescued_data").limit(100)
-
-print(scoring_df)
 
 print(f"Scoring model={model_name} version={get_latest_model_version(model_name)}")
 
@@ -49,17 +51,16 @@ display(scored)
 
 # COMMAND ----------
 
-# DBTITLE 1,Batch inference from new json data
-from databricks.feature_engineering import FeatureEngineeringClient
-from mlia_utils.mlflow_funcs import get_latest_model_version
-from pyspark.sql.types import *
-import json
-import pandas as pd
-import mlflow
-mlflow.set_registry_uri("databricks-uc")
-fe = FeatureEngineeringClient()
+# MAGIC %md
+# MAGIC ###Batch inference from new json data
 
-model_name = f"{catalog}.{database_name}.packaged_transaction_model"
+# COMMAND ----------
+
+# DBTITLE 0,Batch inference from new json data
+from pyspark.sql.types import *
+import pandas as pd
+import json
+
 schema = StructType([
     StructField("CustomerID", IntegerType(), False),
     StructField("TransactionTimestamp", TimestampType(), False),
@@ -78,6 +79,44 @@ scored = fe.score_batch(
 )
 
 display(scored)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Create a Feature & Function Serving endpoint
+# MAGIC If you are not using Databricks Model Serving, use Databricks Feature Serving
+
+# COMMAND ----------
+
+from databricks.feature_engineering.entities.feature_lookup import FeatureLookup
+from databricks.feature_engineering import FeatureFunction
+from databricks.feature_engineering.entities.feature_serving_endpoint import (
+    AutoCaptureConfig,
+    EndpointCoreConfig,
+    Servable,
+    ServedEntity,
+)
+
+# Create endpoint
+endpoint_name = f"{model}"
+
+status = fe.create_feature_serving_endpoint(name=endpoint_name, config=EndpointCoreConfig(served_entities=ServedEntity(feature_spec_name=inference_feature_spec_name)))
+print(status)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##### Databricks Feature Serving Clean Up
+
+# COMMAND ----------
+
+fe.delete_feature_spec(name=inference_feature_spec_name)
+fe.delete_feature_serving_endpoint(name=endpoint_name)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Databricks Model Serving
 
 # COMMAND ----------
 

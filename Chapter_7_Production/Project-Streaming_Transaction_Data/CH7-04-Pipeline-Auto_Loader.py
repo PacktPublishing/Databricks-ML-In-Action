@@ -10,7 +10,6 @@
 
 # DBTITLE 1,Create Checkpoint and Schema reset widget
 dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
-dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 
 # COMMAND ----------
 
@@ -36,7 +35,7 @@ if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(checkpoint_location, True)
   sql(f"DROP TABLE IF EXISTS {table_name}")
 
-if bool(dbutils.widgets.get('First Run')) or bool(dbutils.widgets.get('Reset')):
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty() or bool(dbutils.widgets.get('Reset')):
   sql(f"CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 # COMMAND ----------
