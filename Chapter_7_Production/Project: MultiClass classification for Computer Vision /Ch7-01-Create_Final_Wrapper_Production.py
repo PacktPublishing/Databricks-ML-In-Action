@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %pip install pytorch-lightning==2.1.2 deltalake==0.14.0 deltatorch==0.0.3 evalidate==2.0.2 pillow==10.1.0
+# MAGIC %pip install pytorch-lightning==2.1.2 evalidate==2.0.2 pillow==10.1.0 databricks-sdk==0.12.0
 
 # COMMAND ----------
 
@@ -28,11 +28,12 @@ from pyspark.sql.functions import col
 from PIL import Image
 
 import mlflow
-from deltatorch import create_pytorch_dataloader, FieldSpec
+
 
 # COMMAND ----------
 
 from io import BytesIO
+import torchvision
 
 class CVModelWrapper(mlflow.pyfunc.PythonModel):
     def __init__(self, model):
@@ -40,7 +41,7 @@ class CVModelWrapper(mlflow.pyfunc.PythonModel):
         model.to(torch.device("cpu"))
         self.model = model.eval()
 
-    def feature_extractor(self, image):
+    def feature_extractor(self, image, p=0.5):
         transform = torchvision.transforms.Compose([
             transforms.Resize((150,150)),
             transforms.RandomHorizontalFlip(p=p), # randomly flip and rotate
@@ -111,15 +112,24 @@ images = spark.read.format("delta").load(val_delta_path).take(25)
 
 b64image1 = base64.b64encode(images[0]["content"]).decode("ascii")
 b64image2 = base64.b64encode(images[1]["content"]).decode("ascii")
-b64image3 = base64.b64encode(images[3]["content"]).decode("ascii")
-b64image4 = base64.b64encode(images[4]["content"]).decode("ascii")
+b64image3 = base64.b64encode(images[2]["content"]).decode("ascii")
+b64image4 = base64.b64encode(images[3]["content"]).decode("ascii")
 b64image24 = base64.b64encode(images[24]["content"]).decode("ascii")
 
 df_input = pd.DataFrame(
     [b64image1, b64image2, b64image3, b64image4, b64image24], columns=["data"])
 
-df = wrapper.predict("", df_input)
+df = wrapper.predict("predictions", df_input)
 display(df)
+
+# COMMAND ----------
+
+from PIL import Image
+import matplotlib.pyplot as plt
+from mlia_utils.cv_clf_funcs import *
+for i in [0,1,4,24]:
+  img_path = images[i]['path'].replace("dbfs:","")
+  display_image(f"{img_path}")
 
 # COMMAND ----------
 
@@ -149,58 +159,3 @@ with mlflow.start_run(run_name=model_name) as run:
 ##Alternatively log your model and register later 
 # mlflow.register_model(model_uri, "ap.cv_ops.cvops_model")
 
-
-# COMMAND ----------
-
-from mlflow import MlflowClient
-client = MlflowClient()
-client.set_registered_model_alias(model_name, "Champion", 1)
-
-model_version_uri = f"models:/{model_name}@Champion"
-# Or another option: model_version_uri = f"models:/{model_name}/1"
-loaded_model_uc = mlflow.pyfunc.load_model(model_version_uri) # runiid / model_registry_name+version
-# champion_version = client.get_model_version_by_alias("prod.ml_team.iris_model", "Champion")
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC ## Create your serving endpoint 
-# MAGIC
-# MAGIC **Note** Here we have used UI to set the serving endpoint. You could also use REST API or SDK. 
-
-# COMMAND ----------
-
-import os
-import requests
-import numpy as np
-import pandas as pd
-import json
-
-serving_endpoint_name = f"cvops_model_mlaction_endpoint"
-
-host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
-#db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
-db_token= dbutils.secrets.get("mlaction", "cv_sp_token")
-os.environ['DATABRICKS_TOKEN'] = db_token 
-os.environ["DATABRICKS_HOST"] = host
-
-
-def create_tf_serving_json(data):
-  return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
-
-def score_model(dataset):
-  url = f"{host}/serving-endpoints/{serving_endpoint_name}/invocations"
-  headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
-  ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
-  data_json = json.dumps(ds_dict, allow_nan=True)
-  response = requests.request(method='POST', headers=headers, url=url, data=data_json)
-  if response.status_code != 200:
-    raise Exception(f'Request failed with status {response.status_code}, {response.text}')
-  return response.json()
-
-
-score_model(df_input)
-
-# COMMAND ----------
-
-#ADD HERE SDK SERVING 
