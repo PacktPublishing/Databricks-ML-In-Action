@@ -17,7 +17,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 

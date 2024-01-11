@@ -20,7 +20,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
