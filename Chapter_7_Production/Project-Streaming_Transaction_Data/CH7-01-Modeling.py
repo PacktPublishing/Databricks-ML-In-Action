@@ -20,7 +20,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
@@ -34,7 +34,7 @@ fe = FeatureEngineeringClient()
 
 training_feature_lookups = [
   FeatureLookup(
-    table_name="prod_transaction_count_history",
+    table_name="transaction_count_history",
     rename_outputs={
         "eventTimestamp": "TransactionTimestamp"
       },
@@ -58,9 +58,24 @@ training_feature_lookups = [
   )
 ]
 
+feature_spec_name = f"{catalog}.{database_name}.transaction_training_spec"
+fe.create_feature_spec(name=feature_spec_name, features=training_feature_lookups, exclude_columns="_rescued_data")
+
 # COMMAND ----------
 
-raw_transactions_df = sql("SELECT * FROM prod_raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
+table_name = "raw_transactions"
+ft_name = "product_3minute_max_price_ft"
+
+if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
+  print("problem")
+else:  
+  raw_transactions_df = sql(
+    f"""
+    SELECT rt.* FROM {table_name} rt 
+    INNER JOIN (SELECT MIN(LookupTimestamp) as min_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp >= (ts.min_timestamp)
+    """)
+
+# COMMAND ----------
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
@@ -90,7 +105,7 @@ cat_columns = ["Product","CustomerID"]
 
 inference_feature_lookups = [
   FeatureLookup(
-    table_name="prod_transaction_count_ft",
+    table_name="transaction_count_ft",
     lookup_key=["CustomerID"],
     feature_names=["transactionCount", "isTimeout"]
   ),
@@ -109,9 +124,12 @@ inference_feature_lookups = [
   )
 ]
 
+inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
+# fe.create_feature_spec(name=inference_feature_spec_name, features=inference_feature_lookups, exclude_columns="_rescued_data")
+
 # COMMAND ----------
 
-inf_transactions_df = sql("SELECT * FROM prod_raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
+inf_transactions_df = sql("SELECT * FROM raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
 
 inferencing_set = fe.create_training_set(
     df=inf_transactions_df,
@@ -122,7 +140,7 @@ inferencing_set = fe.create_training_set(
 
 # COMMAND ----------
 
-## We are testing the functionality. We use the display command to force plan execution. Spark using lazy execution. 
+## We are testing the functionality. We use the display command to force plan execution. Spark uses lazy execution. 
 display(inferencing_set.load_df())
 
 # COMMAND ----------
@@ -144,7 +162,7 @@ dbutils.fs.mkdirs(model_artifact_path)
 
 # COMMAND ----------
 
-!pip freeze > /Volumes/ml_in_action/synthetic_transactions/models/packaged_transaction_model/requirements.txt
+!pip freeze > /Volumes/ml_in_prod/synthetic_transactions/models/packaged_transaction_model/requirements.txt
 
 # COMMAND ----------
 
@@ -166,7 +184,6 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     self.model = model
 
     ## Train test split
-    from sklearn.model_selection import train_test_split
     nrows = len(X)
     split_row = round(.8*nrows)
     self.X_train, self.X_test, self.y_train, self.y_test = X[:split_row],X[split_row:],y[:split_row],y[split_row:]
@@ -175,7 +192,7 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
 
     ## OneHot Encoding
     from sklearn.preprocessing import OneHotEncoder  
-    ohe = OneHotEncoder(sparse_output=False).set_output(transform="pandas")
+    ohe = OneHotEncoder(sparse_output=False, handle_unknown='infrequent_if_exist').set_output(transform="pandas")
     self.encoder = ohe.fit(X_train[self.cat_columns])
 
     ## Numerical scaling
@@ -243,19 +260,20 @@ mlflow.autolog(
 )
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
-  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.prod_raw_transactions",
+  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.raw_transactions",
                     'Training-feature-lookups': training_feature_lookups, 
                     'Inference-feature-lookups': inference_feature_lookups})
   
-  from sklearn.model_selection import train_test_split
   training_data = training_set.load_df().toPandas()
   X = training_data.drop(["Label"], axis=1)
   y = training_data.Label.astype(int)
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=2024)
+  nrows = len(X)
+  split_row = round(.8*nrows)
+  X_train, X_test, y_train, y_test = X[:split_row],X[split_row:],y[:split_row],y[split_row:]
 
   ## OneHotEncoding
   from sklearn.preprocessing import OneHotEncoder  
-  ohe = OneHotEncoder(sparse_output=False).set_output(transform="pandas")
+  ohe = OneHotEncoder(sparse_output=False,handle_unknown='infrequent_if_exist').set_output(transform="pandas")
   encoder = ohe.fit(X_train[cat_columns])
 
   from sklearn.preprocessing import StandardScaler 
@@ -276,7 +294,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   signature = infer_signature(X_test_processed, y_preds)
   eval_data = X_test_processed
   eval_data["Label"] = y_test
-  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature)
+  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature,extra_pip_requirements=f"{model_artifact_path}/requirements.txt")
   result = mlflow.evaluate(
        model_info.model_uri,
        eval_data,
@@ -295,3 +313,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 # runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
 # latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
 # print('The latest run id: ', latest_run_id)
+
+# COMMAND ----------
+
+

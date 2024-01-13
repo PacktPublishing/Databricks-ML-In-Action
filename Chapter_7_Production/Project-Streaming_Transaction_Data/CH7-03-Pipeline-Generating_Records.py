@@ -12,11 +12,10 @@
 # COMMAND ----------
 
 dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Delete previous data")
-dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
@@ -28,7 +27,7 @@ dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True'
 # DBTITLE 1,Notebook Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
-destination_path = "{}/prod_raw_transactions/data".format(volume_file_path)
+destination_path = "{}/raw_transactions/data".format(volume_file_path)
 temp_path = "{}/temp".format(volume_file_path)
 sleepIntervalSeconds = 1
 
@@ -37,10 +36,9 @@ sleepIntervalSeconds = 1
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(temp_path, recurse=True)
   dbutils.fs.rm(destination_path, recurse=True)
-  dbutils.fs.mkdirs(destination_path)
 
-if bool(dbutils.widgets.get('First Run')):
-  dbutils.fs.mkdirs(destination_path)
+#only makes dir if there isn't one
+dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 

@@ -1,7 +1,7 @@
 # Databricks notebook source
 # DBTITLE 1,Passed variables via Widgets
 # RUN TIME ARGUMENTS
-dbutils.widgets.text("catalog", "ml_in_action", "Catalog")
+dbutils.widgets.text("env", "dev", "Environment")
 
 #ignored if db is set (we force the databse to the given value in this case)
 dbutils.widgets.text("project_name", "", "Project Name")
@@ -44,8 +44,12 @@ else:
   current_user_no_at = current_user
 current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
 
-# Set the UC catalog
-catalog = dbutils.widgets.get("catalog")
+# Set the UC catalog based on the isolation environment
+env = dbutils.widgets.get("env")
+if env=="dev":
+  catalog = "ml_in_action"
+elif env=="prod":
+  catalog = "ml_in_prod"  
 
 # Set the database
 db = dbutils.widgets.get("db")
@@ -55,27 +59,15 @@ else:
   database_name = db
 
 def use_and_create_db(catalog, database_name):
+  spark.sql(f"""CREATE CATALOG if not exists `{catalog}` """)
   spark.sql(f"USE CATALOG `{catalog}`")
-  spark.sql(f"""create database if not exists `{database_name}` """)
-  
-#If the catalog is defined, we force it to the given value and throw exception if not.
-if len(catalog) > 0:
-  current_catalog = spark.sql("select current_catalog()").collect()[0]['current_catalog()']
-  if current_catalog != catalog:
-    catalogs = [r['catalog'] for r in spark.sql("SHOW CATALOGS").collect()]
-    if catalog not in catalogs:
-      spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog}")
-  use_and_create_db(catalog, database_name)
-else:
-  catalogs = [r['catalog'] for r in spark.sql("SHOW CATALOGS").collect()]
-  if "ml_in_action" not in catalogs:
-    spark.sql("CREATE CATALOG IF NOT EXISTS ml_in_action")
-    catalog = "ml_in_action"
-    use_and_create_db(catalog, database_name)
+  spark.sql(f"""CREATE DATABASE if not exists `{database_name}` """)
+
+use_and_create_db(catalog, database_name)
 
 print(f"using catalog.database_name `{catalog}`.`{database_name}`")
 
-# With parallel execution this can fail the time of the initialization. add a few retries to fix these issues
+# With parallel execution this can fail the time of the initialization. Add a few retries to fix these issues
 for i in range(10):
   try:
     spark.sql(f"""USE `{catalog}`.`{database_name}`""")
@@ -91,16 +83,14 @@ spark.sql(f"GRANT CREATE, SELECT, USAGE on SCHEMA {catalog}.{database_name} TO `
 
 # COMMAND ----------
 
-# DBTITLE 1,Create the volume
+# DBTITLE 1,Create the volumes
 sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.files""")
 volume_file_path = f"/Volumes/{catalog}/{database_name}/files/"
 print(f"use volume_file_path {volume_file_path}")
+
 sql(f"""CREATE VOLUME IF NOT EXISTS {catalog}.{database_name}.models""")
 volume_model_path = f"/Volumes/{catalog}/{database_name}/models/"
 print(f"use volume_model_path {volume_model_path}")
-
-
-
 
 # COMMAND ----------
 
@@ -131,6 +121,7 @@ if project_name == "cv_clf":
 
   print(f"Your main_dir_uc Volumes is set to :{main_dir_uc}.\n")
   print(f"Your main_dir_2write is set to :{main_dir_2write}.\n")
+
   try:  
     data_dir_Train = f"{main_dir_uc}/seg_train"
     data_dir_Test = f"{main_dir_uc}/seg_test"
