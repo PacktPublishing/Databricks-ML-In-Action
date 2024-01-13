@@ -23,10 +23,6 @@ raw_transactions_df = spark.table("raw_transactions")
 # DBTITLE 1,Creating a feature table of product maximum prices.
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F 
-from itertools import chain
-
-mapping = {"A": 0, "B": 1,"C": 2}
-mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
 
 fe = FeatureEngineeringClient()
 
@@ -56,17 +52,6 @@ fe.create_table(
   schema=max_price_df.schema,
   description="Maximum price per product over the last 3 minutes for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last minute's 3 minute rolling max"
 )
-
-# COMMAND ----------
-
-a
-mapping = {"A": 0, "B": 1,"C": 2}
-def translate(dictionary): 
-    return F.udf(lambda col: dictionary.get(col), 
-               IntegerType()) 
-mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
-
-    # .withColumn("ProductNumber", mapping_expr[F.col("Product")])
 
 # COMMAND ----------
 

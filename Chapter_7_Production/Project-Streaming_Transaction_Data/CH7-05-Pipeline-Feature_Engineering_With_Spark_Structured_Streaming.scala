@@ -8,7 +8,6 @@
 // COMMAND ----------
 
 // MAGIC %python
-// MAGIC dbutils.widgets.dropdown(name='First Run', defaultValue='False', choices=['True', 'False'], label="Complete initial setup")
 // MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
 
 // COMMAND ----------
@@ -33,23 +32,23 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // COMMAND ----------
 
-// DBTITLE 1,Reset and first run setup
+// DBTITLE 1,Reset and setup
 // MAGIC %python
-// MAGIC table_name = "prod_transaction_count_ft"
-// MAGIC history_table_name = "prod_transaction_count_history"
+// MAGIC table_name = "transaction_count_ft"
+// MAGIC history_table_name = "transaction_count_history"
 // MAGIC if bool(dbutils.widgets.get('Reset')):
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
 // MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
 // MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
 // MAGIC
-// MAGIC if bool(dbutils.widgets.get('First Run')) or bool(dbutils.widgets.get('Reset')):
+// MAGIC if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
 // MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 // MAGIC   sql(f"""ALTER TABLE {table_name} ALTER COLUMN CustomerID SET NOT NULL""")
 // MAGIC   sql(f"""ALTER TABLE {table_name} ADD PRIMARY KEY(CustomerID)""")
 // MAGIC   sql(f"ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 // MAGIC
-// MAGIC
+// MAGIC if not spark.catalog.tableExists(history_table_name) or spark.table(tableName=history_table_name).isEmpty():
 // MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {history_table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
 // MAGIC   sql(f"""ALTER TABLE {history_table_name} ALTER COLUMN CustomerID SET NOT NULL""")
 // MAGIC   sql(f"""ALTER TABLE {history_table_name} ALTER COLUMN eventTimestamp SET NOT NULL""")
@@ -60,12 +59,12 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Set up paths, and variables
 // variables passed from the setup file are in python
-val table_name = "prod_transaction_count_ft"
-val history_table_name = "prod_transaction_count_history"
-val volumePath = "/Volumes/ml_in_action/synthetic_transactions/files/"
+val table_name = "transaction_count_ft"
+val history_table_name = "transaction_count_history"
+val volumePath = "/Volumes/ml_in_prod/synthetic_transactions/files/" //SR TODO fix prod hardcoded
 val outputPath = f"$volumePath/$table_name/table_feature_outputs/"
 val outputPath2 = f"$volumePath/$history_table_name/table_feature_outputs/"
-val inputTable = "ml_in_action.synthetic_transactions.prod_raw_transactions"
+val inputTable = "ml_in_prod.synthetic_transactions.raw_transactions" //SR TODO fix prod hardcoded
 
 
 // aggregate transactions for windowMinutes
