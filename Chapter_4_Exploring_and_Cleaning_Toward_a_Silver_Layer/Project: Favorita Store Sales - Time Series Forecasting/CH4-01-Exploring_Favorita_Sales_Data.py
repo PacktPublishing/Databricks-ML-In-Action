@@ -17,7 +17,27 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SHOW TABLES
+# MAGIC SELECT COUNT(DISTINCT store_nbr) AS num_stores, COUNT(DISTINCT type) AS num_store_types
+# MAGIC FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+# MAGIC WHERE state='Guayas'
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT type, COUNT(*) AS num_stores
+# MAGIC FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+# MAGIC WHERE state='Guayas'
+# MAGIC GROUP BY all
+# MAGIC ORDER BY
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT type, COUNT(*) AS num_stores
+# MAGIC FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+# MAGIC WHERE state = 'Guayas'
+# MAGIC GROUP BY type
+# MAGIC ORDER BY num_stores DESC
 
 # COMMAND ----------
 
