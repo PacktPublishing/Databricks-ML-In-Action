@@ -12,7 +12,7 @@
 
 # COMMAND ----------
 
-
+# MAGIC
 # MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
