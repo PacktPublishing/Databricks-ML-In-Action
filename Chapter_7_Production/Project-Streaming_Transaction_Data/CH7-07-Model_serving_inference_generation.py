@@ -15,9 +15,19 @@
 
 # COMMAND ----------
 
+destination_path = "{}/raw_transactions/labeled_inference_data".format(volume_file_path)
+temp_path = "{}/temp".format(volume_file_path)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ### Databricks Model Serving
 # MAGIC This code is given to us in the model serving endpoint UI. 
+
+# COMMAND ----------
+
+import os
+#os.environ.setdefault("DATABRICKS_TOKEN",'insert PAT here, run once and remove and comment out')
 
 # COMMAND ----------
 
@@ -44,6 +54,30 @@ def score_model(dataset):
 
 # COMMAND ----------
 
+# from pyspark.sql.types import *
+# import requests
+# import numpy as np
+# import pandas as pd
+# import json
+
+# def create_serving_json(data_as_string_of_json):
+#   scoring_df = pd.json_normalize(json.loads(data_as_string_of_json))
+#   scoring_df["TransactionTimestamp"] = str(scoring_df["TransactionTimestamp"])
+#   return scoring_df.to_json
+
+# def score_model(data_as_string_of_json):
+#   url = 'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/transaction_model/invocations'
+#   headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 
+# 'Content-Type': 'application/json'}
+#   data_json = create_serving_json(data_as_string_of_json)
+#   response = requests.request(method='POST', headers=headers, url=url, data=data_json)
+#   if response.status_code != 200:
+#     raise Exception(f'Request failed with status {response.status_code}, {response.text}')
+
+#   return response.json()
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Generate JSON data
 
@@ -52,9 +86,13 @@ def score_model(dataset):
 # DBTITLE 1,Data Variables
 CustomerID_vars = {"min": 1234, "max": 1260}
 
-Product_vars = {"A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 10},
-                "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 10, "beta": 4},
-                "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 10}}
+Product_vars = {"A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 8},
+                "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 8, "beta": 4},
+                "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 8}}
+
+Products = list(Product_vars.keys())
+nProducts = len(Products)
+nRows = 1
 
 # COMMAND ----------
 
@@ -92,56 +130,48 @@ def define_specs(Product, Label, currentTimestamp = datetime.now()):
 
 # COMMAND ----------
 
-# DBTITLE 1,Functions to generate a JSON dataset for Auto Loader to pick up
+# DBTITLE 1,Functions to generate a JSON dataset for inference
 from pyspark.sql.functions import expr
-from functools import reduce
-import pyspark
-import os
 
 # Generate a record
-def generateRecord(Product,Label):
+def generateRecord():
+  Product = Products[randrange(1,nProducts)]
+  Label = randint(0,1)
   return (define_specs(Product=Product, Label=Label, currentTimestamp=datetime.now()))
-  
-# Generate a list of records
-def generateRecordSet(Products):
-  Labels = [0,1]
-  recordSet = []
-  for Prod in Products:
-    for Lab in Labels:
-      recordSet.append(generateRecord(Prod, Lab))
-  return reduce(pyspark.sql.dataframe.DataFrame.unionByName, recordSet)
-
 
 # Generate a set of data, convert it to a Dataframe, write it out as one json file to the temp path. Then move that file to the destination_path
-def writeJsonFile(destination_path, Products = list(Product_vars.keys())):
-  recordDF = generateRecordSet(Products)
-  recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
-  recordDF.coalesce(1).write.format("json").save(temp_path)
-  
-  # Grab the file from the temp location, write it to the location we want and then delete the temp directory
+def writeJsonFile(destination_path, df):
+  df.coalesce(1).write.format("json").save(temp_path)
   tempJson = os.path.join(temp_path, dbutils.fs.ls(temp_path)[3][1])
   dbutils.fs.cp(tempJson, destination_path)
   dbutils.fs.rm(temp_path, True)
 
+
 # COMMAND ----------
 
 # DBTITLE 1,Loop for Generating Data
-from random import randrange
+from random import randrange, randint
 import time
 
-t=1
-total = 1000
 
-while(t<total):
-  writeJsonFile(destination_path)
-  t = t+1
-  if not(t%10):
-    print(t)
-  time.sleep(sleepIntervalSeconds)
-  if(t>4000):
-    Product_vars = {"A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 8},
-                    "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 8, "beta": 4},
-                    "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 8}}
+recordDF = generateRecord()
+recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
+writeJsonFile(destination_path,recordDF)
+recordDF = recordDF.drop("Label").toPandas().astype({"TransactionTimestamp": str})
+display(recordDF)
+display(score_model(recordDF))
+
+# t=1
+# total = 1000
+
+# while(t<total):
+#   writeJsonFile(destination_path)
+#   t = t+1
+#   if not(t%10):
+#     print(t)
+#   time.sleep(sleepIntervalSeconds)
+#   if(t>4000):
+
 
 # COMMAND ----------
 
