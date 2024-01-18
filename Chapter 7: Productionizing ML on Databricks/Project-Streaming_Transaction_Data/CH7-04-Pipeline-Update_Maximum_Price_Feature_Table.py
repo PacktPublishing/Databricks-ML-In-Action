@@ -6,7 +6,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
@@ -15,18 +15,23 @@
 
 # COMMAND ----------
 
-sql("DROP TABLE IF EXISTS product_3minute_max_price_ft")
-raw_transactions_df = spark.table("raw_transactions")
+table_name = "raw_transactions"
+ft_name = "product_3minute_max_price_ft"
+
+if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name}")
+else:  
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name} rt INNER JOIN (SELECT MAX(LookupTimestamp) as max_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp > (ts.max_timestamp - INTERVAL 1 MINUTE)")
+
+# COMMAND ----------
+
+raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name}")
 
 # COMMAND ----------
 
 # DBTITLE 1,Creating a feature table of product maximum prices.
 from databricks.feature_engineering import FeatureEngineeringClient
 import pyspark.sql.functions as F 
-from itertools import chain
-
-mapping = {"A": 0, "B": 1,"C": 2}
-mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
 
 fe = FeatureEngineeringClient()
 
@@ -34,7 +39,7 @@ time_window = F.window(
     F.col("TransactionTimestamp"),
     windowDuration="3 minutes",
     slideDuration="1 minute",
-).alias("time_window")
+  ).alias("time_window")
               
 max_price_df = (
   raw_transactions_df
@@ -46,31 +51,35 @@ max_price_df = (
     .drop("time_window")
 )
 
-# Create feature table with Product as the primary key
+# Update feature table with Product as the primary key
 # We're using the convention of appending feature table names with "_ft"
-fe.create_table(
-  df=max_price_df,
-  name='product_3minute_max_price_ft',
-  primary_keys=['Product','LookupTimestamp'],
-  timeseries_columns='LookupTimestamp',
-  schema=max_price_df.schema,
-  description="Maximum price per product over the last 3 minutes for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last minute's 3 minute rolling max"
-)
+if not spark.catalog.tableExists(f'{ft_name}'):
+  fe.create_table(
+    df=max_price_df,
+    name=f'{ft_name}',
+    primary_keys=['Product','LookupTimestamp'],
+    timeseries_columns='LookupTimestamp',
+    schema=max_price_df.schema,
+    description="Maximum price per product over the last 3 minutes for Synthetic Transactions. Join on TransactionTimestamp to get the max product price from last minute's 3 minute rolling max"
+    )
+else:
+  fe.write_table(
+    df=max_price_df,
+    name=f'{ft_name}'
+  )
 
 # COMMAND ----------
 
-a
-mapping = {"A": 0, "B": 1,"C": 2}
-def translate(dictionary): 
-    return F.udf(lambda col: dictionary.get(col), 
-               IntegerType()) 
-mapping_expr = F.create_map([F.lit(x) for x in chain(*mapping.items())])
-
-    # .withColumn("ProductNumber", mapping_expr[F.col("Product")])
+display(max_price_df)
 
 # COMMAND ----------
 
-display(max_price_df.withColumn("ProductNumber2", translate(mapping)("Product")))
+# MAGIC %md
+# MAGIC We want to sync this table to the Databricks Online Store. Triggered (or Continuous) sync mode, the source table must have Change data feed enabled.
+
+# COMMAND ----------
+
+sql(f"""ALTER TABLE {catalog}.{database_name}.{ft_name} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
 
 # COMMAND ----------
 
@@ -79,7 +88,6 @@ display(max_price_df.withColumn("ProductNumber2", translate(mapping)("Product"))
 
 # COMMAND ----------
 
-# DBTITLE 1,Creating a Python UDF and saving to Unity Catalog.
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE FUNCTION product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
 # MAGIC RETURNS float
@@ -94,7 +102,6 @@ display(max_price_df.withColumn("ProductNumber2", translate(mapping)("Product"))
 
 # COMMAND ----------
 
-# DBTITLE 1,Testing out the function.
 # MAGIC %sql
 # MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
 

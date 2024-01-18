@@ -17,12 +17,12 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
 # DBTITLE 1,Variables
-table_name = "prod_raw_transactions"
+table_name = "raw_transactions"
 raw_data_location = f"{volume_file_path}/{table_name}/data/" 
 schema_location = f"{volume_file_path}/{table_name}/schema"
 checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"

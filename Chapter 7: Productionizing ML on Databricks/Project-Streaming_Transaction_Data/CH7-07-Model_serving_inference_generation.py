@@ -2,16 +2,12 @@
 # MAGIC %md
 # MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Transaction data - Record Generator
-# MAGIC We simulate streaming data by generating labeled JSON data. Then we write it to a folder in our volume.
+# MAGIC ## Model serving inference generation
+# MAGIC We simulate streaming data by generating the labeled JSON data and use the model we deployed to the API to predict the label.
 
 # COMMAND ----------
 
 # MAGIC %md ## Run Setup
-
-# COMMAND ----------
-
-dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Delete previous data")
 
 # COMMAND ----------
 
@@ -20,25 +16,36 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Generate a JSON dataset
+# MAGIC ### Databricks Model Serving
+# MAGIC This code is given to us in the model serving endpoint UI. 
 
 # COMMAND ----------
 
-# DBTITLE 1,Notebook Variables
-nRows = 10
-nPositiveRows = round(nRows/3)
-destination_path = "{}/prod_raw_transactions/data".format(volume_file_path)
-temp_path = "{}/temp".format(volume_file_path)
-sleepIntervalSeconds = 1
+import os
+import requests
+import numpy as np
+import pandas as pd
+import json
+
+def create_tf_serving_json(data):
+  return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
+
+def score_model(dataset):
+  url = 'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/transaction_model/invocations'
+  headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 
+'Content-Type': 'application/json'}
+  ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else create_tf_serving_json(dataset)
+  data_json = json.dumps(ds_dict, allow_nan=True)
+  response = requests.request(method='POST', headers=headers, url=url, data=data_json)
+  if response.status_code != 200:
+    raise Exception(f'Request failed with status {response.status_code}, {response.text}')
+
+  return response.json()
 
 # COMMAND ----------
 
-if bool(dbutils.widgets.get('Reset')):
-  dbutils.fs.rm(temp_path, recurse=True)
-  dbutils.fs.rm(destination_path, recurse=True)
-
-#only makes dir if there isn't one
-dbutils.fs.mkdirs(destination_path)
+# MAGIC %md
+# MAGIC ## Generate JSON data
 
 # COMMAND ----------
 

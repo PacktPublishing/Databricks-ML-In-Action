@@ -18,7 +18,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------
 
@@ -38,7 +38,7 @@ import mlflow
 mlflow.set_registry_uri("databricks-uc")
 fe = FeatureEngineeringClient()
 
-scoring_df = spark.table("prod_raw_transactions").drop("Label","_rescued_data").limit(100)
+scoring_df = sql("SELECT * FROM raw_transactions ORDER BY TransactionTimestamp DESC").drop("Label").limit(100)
 
 print(f"Scoring model={model_name} version={get_latest_model_version(model_name)}")
 
@@ -67,7 +67,7 @@ schema = StructType([
     StructField("Product", StringType(), True),
     StructField("Amount", FloatType(),False)
 ])
-data = '[{"CustomerID":1240,"TransactionTimestamp": "2023-12-12T23:42:07.571Z","Product":"Product A","Amount":10.0}]'
+data = '[{"CustomerID":1240,"TransactionTimestamp": "2024-01-11T03:10:17.416+00:00","Product":"Product A","Amount":10.0}]'
 scoring_df = pd.json_normalize(json.loads(data))
 scoring_df["TransactionTimestamp"] = pd.to_datetime(scoring_df["TransactionTimestamp"])
 
