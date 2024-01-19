@@ -35,6 +35,9 @@ if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(checkpoint_location, True)
   sql(f"DROP TABLE IF EXISTS {table_name}")
 
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty() or bool(dbutils.widgets.get('Reset')):
+  sql(f"CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+
 # COMMAND ----------
 
 # DBTITLE 1,Optimization settings and reduce the number of files that must be read to determine schema
