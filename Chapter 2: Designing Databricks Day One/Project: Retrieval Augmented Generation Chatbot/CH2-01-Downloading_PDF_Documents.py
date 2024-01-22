@@ -71,8 +71,8 @@ def load_file(file_uri, file_name, library_folder):
 
 # we are getting our documents, you could directly upload it to the volumes using UI
 pdfs = {
-        '2312.14565.pdf': 'https://arxiv.org/pdf/2312.14565.pdf', #used for evaluator, created 20 questions from it and answeres generated using Mixtral
-        '2303.10130.pdf':'https://arxiv.org/pdf/2303.10130.pdf', #used for evaluator, created 20 questions from it and answeres generated using Mixtral
+        '2312.14565.pdf': 'https://arxiv.org/pdf/2312.14565.pdf', #used for evaluator, created 20 questions from it and answers generated using Mixtral
+        '2303.10130.pdf':'https://arxiv.org/pdf/2303.10130.pdf', #used for evaluator, created 20 questions from it and answers generated using Mixtral
         '2302.06476.pdf':'https://arxiv.org/pdf/2312.00506.pdf', 
         '2302.06476.pdf':'https://arxiv.org/pdf/2302.06476.pdf', 
         '2311.07071.pdf':'https://arxiv.org/pdf/2311.07071.pdf',
