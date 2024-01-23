@@ -9,7 +9,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Create Checkpoint and Schema reset widget
-dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset Checkpoint and Schema")
 
 # COMMAND ----------
 
@@ -23,7 +23,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 
 # DBTITLE 1,Variables
 table_name = "synthetic_transactions"
-raw_data_location = f"{volume_file_path}/schema_change_data/"
+raw_data_location = f"{volume_file_path}/{table_name}/schema_change_data/"
 schema_location = f"{volume_file_path}/{table_name}/schema"
 checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
 
