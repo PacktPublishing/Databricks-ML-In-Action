@@ -22,10 +22,10 @@
 
 # DBTITLE 1,Simple select allows many visualizations
 # MAGIC %sql
-# MAGIC select * from raw_transactions
+# MAGIC select * from synthetic_transactions
 
 # COMMAND ----------
 
 import seaborn as sns
-g = sns.PairGrid(spark.table('raw_transactions').toPandas()[['CustomerID','Amount', 'Product','Label']], diag_sharey=False, hue="Label")
+g = sns.PairGrid(spark.table('synthetic_transactions').toPandas()[['CustomerID','Amount', 'Product','Label']], diag_sharey=False, hue="Label")
 g.map_lower(sns.kdeplot).map_diag(sns.kdeplot, lw=3).map_upper(sns.regplot).add_legend()
