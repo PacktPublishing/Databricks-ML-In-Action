@@ -4,7 +4,7 @@
 -- MAGIC
 -- MAGIC ## Favorita Sales - Exploring Favorita Sales Data
 -- MAGIC
--- MAGIC [Kaggle link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting) and [autoML documentation](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
+-- MAGIC [Kaggle link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting) and [AutoML documentation](https://docs.databricks.com/en/machine-learning/automl/train-ml-model-automl-api.html)
 
 -- COMMAND ----------
 
@@ -16,14 +16,23 @@
 
 -- COMMAND ----------
 
+SELECT * FROM train_set
+
+-- COMMAND ----------
+
+SELECT ts.* FROM train_set ts 
+INNER JOIN (SELECT family, sum(sales) as total_sales FROM train_set GROUP BY family ORDER BY total_sales DESC LIMIT 10) top_10 ON ts.family=top_10.family
+
+-- COMMAND ----------
+
 SELECT COUNT(DISTINCT store_nbr) AS num_stores, COUNT(DISTINCT type) AS num_store_types
-FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+FROM favorita_stores
 WHERE state='Guayas'
 
 -- COMMAND ----------
 
 SELECT type, COUNT(*) AS num_stores
-FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+FROM favorita_stores
 WHERE state='Guayas'
 GROUP BY all
 ORDER BY num_stores DESC
@@ -31,18 +40,10 @@ ORDER BY num_stores DESC
 -- COMMAND ----------
 
 SELECT type, COUNT(*) AS num_stores
-FROM lakehouse_in_action.favorita_forecasting.favorita_stores
+FROM favorita_stores
 WHERE state = 'Guayas'
 GROUP BY type
 ORDER BY num_stores DESC
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC from pyspark.sql.functions import *
--- MAGIC df = spark.table("train_set")
--- MAGIC df = df.withColumn("transaction_date", to_date("date"))
--- MAGIC display(df)
 
 -- COMMAND ----------
 
