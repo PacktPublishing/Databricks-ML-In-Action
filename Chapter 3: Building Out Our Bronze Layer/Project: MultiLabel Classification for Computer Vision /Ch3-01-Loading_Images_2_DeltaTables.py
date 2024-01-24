@@ -49,7 +49,7 @@ def prep_data2delta(
         df = (
             spark.read.format("binaryfile")
             .option("recursiveFileLookup", "true")
-            .load(f"{dir_name}/{lable_name}")
+            .load(f"{dir_name}/{label_name}")
             .withColumn("label_name", f.lit(f"{label_name}"))
             .withColumn("label_id", f.lit(f"{mapping_dict[label_name]}").astype("int"))
             .withColumn("image_name", f.split(f.col("path"), "/").getItem(10))
