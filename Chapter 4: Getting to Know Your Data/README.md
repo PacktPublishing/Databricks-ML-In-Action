@@ -1,12 +1,14 @@
-# Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# Chapter 4: Getting to Know Your Data
 
 **Here is what you will learn as part of this chapter:**
 
-1. Exploring data with the Databricks Assistant
-2. Generating data profiles with AutoML
-3. Visualizing data with DBSQL
-4. Setting data quality expectations with DLT
-5. Applying our learning
+1. Improving data integrity with Delta Live Tables (DLT)
+2. Monitoring data quality with Databricks Lakehouse Monitoring
+3. Exploring data with Databricks Assistant
+4. Generating data profiles with AutoML
+5. Using embeddings for machine-readable data
+6. Enhancing data retrieval with Databricks Vector Search
+7. Applying our learning
 
 ## Technical requirements 
 

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 4: Exploring and Cleaning Toward a Silver Layer
+# MAGIC Chapter 4: Getting to Know Your Data
 # MAGIC
 # MAGIC ## Favorita Forecasting - Oil Data Imputing
 # MAGIC [Kaggle Competition Link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
