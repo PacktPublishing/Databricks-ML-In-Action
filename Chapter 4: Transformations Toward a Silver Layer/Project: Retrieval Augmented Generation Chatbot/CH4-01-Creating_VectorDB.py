@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 4: Exploring and cleaning toward the silver layer
+# MAGIC Chapter 4: Getting to Know Your Data
 # MAGIC
 # MAGIC ## Retrieval Augmented Generation Chatbot - Creating embeddings
 # MAGIC https://arxiv.org/pdf
