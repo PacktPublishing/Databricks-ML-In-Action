@@ -55,10 +55,6 @@ fe.create_table(
 
 # COMMAND ----------
 
-display(max_price_df.withColumn("ProductNumber2", translate(mapping)("Product")))
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ### Step 2: Create a Python UDF to calculate the difference ratio of each transaction
 
