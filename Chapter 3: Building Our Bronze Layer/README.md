@@ -5,7 +5,7 @@ Here is what you will learn as part of this chapter:
 1. Revising the Medallion architecture pattern
 2. Transforming data to Delta with Auto Loader
 3. Delta Live Tables starting with Bronze
-3. Maintaining and optimizing Delta Tables
+4. Maintaining and optimizing Delta Tables
 5. Applying our learning
 
 ## Technical requirements 

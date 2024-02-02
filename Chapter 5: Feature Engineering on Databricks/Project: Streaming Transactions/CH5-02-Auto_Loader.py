@@ -62,3 +62,7 @@ stream = spark.readStream \
   .option("mergeSchema", "true") \
   .trigger(processingTime="10 seconds") \
   .toTable(tableName=table_name)
+
+# COMMAND ----------
+
+

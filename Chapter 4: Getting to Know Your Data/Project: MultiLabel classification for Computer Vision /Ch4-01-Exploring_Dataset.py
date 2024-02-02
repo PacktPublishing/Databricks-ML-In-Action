@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC
-# MAGIC Chapter 4
+# MAGIC Chapter 4: Getting to Know Your Data
 # MAGIC
 # MAGIC ## Intel Multilable Image Classification - Explore your dataset.
 
