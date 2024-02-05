@@ -75,7 +75,7 @@ model_feature_lookups = [
     FeatureLookup(
       table_name="stores_ft",
       lookup_key="store_nbr",
-      feature_names=["cluster","store_type"]
+      feature_names=["store_cluster","store_type"]
     ),
 ]
 
@@ -120,6 +120,7 @@ for col in ["date"]:
 
 # COMMAND ----------
 
+training_pd = training_df.toPandas()
 dates = np.sort(training_pd["date"].unique())
 tscv = TimeSeriesSplit(test_size=90, n_splits=3)
 
@@ -195,6 +196,5 @@ with mlflow.start_run(run_name="Forecast Window Length") as run:
 
 
 # COMMAND ----------
-
 
 
