@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 4: Exploring and cleaning toward the silver layer
+# MAGIC Chapter 4: Getting to Know Your Data
 # MAGIC
 # MAGIC ## Retrieval Augmented Generation Chatbot - Creating embeddings
 # MAGIC https://arxiv.org/pdf
@@ -22,11 +22,17 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Create Vector Search 
+# MAGIC ## Create Vector Search
+# MAGIC If you have hit your maximum number of endpoints, you can find one already running and use it. To do so, uncomment the code in command 6 and change the name in command 7.
 # MAGIC
 # MAGIC To learn more about Databricks Vector Search check this documentation: 
 # MAGIC - [AWS](https://docs.databricks.com/en/generative-ai/vector-search.html)
 # MAGIC - [Azure](https://learn.microsoft.com/en-gb/azure/databricks/generative-ai/vector-search) 
+
+# COMMAND ----------
+
+# for e in vsc.list_endpoints()['endpoints']:
+#   print(e['name'])
 
 # COMMAND ----------
 
@@ -55,10 +61,6 @@ print(f"Endpoint named {vsc_endpoint_name} is ready.")
 # COMMAND ----------
 
 display(spark.read.table(f"{catalog}.{database_name}.pdf_documentation_text"))
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 
@@ -113,8 +115,4 @@ results = vsc.get_index(vsc_endpoint_name, vs_index_fullname).similarity_search(
   num_results=3)
 docs = results.get('result', {}).get('data_array', [])
 pprint(docs)
-
-
-# COMMAND ----------
-
 

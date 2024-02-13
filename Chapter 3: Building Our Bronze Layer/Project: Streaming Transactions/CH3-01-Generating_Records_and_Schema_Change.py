@@ -27,7 +27,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 # DBTITLE 1,Notebooke Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
-destination_path = "{}/schema_change_data".format(volume_file_path)
+destination_path = "{}/synthetic_transactions/schema_change_data".format(volume_file_path)
 temp_path = "{}/temp".format(volume_file_path)
 sleepIntervalSeconds = 1
 

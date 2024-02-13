@@ -80,7 +80,3 @@ display(df)
 
 # MAGIC %sql
 # MAGIC SHOW TABLES
-
-# COMMAND ----------
-
-

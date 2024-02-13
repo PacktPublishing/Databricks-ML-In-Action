@@ -7,7 +7,7 @@
 
 # COMMAND ----------
 
-dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Drop previous table")
+dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset: Delete previous data")
 
 # COMMAND ----------
 
@@ -17,7 +17,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 
 delta_train_name = "train_imgs_main.delta"
 delta_val_name = "valid_imgs_main.delta"
-# we are keeping Delta tables with a PATH 
+
 if bool(dbutils.widgets.get('Reset')):
   !rm -rf {main_dir_2write}{delta_train_name}
   !rm -rf {main_dir_2write}{delta_val_name}
@@ -49,7 +49,7 @@ def prep_data2delta(
         df = (
             spark.read.format("binaryfile")
             .option("recursiveFileLookup", "true")
-            .load(f"{dir_name}/{lable_name}")
+            .load(f"{dir_name}/{label_name}")
             .withColumn("label_name", f.lit(f"{label_name}"))
             .withColumn("label_id", f.lit(f"{mapping_dict[label_name]}").astype("int"))
             .withColumn("image_name", f.split(f.col("path"), "/").getItem(10))

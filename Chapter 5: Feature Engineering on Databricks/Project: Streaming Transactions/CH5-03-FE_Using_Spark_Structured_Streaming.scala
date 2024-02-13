@@ -8,7 +8,7 @@
 // COMMAND ----------
 
 // MAGIC %python
-// MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
+// MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'False'], label="Reset Checkpoint and Schema")
 
 // COMMAND ----------
 
