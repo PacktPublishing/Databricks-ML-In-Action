@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 6: Searching for Signal
+# MAGIC Chapter 6: Tools for Model Training and Experimenting
 # MAGIC
 # MAGIC ## Favorita Sales - SQL Chat Bot
 # MAGIC
@@ -160,8 +160,3 @@ db_chain.run(question)
 # COMMAND ----------
 
 chat_chain.run(question)
-
-
-
-# We'd like to thank Robert Mosley, a Sr. Solutions Architect at Databricks and Generative AI/LLM thoughtleader for helping use with the development of our Chat Bot code!
-
