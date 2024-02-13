@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 6: Searching for Signal
+# MAGIC Chapter 6: Tools for Model Training and Experimenting
 # MAGIC
 # MAGIC ## Favorita Forecasting -Favorita Advanced Experiment Tracking
 # MAGIC
@@ -29,13 +29,6 @@ time_col = "date"
 
 # COMMAND ----------
 
-# DBTITLE 1,Select supported columns
-from databricks.automl_runtime.sklearn.column_selector import ColumnSelector
-supported_cols = ["family", "lag10_oil_price", "cluster", "date", "regional_holiday_type", "store_nbr", "onpromotion", "store_type", "local_holiday_type", "national_holiday_type"]
-col_selector = ColumnSelector(supported_cols)
-
-# COMMAND ----------
-
 # DBTITLE 1,Import & Initialize the DFE Client
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
 from sklearn.model_selection import TimeSeriesSplit
@@ -51,6 +44,10 @@ training_features = "training_dataset"
 raw_data_table = "train_set"
 label_name = "sales"
 time_column = "date"
+
+# COMMAND ----------
+
+import prophet
 
 # COMMAND ----------
 
@@ -88,35 +85,6 @@ training_set = fe.create_training_set(
     label=label_name,
 )
 training_df = training_set.load_df()
-
-# COMMAND ----------
-
-from pandas import Timestamp
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-
-from databricks.automl_runtime.sklearn import DatetimeImputer
-from databricks.automl_runtime.sklearn import OneHotEncoder
-from databricks.automl_runtime.sklearn import TimestampTransformer
-from sklearn.preprocessing import StandardScaler
-
-imputers = {
-  "date": DatetimeImputer(),
-}
-
-datetime_transformers = []
-
-for col in ["date"]:
-    ohe_transformer = ColumnTransformer(
-        [("ohe", OneHotEncoder(sparse=False, handle_unknown="indicator"), [TimestampTransformer.HOUR_COLUMN_INDEX])],
-        remainder="passthrough")
-    timestamp_preprocessor = Pipeline([
-        (f"impute_{col}", imputers[col]),
-        (f"transform_{col}", TimestampTransformer()),
-        (f"onehot_encode_{col}", ohe_transformer),
-        (f"standardize_{col}", StandardScaler()),
-    ])
-    datetime_transformers.append((f"timestamp_{col}", timestamp_preprocessor, [col]))
 
 # COMMAND ----------
 
