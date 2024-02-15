@@ -27,8 +27,8 @@
 # COMMAND ----------
 
 # DBTITLE 1,Unzip your data under Volumes 
-!mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/
-!mkdir /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images
+!mkdir {volume_file_path}/intel_image_clf/
+!mkdir {volume_file_path}/intel_image_clf/raw_images
 
 # this can take up to a few hours  
 # or load a few examples to UC on your own if time is a constraint
