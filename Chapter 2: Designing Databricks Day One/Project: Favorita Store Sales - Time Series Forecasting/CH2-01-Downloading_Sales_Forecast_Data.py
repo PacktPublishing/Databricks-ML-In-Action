@@ -41,3 +41,6 @@ od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecas
 
 dbutils.fs.ls(raw_data_path + "/store-sales-time-series-forecasting/")
 
+# COMMAND ----------
+
+
