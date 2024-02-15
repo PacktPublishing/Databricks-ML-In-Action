@@ -2,7 +2,7 @@
 # MAGIC %md 
 # MAGIC Chapter 2 
 # MAGIC
-# MAGIC ##  Intel image multilabel classification - Dowloanding our images to the Volumes
+# MAGIC ##  Intel image multilabel classification - Downloading our images to the Volumes
 # MAGIC We will download data from Kaggle Dataset: [Kaggle competition link](https://www.kaggle.com/datasets/puneet6060/intel-image-classification/data) 
 # MAGIC It's a classical multiclass classification problem. 
 # MAGIC
