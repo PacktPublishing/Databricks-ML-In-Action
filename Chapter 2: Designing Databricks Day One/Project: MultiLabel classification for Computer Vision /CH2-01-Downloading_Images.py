@@ -19,23 +19,9 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Add your credentials to connect to the Kaggle Account 
-import os
-
-os.environ[
-    "kaggle_username"
-] = dbutils.secrets.get("mlaction", "kaggle_name")  # replace with your own credential here temporarily or set up a secret scope with your credential
-
-os.environ[
-    "kaggle_key"
-] = dbutils.secrets.get("mlaction", "kaggle_key")  # replace with your own credential here temporarily or set up a secret scope with your credential
-
-# COMMAND ----------
-
+# DBTITLE 1,Kaggle download using Databricks Secrets
 # MAGIC %sh
 # MAGIC cd /local_disk0/
-# MAGIC export KAGGLE_USERNAME=$kaggle_username
-# MAGIC export KAGGLE_KEY=$kaggle_key
 # MAGIC kaggle datasets download -d puneet6060/intel-image-classification
 
 # COMMAND ----------
