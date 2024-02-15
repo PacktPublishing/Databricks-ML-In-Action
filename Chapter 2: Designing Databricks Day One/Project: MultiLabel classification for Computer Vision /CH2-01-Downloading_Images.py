@@ -32,4 +32,4 @@
 
 # this can take up to a few hours  
 # or load a few examples to UC on your own if time is a constraint
-!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images 
+!unzip -n /local_disk0/intel-image-classification.zip -d {volume_file_path}/intel_image_clf/raw_images 
