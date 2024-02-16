@@ -24,6 +24,7 @@ Databricks ML Runtime includes several pre-installed libraries useful for machin
 - [Schema evolution with Auto Loader](https://docs.databricks.com/ingestion/auto-loader/schema.html#configure-schema-inference-and-evolution-in-auto-loader)
 - [Common loading patterns with Auto Loader](https://docs.databricks.com/ingestion/auto-loader/patterns.html)
 - [Stream processing with Apache Kafka and Databricks](https://docs.databricks.com/structured-streaming/kafka.html)
+- [Blog: Context length in LLMs: All you need to know](https://agi-sphere.com/context-length/)
 - [How We Performed ETL on One Billion Records For Under $1 With Delta Live Tables](https://www.databricks.com/blog/2023/04/14/how-we-performed-etl-one-billion-records-under-1-delta-live-tables.html)
 - [Create tables - Managed vs External](https://docs.databricks.com/en/data-governance/unity-catalog/create-tables.html#create-tables)
 - [Take full advantage of the auto-tuning available](https://docs.databricks.com/delta/tune-file-size.html#configure-delta-lake-to-control-data-file-size)

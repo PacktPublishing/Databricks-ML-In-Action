@@ -2,7 +2,7 @@
 # MAGIC %md 
 # MAGIC Chapter 2 
 # MAGIC
-# MAGIC ##  Intel image multilabel classification - Dowloanding our images to the Volumes
+# MAGIC ##  Intel image multilabel classification - Downloading our images to the Volumes
 # MAGIC We will download data from Kaggle Dataset: [Kaggle competition link](https://www.kaggle.com/datasets/puneet6060/intel-image-classification/data) 
 # MAGIC It's a classical multiclass classification problem. 
 # MAGIC
@@ -32,4 +32,4 @@
 
 # this can take up to a few hours  
 # or load a few examples to UC on your own if time is a constraint
-!unzip -n /local_disk0/intel-image-classification.zip -d /Volumes/{catalog}/{database_name}/files/intel_image_clf/raw_images 
+!unzip -n /local_disk0/intel-image-classification.zip -d {volume_file_path}/intel_image_clf/raw_images 

@@ -29,6 +29,9 @@ display(dbutils.fs.ls(raw_data_path))
 
 import pandas as pd
 
+df = pd.read_csv(f'{raw_data_path}/holidays_events.csv', sep=',', decimal='.')
+display(df)
+
 # COMMAND ----------
 
 # DBTITLE 1,Holiday Events
