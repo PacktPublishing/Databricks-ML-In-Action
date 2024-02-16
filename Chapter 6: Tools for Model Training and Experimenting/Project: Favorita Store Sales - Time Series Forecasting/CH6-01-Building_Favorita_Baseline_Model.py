@@ -34,7 +34,12 @@ time_column = "date"
 
 # COMMAND ----------
 
-# DBTITLE 1,Quick reminder what the data looks like
+# MAGIC %md
+# MAGIC
+# MAGIC ##Quick reminder what the data looks like
+
+# COMMAND ----------
+
 raw_data = sql(f"SELECT * FROM {raw_data_table}")
 
 display(raw_data.take(10))
@@ -44,6 +49,11 @@ display(raw_data.take(10))
 store_data = spark.table("stores_ft")
 
 display(store_data.take(10))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##Create FeatureLookups, a training set, and a baseline model
 
 # COMMAND ----------
 
@@ -90,7 +100,3 @@ summary = automl.regress(automl_data,
                           timeout_minutes=10,
                           exclude_cols=['id']
                           )
-
-# COMMAND ----------
-
-
