@@ -22,7 +22,7 @@
 # MAGIC %md
 # MAGIC ### Creating the training set
 # MAGIC
-# MAGIC With the timeserires features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we must have a value for the max product, but not necessarily for the transaction count. We will make sure both have values.
+# MAGIC With the timeseries features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we make sure both have values.
 
 # COMMAND ----------
 
