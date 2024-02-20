@@ -2,8 +2,9 @@
 // MAGIC %md
 // MAGIC Chapter 5: Feature Engineering
 // MAGIC
-// MAGIC ##Synthetic data - Feature engineering on a streaming table
+// MAGIC ##Transaction data - Feature engineering on a streaming table
 // MAGIC
+// MAGIC Calculate the number of transations per customer in the last 2 minutes.
 
 // COMMAND ----------
 
