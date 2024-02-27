@@ -40,12 +40,16 @@ display(train_df)
 
 # COMMAND ----------
 
+dbutils.fs.ls(volume_model_path)
+
+# COMMAND ----------
+
 import mlflow
 from mlia_utils import mlflow_funcs
 
 experiment_path = f"/Users/{current_user}/intel-clf-training_action"
 mlflow_funcs.mlflow_set_experiment(experiment_path) 
-log_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/intel_training_logger_board"
+log_path = f"{volume_file_path}/intel_image_clf/intel_training_logger_board"
 !mkdir {log_path}
 
 # COMMAND ----------

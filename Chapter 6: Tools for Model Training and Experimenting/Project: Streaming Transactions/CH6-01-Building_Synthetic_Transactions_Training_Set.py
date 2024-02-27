@@ -22,7 +22,7 @@
 # MAGIC %md
 # MAGIC ### Creating the training set
 # MAGIC
-# MAGIC With the timeserires features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we must have a value for the max product, but not necessarily for the transaction count. We will make sure both have values.
+# MAGIC With the timeseries features, the first values of the features will be later than the initial raw transactions. We start with determining the earliest raw transaction we want to include in the training set. For the on-demand UDF, nulls will throw an ugly error. For the transaction count, we simply won't have the feature value. Therefore we make sure both have values.
 
 # COMMAND ----------
 
@@ -67,7 +67,7 @@ training_feature_lookups = [
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
-raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2023-12-12T23:42:54.645+00:00')")
+raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2024-02-16T23:18:01.080+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
@@ -80,8 +80,3 @@ training_df = training_set.load_df()
 # COMMAND ----------
 
 display(training_df)
-
-# COMMAND ----------
-
-# DBTITLE 1,Write the training data to a table we will need this in the next chapter
-training_df.write.mode("overwrite").saveAsTable("training_data_snapshot")
