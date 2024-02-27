@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 5: Feature Engineering in Unity Catalog
 # MAGIC
-# MAGIC ## Synthetic Data - Streaming as Delta into a table using Auto Loader
+# MAGIC ## Transaction data - Streaming as Delta into a table using Auto Loader
 # MAGIC
 # MAGIC We have created a feature for our model based on the Product column so we no longer create the nulls.
 
@@ -62,7 +62,3 @@ stream = spark.readStream \
   .option("mergeSchema", "true") \
   .trigger(processingTime="10 seconds") \
   .toTable(tableName=table_name)
-
-# COMMAND ----------
-
-

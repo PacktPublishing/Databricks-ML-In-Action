@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 5: Feature Engineering
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ##Synthetic Transactions data - Creating a Maximum Price Feature Table
+# MAGIC ##Transaction data - Creating a Maximum Price Feature Table
 
 # COMMAND ----------
 

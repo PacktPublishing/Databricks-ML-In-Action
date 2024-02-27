@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 5: Feature Engineering in Unity Catalog
 # MAGIC
-# MAGIC ## Synthetic data - Synthetic Data Source Record Generator
+# MAGIC ## Transaction data - Record Generator
 # MAGIC We simulate streaming data by generating labeled JSON data. Then we write it to a folder in our volume.
 
 # COMMAND ----------
@@ -36,7 +36,8 @@ sleepIntervalSeconds = 1
 if bool(dbutils.widgets.get('Reset')):
   dbutils.fs.rm(temp_path, recurse=True)
   dbutils.fs.rm(destination_path, recurse=True)
-  dbutils.fs.mkdirs(destination_path)
+
+dbutils.fs.mkdirs(destination_path)
 
 # COMMAND ----------
 

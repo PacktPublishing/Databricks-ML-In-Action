@@ -131,11 +131,7 @@ while(t<total):
   if not(t%10):
     print(t)
   time.sleep(sleepIntervalSeconds)
-  if(t>4000):
+  if(t>400):
     Product_vars = {"A": {"min": 1000, "max": 25001, "mean": 15520, "alpha": 4, "beta": 8},
                     "B": {"min": 1000, "max": 5501, "mean": 35520, "alpha": 8, "beta": 4},
                     "C": {"min": 10000, "max": 40001, "mean": 30520, "alpha": 3, "beta": 8}}
-
-# COMMAND ----------
-
-
