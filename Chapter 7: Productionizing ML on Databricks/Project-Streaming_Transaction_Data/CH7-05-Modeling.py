@@ -58,8 +58,9 @@ training_feature_lookups = [
   )
 ]
 
-feature_spec_name = f"{catalog}.{database_name}.transaction_training_spec"
-fe.create_feature_spec(name=feature_spec_name, features=training_feature_lookups, exclude_columns="_rescued_data")
+# We are using model serving so we don't need to serve our features
+# feature_spec_name = f"{catalog}.{database_name}.transaction_training_spec"
+# fe.create_feature_spec(name=feature_spec_name, features=training_feature_lookups, exclude_columns="_rescued_data")
 
 # COMMAND ----------
 
@@ -124,7 +125,8 @@ inference_feature_lookups = [
   )
 ]
 
-inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
+# We are using model serving so we don't need to serve our features
+# inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
 # fe.create_feature_spec(name=inference_feature_spec_name, features=inference_feature_lookups, exclude_columns="_rescued_data")
 
 # COMMAND ----------
@@ -246,10 +248,12 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
 # COMMAND ----------
 
 from mlflow.models import infer_signature
-import json
-context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
-experiment_name = context['extraContext']['notebook_path']
-experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+
+experiment_name = model_artifact_path
+experiment = mlflow.get_experiment_by_name(experiment_name)
+if not experiment:
+    experiment_id = mlflow.create_experiment(experiment_name)
+    experiment = mlflow.get_experiment(experiment_id)
 
 mlflow.autolog(
     log_input_examples=True,
