@@ -143,6 +143,9 @@ import mlflow
 mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
+full_model_name = f'{catalog}.{database_name}.{model_name}'
+model_description = "MLflow custom python function wrapper around a LightGBM model with embedded pre-processing. The wrapper provides data preprocessing so that the model can be applied to input dataframe directly without training/serving skew. This model serves to classify transactions as 0/1 for learning purposes."
+
 model_artifact_path = volume_model_path +  model_name
 dbutils.fs.mkdirs(model_artifact_path)
 
@@ -152,19 +155,13 @@ dbutils.fs.mkdirs(model_artifact_path)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Create a model wrapper
+
+# COMMAND ----------
+
 # DBTITLE 1,PyFunc Wrapper for Transaction Model
 class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
-  '''
-  LightGBM with embedded pre-processing.
-  
-  This class is an MLflow custom python function wrapper around a LGB model.
-  The wrapper provides data preprocessing so that the model can be applied to input dataframe directly.
-  :Input: to the model is pandas dataframe
-  :Output: predicted class for each transaction
-
-  ????The model declares current local versions of XGBoost and pillow as dependencies in its
-  conda environment file.  
-  '''
   
   def __init__(self, _clf, X, y, numeric_columns, cat_columns):
     ## Train test split
@@ -232,12 +229,18 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Train, log, and register the model
+
+# COMMAND ----------
+
 experiment_name = model_artifact_path
 experiment = mlflow.get_experiment_by_name(experiment_name)
-experiment_id = experiment.experiment_id
 if not experiment:
     experiment_id = mlflow.create_experiment(experiment_name)
     experiment = mlflow.get_experiment(experiment_id)
+else:
+    experiment_id = experiment.experiment_id
 
 mlflow.autolog(
     log_input_examples=True,
@@ -276,12 +279,34 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
   ##------- log pyfunc custom model -------##
   
-  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package")
+  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package", infer_input_example=X)
+
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ####Update the data for the registered model
+
+# COMMAND ----------
+
+mlfclient = mlflow.tracking.MlflowClient()
+
+model_details = mlfclient.get_registered_model(model_name)
+if model_details.description == "":
+  mlfclient.update_registered_model(
+    name=full_model_name,
+    description=model_description
+    )
+
+model_version_info = mlfclient.search_model_versions(f"name='{full_model_name}'")[0]
+mlfclient.set_registered_model_alias(name=full_model_name, alias="needs_tested", version=model_version_info.version)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Test ability to predict
 
 # COMMAND ----------
 
 myLGBM.predict(spark, X)
-
-# COMMAND ----------
-
-

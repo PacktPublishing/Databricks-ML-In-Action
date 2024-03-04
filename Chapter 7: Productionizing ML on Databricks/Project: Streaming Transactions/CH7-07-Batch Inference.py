@@ -22,7 +22,6 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
 model_name = f"{catalog}.{database_name}.packaged_transaction_model"
 
 # COMMAND ----------
@@ -44,7 +43,8 @@ print(f"Scoring model={model_name} version={get_latest_model_version(model_name)
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",
-  df=scoring_df
+  df=scoring_df,
+  env_manager="conda"
 )
 
 display(scored)
@@ -75,7 +75,8 @@ print(f"Scoring model={model_name} version={get_latest_model_version(model_name)
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",
-  df=spark.createDataFrame(scoring_df,schema=schema)
+  df=spark.createDataFrame(scoring_df,schema=schema),
+  env_manager="conda"
 )
 
 display(scored)
