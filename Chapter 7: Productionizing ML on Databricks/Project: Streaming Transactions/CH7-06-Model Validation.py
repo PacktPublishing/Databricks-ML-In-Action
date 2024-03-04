@@ -20,6 +20,7 @@ model_name = dbutils.widgets.get(name="model_name")
 
 # COMMAND ----------
 
+from mlia_utils.mlflow_funcs import get_latest_model_version
 from mlflow.client import MlflowClient
 import mlflow
 

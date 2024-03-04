@@ -300,7 +300,7 @@ if model_details.description == "":
     )
 
 model_version_info = mlfclient.search_model_versions(f"name='{full_model_name}'")[0]
-mlfclient.set_registered_model_alias(name=full_model_name, alias="needs_tested", version=model_version_info.version)
+mlfclient.set_model_version_tag(name=full_model_name, key="validation_status" value="needs_tested", version=model_version_info.version)
 
 # COMMAND ----------
 
