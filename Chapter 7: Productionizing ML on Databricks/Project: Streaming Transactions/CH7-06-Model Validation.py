@@ -38,17 +38,18 @@ validation_results = {}
 # COMMAND ----------
 
 model_details = mlfclient.get_registered_model(model_name)
-model_version_info = mlfclient.search_model_versions(f"name='{model_name}'")[0]
+model_version = str(get_latest_model_version(model_name))
+model_version_details = mlfclient.get_model_version(name=model_name, version=model_version)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ####Check for aliases
+# MAGIC ####Check for tags
 
 # COMMAND ----------
 
-assert 'needs_tested' in model_details.aliases.keys(), f"the model, model={model_name}, specfied does not have any version with alias 'needs_tested'"
-assert model_details.aliases['needs_tested'] == model_version_info.version, f"the latest version, version={model_version_info.version}, of model, model={model_name} is not aliased as 'needs_testing'"
+assert 'validation_status' in model_version_details.tags.keys(), f"the model, model={model_name}, specfied does not have validation_status tag"
+assert model_version_details.tags['validation_status'] == 'needs_tested', f"the latest version, version={model_version}, of model, model={model_name} is not tagged as validation_status=needs_tested"
 
 # COMMAND ----------
 
@@ -86,13 +87,8 @@ else:
 # COMMAND ----------
 
 if sum(validation_results.values()) == len(validation_results.values()):
-  mlfclient.set_registered_model_alias(name=model_name, alias="passed_tests", version=model_version_info.version)
-  mlfclient.delete_registered_model_alias(name=model_name, alias="needs_tested")
-  if 'failed_tests' in model_details.aliases.keys():
-    mlfclient.delete_registered_model_alias(name=model_name, alias="failed_tests")
-  print(f"Success! Your model, {model_name} version {model_version_info.version}, passed all tests.")
+  mlfclient.set_model_version_tag(name=model_name, key="validation_status", value="passed_tests", version=model_version)
+  print(f"Success! Your model, {model_name} version {model_version}, passed all tests.")
 else:
-  if 'passed_tests' in model_details.aliases.keys():
-    mlfclient.delete_registered_model_alias(name=model_name, alias="passed_tests")
-  mlfclient.set_registered_model_alias(name=model_name, alias="failed_tests", version=model_version_info.version)
+  mlfclient.set_model_version_tag(name=model_name, key="validation_status", value="failed_tests", version=model_version)
   print(f"Fail! Check the results to determine which test(s) the model failed. {validation_results}")

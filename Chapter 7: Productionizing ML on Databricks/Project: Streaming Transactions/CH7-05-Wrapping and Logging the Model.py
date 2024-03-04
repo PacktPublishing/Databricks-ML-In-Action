@@ -290,6 +290,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
 # COMMAND ----------
 
+from mlia_utils.mlflow_funcs import get_latest_model_version
 mlfclient = mlflow.tracking.MlflowClient()
 
 model_details = mlfclient.get_registered_model(model_name)
@@ -299,8 +300,9 @@ if model_details.description == "":
     description=model_description
     )
 
-model_version_info = mlfclient.search_model_versions(f"name='{full_model_name}'")[0]
-mlfclient.set_model_version_tag(name=full_model_name, key="validation_status" value="needs_tested", version=model_version_info.version)
+model_version = get_latest_model_version(full_model_name)
+mlfclient.set_model_version_tag(name=full_model_name, key="validation_status", value="needs_tested", version=str(model_version))
+mlfclient.set_model_version_tag(name=full_model_name, key="project", value=project_name, version=str(model_version))
 
 # COMMAND ----------
 
