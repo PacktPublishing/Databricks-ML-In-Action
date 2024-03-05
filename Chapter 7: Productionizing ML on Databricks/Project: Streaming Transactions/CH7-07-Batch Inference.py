@@ -67,6 +67,8 @@ schema = StructType([
     StructField("Product", StringType(), True),
     StructField("Amount", FloatType(),False)
 ])
+
+## Update the TransactionTimestamp to fit your current timeframe
 data = '[{"CustomerID":1240,"TransactionTimestamp": "2024-01-11T03:10:17.416+00:00","Product":"Product A","Amount":10.0}]'
 scoring_df = pd.json_normalize(json.loads(data))
 scoring_df["TransactionTimestamp"] = pd.to_datetime(scoring_df["TransactionTimestamp"])
