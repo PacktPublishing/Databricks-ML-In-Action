@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 5: Feature Engineering in Unity Catalog
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Synthetic Data - Streaming as Delta into a table using Auto Loader
+# MAGIC ## Transaction data - Streaming as Delta into a table using Auto Loader
 # MAGIC
 # MAGIC We have created a feature for our model based on the Product column so we no longer create the nulls.
 

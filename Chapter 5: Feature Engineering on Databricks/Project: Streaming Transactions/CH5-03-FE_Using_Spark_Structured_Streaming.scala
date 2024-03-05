@@ -2,8 +2,9 @@
 // MAGIC %md
 // MAGIC Chapter 5: Feature Engineering
 // MAGIC
-// MAGIC ##Synthetic data - Feature engineering on a streaming table
+// MAGIC ##Transaction data - Feature engineering on a streaming table
 // MAGIC
+// MAGIC Calculate the number of transations per customer in the last 2 minutes.
 
 // COMMAND ----------
 
@@ -37,8 +38,8 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 // MAGIC table_name = "transaction_count_ft"
 // MAGIC history_table_name = "transaction_count_history"
 // MAGIC if bool(dbutils.widgets.get('Reset')):
-// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
-// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
+// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/streaming_outputs/", True)
+// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/streaming_outputs/", True)
 // MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
 // MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
 
@@ -251,7 +252,3 @@ flatMapGroupsWithStateResultDf.writeStream
   .trigger(Trigger.ProcessingTime("10 seconds"))
   .queryName("flatMapGroupsHistoryTable")
   .table(history_table_name)
-
-// COMMAND ----------
-
-

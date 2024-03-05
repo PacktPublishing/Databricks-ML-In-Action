@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Production ML
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Synthetic data - Inference
+# MAGIC ## Batch Inference
 
 # COMMAND ----------
 
@@ -22,7 +22,6 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
 model_name = f"{catalog}.{database_name}.packaged_transaction_model"
 
 # COMMAND ----------
@@ -44,7 +43,8 @@ print(f"Scoring model={model_name} version={get_latest_model_version(model_name)
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",
-  df=scoring_df
+  df=scoring_df,
+  env_manager="conda"
 )
 
 display(scored)
@@ -75,44 +75,8 @@ print(f"Scoring model={model_name} version={get_latest_model_version(model_name)
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{get_latest_model_version(model_name)}",
-  df=spark.createDataFrame(scoring_df,schema=schema)
+  df=spark.createDataFrame(scoring_df,schema=schema),
+  env_manager="conda"
 )
 
 display(scored)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ###Create a Feature & Function Serving endpoint
-# MAGIC If you are not using Databricks Model Serving, use Databricks Feature Serving
-
-# COMMAND ----------
-
-from databricks.feature_engineering.entities.feature_lookup import FeatureLookup
-from databricks.feature_engineering import FeatureFunction
-from databricks.feature_engineering.entities.feature_serving_endpoint import (
-    AutoCaptureConfig,
-    EndpointCoreConfig,
-    Servable,
-    ServedEntity,
-)
-
-# Create endpoint
-endpoint_name = f"{model}"
-
-status = fe.create_feature_serving_endpoint(name=endpoint_name, config=EndpointCoreConfig(served_entities=ServedEntity(feature_spec_name=inference_feature_spec_name)))
-print(status)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ##### Databricks Feature Serving Clean Up
-
-# COMMAND ----------
-
-fe.delete_feature_spec(name=inference_feature_spec_name)
-fe.delete_feature_serving_endpoint(name=endpoint_name)
-
-# COMMAND ----------
-
-

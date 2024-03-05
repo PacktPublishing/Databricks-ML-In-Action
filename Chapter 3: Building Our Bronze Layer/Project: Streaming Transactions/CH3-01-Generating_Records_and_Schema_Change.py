@@ -176,7 +176,3 @@ display(spark.read.format("json").load(destination_path))
 
 # DBTITLE 1,Display the Data Generated
 display(spark.read.format("text").load(destination_path))
-
-# COMMAND ----------
-
-

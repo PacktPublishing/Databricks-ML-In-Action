@@ -87,6 +87,11 @@ training_df = training_set.load_df()
 
 # COMMAND ----------
 
+# DBTITLE 1,Save as table
+training_df.write.mode("overwrite").saveAsTable("training_data")
+
+# COMMAND ----------
+
 display(training_df)
 
 # COMMAND ----------

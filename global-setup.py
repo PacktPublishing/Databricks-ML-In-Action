@@ -36,6 +36,14 @@ assert float(current_version) >= float(min_required_version), f'The Databricks v
 
 # DBTITLE 1,Setting a default catalog and project specific database
 # DATABASE SETUP -----------------------------------
+# Define a current user
+current_user = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().apply('user')
+if current_user.rfind('@') > 0:
+  current_user_no_at = current_user[:current_user.rfind('@')]
+else:
+  current_user_no_at = current_user
+current_user_no_at = re.sub(r'\W+', '_', current_user_no_at)
+
 # Set the UC catalog based on the isolation environment
 env = dbutils.widgets.get("env")
 if env=="dev":

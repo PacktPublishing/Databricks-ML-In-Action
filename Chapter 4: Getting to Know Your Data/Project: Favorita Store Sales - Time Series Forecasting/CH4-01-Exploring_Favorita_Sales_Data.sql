@@ -44,13 +44,3 @@ FROM favorita_stores
 WHERE state = 'Guayas'
 GROUP BY type
 ORDER BY num_stores DESC
-
--- COMMAND ----------
-
--- MAGIC %python
--- MAGIC from databricks import automl
--- MAGIC summary = automl.regress(df, target_col="sales", timeout_minutes=30)
-
--- COMMAND ----------
-
-
