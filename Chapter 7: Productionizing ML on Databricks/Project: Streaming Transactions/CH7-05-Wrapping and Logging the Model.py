@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Production ML
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Synthetic data - Modeling
+# MAGIC ## Wrapping and Logging the Model
 # MAGIC
 
 # COMMAND ----------
@@ -58,9 +58,6 @@ training_feature_lookups = [
   )
 ]
 
-feature_spec_name = f"{catalog}.{database_name}.transaction_training_spec"
-fe.create_feature_spec(name=feature_spec_name, features=training_feature_lookups, exclude_columns="_rescued_data")
-
 # COMMAND ----------
 
 table_name = "raw_transactions"
@@ -87,13 +84,6 @@ training_set = fe.create_training_set(
 # COMMAND ----------
 
 display(training_set.load_df())
-
-# COMMAND ----------
-
-#columns we want to scale
-numeric_columns = []
-#columns we want to factorize
-cat_columns = ["Product","CustomerID"]
 
 # COMMAND ----------
 
@@ -124,9 +114,6 @@ inference_feature_lookups = [
   )
 ]
 
-inference_feature_spec_name = f"{catalog}.{database_name}.transaction_inference_spec"
-# fe.create_feature_spec(name=inference_feature_spec_name, features=inference_feature_lookups, exclude_columns="_rescued_data")
-
 # COMMAND ----------
 
 inf_transactions_df = sql("SELECT * FROM raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
@@ -151,12 +138,14 @@ display(inferencing_set.load_df())
 
 # COMMAND ----------
 
-
 import pandas as pd
 import mlflow
 mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
+full_model_name = f'{catalog}.{database_name}.{model_name}'
+model_description = "MLflow custom python function wrapper around a LightGBM model with embedded pre-processing. The wrapper provides data preprocessing so that the model can be applied to input dataframe directly without training/serving skew. This model serves to classify transactions as 0/1 for learning purposes."
+
 model_artifact_path = volume_model_path +  model_name
 dbutils.fs.mkdirs(model_artifact_path)
 
@@ -166,23 +155,15 @@ dbutils.fs.mkdirs(model_artifact_path)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC #### Create a model wrapper
+
+# COMMAND ----------
+
 # DBTITLE 1,PyFunc Wrapper for Transaction Model
 class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
-  '''
-  LightGBM with embedded pre-processing.
   
-  This class is an MLflow custom python function wrapper around a LGB model.
-  The wrapper provides data preprocessing so that the model can be applied to input dataframe directly.
-  :Input: to the model is pandas dataframe
-  :Output: predicted class for each transaction
-
-  ????The model declares current local versions of XGBoost and pillow as dependencies in its
-  conda environment file.  
-  '''
-  
-  def __init__(self, model, X, y, numeric_columns, cat_columns):
-    self.model = model
-
+  def __init__(self, _clf, X, y, numeric_columns, cat_columns):
     ## Train test split
     nrows = len(X)
     split_row = round(.8*nrows)
@@ -193,7 +174,7 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     ## OneHot Encoding
     from sklearn.preprocessing import OneHotEncoder  
     ohe = OneHotEncoder(sparse_output=False, handle_unknown='infrequent_if_exist').set_output(transform="pandas")
-    self.encoder = ohe.fit(X_train[self.cat_columns])
+    self.encoder = ohe.fit(self.X_train[self.cat_columns])
 
     ## Numerical scaling
     from sklearn.preprocessing import StandardScaler 
@@ -207,6 +188,8 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
     self.X_train_processed = TransactionModelWrapper.preprocess_data(self.X_train, self.numeric_columns, self.fitted_scaler,self.cat_columns, self.encoder)
     self.X_test_processed  = TransactionModelWrapper.preprocess_data(self.X_test, self.numeric_columns, self.fitted_scaler,self.cat_columns,self.encoder)
 
+    self.model = _clf.fit(self.X_train_processed, self.y_train)
+
     def _evaluation_metrics(model, X, y):
       from sklearn.metrics import log_loss
       y_pred = model.predict(X)
@@ -214,11 +197,19 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
       return log_loss
       
     self.log_loss = _evaluation_metrics(model=self.model, X=self.X_test_processed, y=self.y_test)
+    
+    def _model_signature(model, X):
+      from mlflow.models import infer_signature
+      y_preds=model.predict(X)
+      return infer_signature(X, y_preds)
   
+    self.model_signature = _model_signature(model=self.model, X=self.X_test_processed)
+
   def predict(self, context, input_data: pd.DataFrame)->pd.DataFrame:
     input_processed = TransactionModelWrapper.preprocess_data(df=input_data, numeric_columns=self.numeric_columns, fitted_scaler=self.fitted_scaler ,cat_columns=self.cat_columns, encoder=self.encoder)
     return pd.DataFrame(self.model.predict(input_processed), columns=['predicted'])
-  
+
+
   @staticmethod
   def preprocess_data(df, numeric_columns,fitted_scaler,cat_columns, encoder):
     if "TransactionTimestamp" in df.columns:
@@ -234,22 +225,22 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
       ndf = df[numeric_columns].copy()
       df[numeric_columns] = fitted_scaler.transform(ndf[numeric_columns])
     return df
-  
-  @staticmethod
-  def fit(X, y):
-    import lightgbm as lgb
-    _clf = lgb.LGBMClassifier()
-    lgbm_model = _clf.fit(X, y)
-    return lgbm_model
-  
+
 
 # COMMAND ----------
 
-from mlflow.models import infer_signature
-import json
-context = json.loads(dbutils.notebook.entry_point.getDbutils().notebook().getContext().toJson())
-experiment_name = context['extraContext']['notebook_path']
-experiment_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+# MAGIC %md
+# MAGIC #### Train, log, and register the model
+
+# COMMAND ----------
+
+experiment_name = model_artifact_path
+experiment = mlflow.get_experiment_by_name(experiment_name)
+if not experiment:
+    experiment_id = mlflow.create_experiment(experiment_name)
+    experiment = mlflow.get_experiment(experiment_id)
+else:
+    experiment_id = experiment.experiment_id
 
 mlflow.autolog(
     log_input_examples=True,
@@ -267,34 +258,18 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   training_data = training_set.load_df().toPandas()
   X = training_data.drop(["Label"], axis=1)
   y = training_data.Label.astype(int)
-  nrows = len(X)
-  split_row = round(.8*nrows)
-  X_train, X_test, y_train, y_test = X[:split_row],X[split_row:],y[:split_row],y[split_row:]
-
-  ## OneHotEncoding
-  from sklearn.preprocessing import OneHotEncoder  
-  ohe = OneHotEncoder(sparse_output=False,handle_unknown='infrequent_if_exist').set_output(transform="pandas")
-  encoder = ohe.fit(X_train[cat_columns])
-
-  from sklearn.preprocessing import StandardScaler 
-  # create a scaler for our numeric variables
-  # only run this on the training dataset and use to scale test set later.
-  scaler = StandardScaler()
-  if len(numeric_columns):
-    fitted_scaler = scaler.fit(X_train[numeric_columns])
-  else:
-    fitted_scaler=None
-  X_train_processed = TransactionModelWrapper.preprocess_data(df=X_train, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
-  X_test_processed = TransactionModelWrapper.preprocess_data(df=X_test, numeric_columns=numeric_columns, fitted_scaler=fitted_scaler,cat_columns=cat_columns, encoder=encoder)
   
-  #Train a model
-  lgbm_model = TransactionModelWrapper.fit(X=X_train_processed, y=y_train)
+  #columns we want to scale
+  numeric_columns = []
+  #columns we want to factorize
+  cat_columns = ["Product","CustomerID"]
   
-  y_preds=lgbm_model.predict(X_test_processed)
-  signature = infer_signature(X_test_processed, y_preds)
-  eval_data = X_test_processed
-  eval_data["Label"] = y_test
-  model_info = mlflow.sklearn.log_model(lgbm_model, "lgbm_model", signature=signature,extra_pip_requirements=f"{model_artifact_path}/requirements.txt")
+  import lightgbm as lgb
+  myLGBM = TransactionModelWrapper(_clf = lgb.LGBMClassifier(), X=X, y=y, numeric_columns = numeric_columns,cat_columns = cat_columns)
+
+  eval_data = myLGBM.X_test_processed
+  eval_data["Label"] = myLGBM.y_test
+  model_info = mlflow.sklearn.log_model(myLGBM.model, "lgbm_model", signature=myLGBM.model_signature,extra_pip_requirements=f"{model_artifact_path}/requirements.txt")
   result = mlflow.evaluate(
        model_info.model_uri,
        eval_data,
@@ -303,17 +278,37 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
    )
 
   ##------- log pyfunc custom model -------##
-   # make an instance of the Pyfunc Class
+  
+  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package", infer_input_example=X)
 
-  myLGBM = TransactionModelWrapper(model = lgbm_model, X=X, y=y, numeric_columns = numeric_columns,cat_columns = cat_columns)
-  
-  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package")
-  
-# # programmatically get the latest Run ID
-# runs = mlflow.search_runs(mlflow.get_experiment_by_name(experiment_name).experiment_id)
-# latest_run_id = runs.sort_values('end_time').iloc[-1]["run_id"]
-# print('The latest run id: ', latest_run_id)
+
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ####Update the data for the registered model
 
+# COMMAND ----------
+
+from mlia_utils.mlflow_funcs import get_latest_model_version
+mlfclient = mlflow.tracking.MlflowClient()
+
+model_details = mlfclient.get_registered_model(model_name)
+if model_details.description == "":
+  mlfclient.update_registered_model(
+    name=full_model_name,
+    description=model_description
+    )
+
+model_version = get_latest_model_version(full_model_name)
+mlfclient.set_model_version_tag(name=full_model_name, key="validation_status", value="needs_tested", version=str(model_version))
+mlfclient.set_model_version_tag(name=full_model_name, key="project", value=project_name, version=str(model_version))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ###Test ability to predict
+
+# COMMAND ----------
+
+myLGBM.predict(spark, X)
