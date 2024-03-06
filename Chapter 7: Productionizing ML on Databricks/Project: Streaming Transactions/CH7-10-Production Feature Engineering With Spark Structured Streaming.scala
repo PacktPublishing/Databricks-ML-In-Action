@@ -8,11 +8,6 @@
 
 // COMMAND ----------
 
-// MAGIC %python
-// MAGIC dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
-
-// COMMAND ----------
-
 // MAGIC %md ## Run Setup
 
 // COMMAND ----------
@@ -35,8 +30,12 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Reset and setup
 // MAGIC %python
-// MAGIC table_name = "transaction_count_ft"
-// MAGIC history_table_name = "transaction_count_history"
+// MAGIC dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
+// MAGIC table_name = dbutils.widgets.get("feature_table_name")
+// MAGIC dbutils.widgets.text("feature_history_table_name","transaction_count_history","Enter table name for the historical feature count values")
+// MAGIC history_table_name = dbutils.widgets.get("feature_history_table_name")
+// MAGIC
+// MAGIC dbutils.widgets.dropdown('Reset','False', ['True','False'])
 // MAGIC if bool(dbutils.widgets.get('Reset')):
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
@@ -59,13 +58,17 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 // COMMAND ----------
 
 // DBTITLE 1,Set up paths, and variables
-// variables passed from the setup file are in python
-val table_name = "transaction_count_ft"
-val history_table_name = "transaction_count_history"
+dbutils.widgets.text("raw_table_name","prod_transactions","Enter table name for the raw delta")
+val input_table_name = dbutils.widgets.get("raw_table_name")
+dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
+val table_name = dbutils.widgets.get("feature_table_name")
+dbutils.widgets.text("feature_history_table_name","transaction_count_history","Enter table name for the historical feature count values")
+val history_table_name = dbutils.widgets.get("feature_history_table_name")
+
 val volumePath = "/Volumes/ml_in_prod/synthetic_transactions/files/" //SR TODO fix prod hardcoded
 val outputPath = f"$volumePath/$table_name/table_feature_outputs/"
 val outputPath2 = f"$volumePath/$history_table_name/table_feature_outputs/"
-val inputTable = f"ml_in_prod.synthetic_transactions.raw_transactions" //SR TODO fix prod hardcoded
+val inputTable = f"ml_in_prod.synthetic_transactions.$input_table_name"
 
 
 // aggregate transactions for windowMinutes
@@ -200,6 +203,14 @@ val schema = StructType(Array(
 
 // COMMAND ----------
 
+// MAGIC %python
+// MAGIC import time
+// MAGIC
+// MAGIC #giving the generator time to start 15 seconds
+// MAGIC time.sleep(15*3)
+
+// COMMAND ----------
+
 // DBTITLE 1,Read and write streams
 import io.delta.tables._
 import org.apache.spark.sql.Dataset
@@ -254,7 +265,3 @@ flatMapGroupsWithStateResultDf.writeStream
   .trigger(Trigger.ProcessingTime("10 seconds"))
   .queryName("flatMapGroupsHistoryTable")
   .table(history_table_name)
-
-// COMMAND ----------
-
-

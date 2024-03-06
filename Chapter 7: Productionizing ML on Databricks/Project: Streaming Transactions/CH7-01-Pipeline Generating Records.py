@@ -105,7 +105,7 @@ def generateRecordSet(Products):
   return reduce(pyspark.sql.dataframe.DataFrame.unionByName, recordSet)
 
 
-# Generate a set of data, convert it to a Dataframe, write it out as one json file to the temp path. Then move that file to the destination_path
+# Generate a set of data, write it out as one json file to the temp path. Then move that file to the destination_path
 def writeJsonFile(destination_path, Products = list(Product_vars.keys())):
   recordDF = generateRecordSet(Products)
   recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
@@ -119,7 +119,6 @@ def writeJsonFile(destination_path, Products = list(Product_vars.keys())):
 # COMMAND ----------
 
 # DBTITLE 1,Loop for Generating Data
-from random import randrange
 import time
 
 t=1
