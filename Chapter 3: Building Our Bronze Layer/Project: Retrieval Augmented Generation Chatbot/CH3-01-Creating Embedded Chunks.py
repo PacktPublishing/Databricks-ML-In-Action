@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC Chapter 3: Building the Bronze Layer
 # MAGIC
 # MAGIC ## Retrieval Augmented Generation Chatbot - Extracting chunks
 # MAGIC
