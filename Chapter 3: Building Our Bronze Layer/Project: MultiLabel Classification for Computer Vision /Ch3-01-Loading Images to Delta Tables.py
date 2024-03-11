@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md 
-# MAGIC Chapter 3 
+# MAGIC Chapter 3: Building the Bronze Layer
 # MAGIC
 # MAGIC ## Intel Mulilable Image Classification - Ingest your data into Delta 
 # MAGIC
@@ -123,7 +123,3 @@ prep_data2delta(
 
 # MAGIC %sql 
 # MAGIC SELECT * FROM delta.`/Volumes/ml_in_action/cv_clf/files/intel_image_clf/valid_imgs_main.delta`
-
-# COMMAND ----------
-
-

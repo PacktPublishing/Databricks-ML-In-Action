@@ -59,7 +59,7 @@ else:
   database_name = db
 
 def use_and_create_db(catalog, database_name):
-  spark.sql(f"""CREATE CATALOG if not exists `{catalog}` """)
+  #spark.sql(f"""CREATE CATALOG if not exists `{catalog}` """)
   spark.sql(f"USE CATALOG `{catalog}`")
   spark.sql(f"""CREATE DATABASE if not exists `{database_name}` """)
 
