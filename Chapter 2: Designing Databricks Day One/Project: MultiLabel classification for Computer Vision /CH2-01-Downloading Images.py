@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md 
-# MAGIC Chapter 2 
+# MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
 # MAGIC ##  Intel image multilabel classification - Downloading our images to the Volumes
 # MAGIC We will download data from Kaggle Dataset: [Kaggle competition link](https://www.kaggle.com/datasets/puneet6060/intel-image-classification/data) 
@@ -33,3 +33,7 @@
 # this can take up to a few hours  
 # or load a few examples to UC on your own if time is a constraint
 !unzip -n /local_disk0/intel-image-classification.zip -d {volume_file_path}/intel_image_clf/raw_images 
+
+# COMMAND ----------
+
+

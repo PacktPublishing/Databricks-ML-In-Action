@@ -12,13 +12,11 @@
 
 # COMMAND ----------
 
-# MAGIC
 # MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
 # DBTITLE 1,Set the data path
-
 raw_data_path = volume_file_path + 'raw_data'
 
 dbutils.fs.mkdirs(raw_data_path)
@@ -40,7 +38,3 @@ od.download("https://www.kaggle.com/competitions/store-sales-time-series-forecas
 # COMMAND ----------
 
 dbutils.fs.ls(raw_data_path + "/store-sales-time-series-forecasting/")
-
-# COMMAND ----------
-
-
