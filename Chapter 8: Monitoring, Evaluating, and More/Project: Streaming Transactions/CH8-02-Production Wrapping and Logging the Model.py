@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ## Wrapping and Logging the Model
 # MAGIC
@@ -21,6 +21,11 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
+
+# COMMAND ----------
+
+dbutils.widgets.text('raw_table_name','prod_transactions','Enter raw table name')
+table_name = dbutils.widgets.get('raw_table_name')
 
 # COMMAND ----------
 
@@ -60,16 +65,16 @@ training_feature_lookups = [
 
 # COMMAND ----------
 
-table_name = "prod_transactions"
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
-  print("problem")
+  raise Exception("problem")
 else:  
   raw_transactions_df = sql(
     f"""
     SELECT rt.* FROM {table_name} rt 
-    INNER JOIN (SELECT MIN(LookupTimestamp) as min_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp >= (ts.min_timestamp)
+    INNER JOIN (SELECT MIN(LookupTimestamp) as min_timestamp FROM {ft_name}) ts 
+    ON rt.TransactionTimestamp >= (ts.min_timestamp)
     """)
 
 # COMMAND ----------
@@ -116,7 +121,7 @@ inference_feature_lookups = [
 
 # COMMAND ----------
 
-inf_transactions_df = sql("SELECT * FROM prod_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
+inf_transactions_df = sql(f"SELECT * FROM {table_name} ORDER BY  TransactionTimestamp DESC LIMIT 1")
 
 inferencing_set = fe.create_training_set(
     df=inf_transactions_df,
@@ -303,12 +308,3 @@ if model_details.description == "":
 model_version = get_latest_model_version(full_model_name)
 mlfclient.set_model_version_tag(name=full_model_name, key="validation_status", value="needs_tested", version=str(model_version))
 mlfclient.set_model_version_tag(name=full_model_name, key="project", value=project_name, version=str(model_version))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ###Test ability to predict
-
-# COMMAND ----------
-
-myLGBM.predict(spark, X)

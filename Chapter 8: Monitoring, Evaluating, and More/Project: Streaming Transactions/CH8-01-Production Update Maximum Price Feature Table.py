@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ##Transaction data - Creating a Maximum Price Feature Table
 
@@ -15,7 +15,8 @@
 
 # COMMAND ----------
 
-table_name = "raw_transactions"
+dbutils.widgets.text('raw_table_name','prod_transactions','Enter raw table name')
+table_name = dbutils.widgets.get('raw_table_name')
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
@@ -91,7 +92,3 @@ display(max_price_df)
 
 # MAGIC %sql
 # MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
-
-# COMMAND ----------
-
-

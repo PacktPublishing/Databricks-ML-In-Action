@@ -5,6 +5,10 @@
 
 # COMMAND ----------
 
+# MAGIC %md ### Run Setup
+
+# COMMAND ----------
+
 # MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
 
 # COMMAND ----------

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ## Model Validation
 # MAGIC Use MLflow model validation API to test the model when registering a model
