@@ -67,28 +67,19 @@ else:
 
 # COMMAND ----------
 
-display(max_price_df)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ### Create a Python UDF to calculate the difference ratio of each transaction
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC CREATE OR REPLACE FUNCTION product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
-# MAGIC RETURNS float
-# MAGIC LANGUAGE PYTHON
-# MAGIC COMMENT 'Calculate the difference ratio for a product at time of transaction (maximum price - transaction amount)/maximum price.'
-# MAGIC AS $$
-# MAGIC def calc_ratio_difference(n1: float, n2: float) -> float:
-# MAGIC   return round(((n1 - n2)/n1),2)
-# MAGIC
-# MAGIC return calc_ratio_difference(max_price, transaction_amount)
-# MAGIC $$
+# %sql
+# CREATE OR REPLACE FUNCTION product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
+# RETURNS float
+# LANGUAGE PYTHON
+# COMMENT 'Calculate the difference ratio for a product at time of transaction (maximum price - transaction amount)/maximum price.'
+# AS $$
+# def calc_ratio_difference(n1: float, n2: float) -> float:
+#   return round(((n1 - n2)/n1),2)
 
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
+# return calc_ratio_difference(max_price, transaction_amount)
+# $$
