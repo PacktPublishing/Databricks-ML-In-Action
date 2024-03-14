@@ -33,15 +33,10 @@ from mlia_utils.transactions_funcs import writeJsonFile
 
 import time
 
-# while(1==1):
-#   writeJsonFile(spark,destination_path,temp_path)
-#   time.sleep(sleepIntervalSeconds)
-
-t=1
-while(t<3):
+while(1==1):
   writeJsonFile(spark,record_path,label_path,temp_path)
   time.sleep(sleepIntervalSeconds)
-  t+=1
+
 
 # COMMAND ----------
 

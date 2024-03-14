@@ -30,7 +30,6 @@ table_name = dbutils.widgets.get('raw_table_name')
 
 ft_name = "product_3minute_max_price_ft"
 inference_table = f"{catalog}.{database_name}.packaged_transaction_model_predictions"
-outputPath = f"{volume_file_path}/{inference_table}/streaming_outputs/"
 
 # COMMAND ----------
 
@@ -66,6 +65,8 @@ if not spark.catalog.tableExists(inference_table) or spark.table(tableName=infer
                    SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} 
                    WHERE TransactionTimestamp <= '{max_time}' AND TransactionTimestamp >= '{min_time}'
                    """)
+  sql(f"""CREATE TABLE IF NOT EXISTS {inference_table} (CustomerID INT NOT NULL, TransactionTimestamp TIMESTAMP NOT NULL, Label INT) 
+  TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true)""")
 else:
   last_inf_time = sql(f"SELECT MAX(LookupTimestamp) FROM {inference_table}").collect()[0][0]  
   scoring_df = sql(f"""

@@ -26,6 +26,8 @@ dbutils.library.restartPython()
 
 dbutils.widgets.text('inference_table','packaged_transaction_model_predictions','Enter raw training table name')
 table_name = dbutils.widgets.get('inference_table')
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
+  dbutils.notebook.exit("No inference table exists yet")
 
 # COMMAND ----------
 
