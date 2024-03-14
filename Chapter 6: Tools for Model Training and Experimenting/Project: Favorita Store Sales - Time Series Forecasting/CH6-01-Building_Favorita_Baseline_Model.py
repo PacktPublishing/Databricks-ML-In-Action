@@ -34,10 +34,26 @@ time_column = "date"
 
 # COMMAND ----------
 
-# DBTITLE 1,Quick reminder what the data looks like
+# MAGIC %md
+# MAGIC
+# MAGIC ##Quick reminder what the data looks like
+
+# COMMAND ----------
+
 raw_data = sql(f"SELECT * FROM {raw_data_table}")
 
 display(raw_data.take(10))
+
+# COMMAND ----------
+
+store_data = spark.table("stores_ft")
+
+display(store_data.take(10))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ##Create FeatureLookups, a training set, and a baseline model
 
 # COMMAND ----------
 
@@ -55,7 +71,7 @@ model_feature_lookups = [
     FeatureLookup(
       table_name="stores_ft",
       lookup_key="store_nbr",
-      feature_names=["cluster","store_type"]
+      feature_names=["store_cluster","store_type"]
     ),
 ]
 
@@ -71,15 +87,21 @@ training_df = training_set.load_df()
 
 # COMMAND ----------
 
+# DBTITLE 1,Save as table
+training_df.write.mode("overwrite").saveAsTable("training_data")
+
+# COMMAND ----------
+
 display(training_df)
 
 # COMMAND ----------
 
+from databricks import automl
 automl_data = training_df.filter("date > '2016-12-31'")
 
-summary = databricks.automl.regress(automl_data, 
-                                    target_col=label_name,
-                                    time_col="date",
-                                    timeout_minutes=10,
-                                    exclude_cols=['id']
-                                    )
+summary = automl.regress(automl_data, 
+                          target_col=label_name,
+                          time_col="date",
+                          timeout_minutes=10,
+                          exclude_cols=['id']
+                          )
