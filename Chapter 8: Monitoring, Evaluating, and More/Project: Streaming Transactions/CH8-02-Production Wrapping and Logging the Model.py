@@ -24,8 +24,8 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-dbutils.widgets.text('raw_table_name','prod_transactions','Enter raw table name')
-table_name = dbutils.widgets.get('raw_table_name')
+dbutils.widgets.text('inference_table','packaged_transaction_model_predictions','Enter raw training table name')
+table_name = dbutils.widgets.get('inference_table')
 
 # COMMAND ----------
 
@@ -70,11 +70,11 @@ ft_name = "product_3minute_max_price_ft"
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
   raise Exception("problem")
 else:
-  mintime = sql(f"SELECT MIN(LookupTimestamp) FROM {ft_name}").collect()[0][0]
-  maxtime = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
+  min_time = sql(f"SELECT MIN(LookupTimestamp) FROM {ft_name}").collect()[0][0]
+  max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
   raw_transactions_df = sql(f"""
-    SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name}
-    WHERE TransactionTimestamp >= '{mintime}' AND TransactionTimestamp <= '{maxtime}'
+    SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
+    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}'
     """)
 
 # COMMAND ----------

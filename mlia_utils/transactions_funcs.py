@@ -3,7 +3,7 @@ from datetime import datetime
 import dbldatagen.distributions as dist
 from pyspark.sql.types import IntegerType, FloatType, StringType
 
-def define_specs(context, Product, Label, currentTimestamp = datetime.now()):
+def define_specs(context, Product, Label, currentTimestamp):
   CustomerID_vars = {"min": 1234, "max": 1260}
 
   Product_vars = {1: {
@@ -37,7 +37,7 @@ def returnTransactionDf(context):
   recordSet = []
   numRecords = random.randint(1,10)
   for record in range(numRecords):
-    recordSet.append(define_specs(context, Product=products[random.randint(0,len(products)-1)],Label=random.randint(0,1)))
+    recordSet.append(define_specs(context, Product=products[random.randint(0,len(products)-1)],Label=random.randint(0,1),currentTimestamp = datetime.now()))
   recordDF = reduce(pyspark.sql.dataframe.DataFrame.unionByName, recordSet) 
   recordDF = recordDF.withColumn("Amount", expr("Amount / 100"))
   return recordDF
@@ -54,4 +54,3 @@ def writeJsonFile(context,destination_path,temp_path):
   tempJson = os.path.join(temp_path, dbutils.fs.ls(temp_path)[3][1])
   dbutils.fs.cp(tempJson, destination_path)
   dbutils.fs.rm(temp_path, True)
-
