@@ -116,7 +116,7 @@ inference_feature_lookups = [
 
 # COMMAND ----------
 
-inf_transactions_df = sql("SELECT * FROM prod_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
+inf_transactions_df = sql("SELECT * FROM prod_transactions ORDER BY TransactionTimestamp DESC LIMIT 1")
 
 inferencing_set = fe.create_training_set(
     df=inf_transactions_df,

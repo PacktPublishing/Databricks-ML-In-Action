@@ -28,6 +28,7 @@ sleepIntervalSeconds = 1
 from mlia_utils.transactions_funcs import writeJsonFile
 
 import time
+
 while(1==1):
   writeJsonFile(spark,destination_path,temp_path)
   time.sleep(sleepIntervalSeconds)

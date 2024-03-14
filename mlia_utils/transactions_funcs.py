@@ -21,6 +21,7 @@ def define_specs(context, Product, Label, currentTimestamp = datetime.now()):
                 minValue=CustomerID_vars["min"], maxValue=CustomerID_vars["max"], random=True)
     .withColumn("TransactionTimestamp", "timestamp", random=False,
                 begin=currentTimestamp, end=currentTimestamp,nullable=False)
+    .withColumn("Product", StringType(), template=f"Pro\duct \{Product}")
     .withColumn("Amount", FloatType(), 
                 minValue=pVars["min"],maxValue=pVars["max"], 
                 distribution=dist.Beta(alpha=pVars["alpha"], beta=pVars["beta"]), random=True)
@@ -32,7 +33,7 @@ from functools import reduce
 import pyspark
 
 def returnTransactionDf(context):
-  products = list(["A","B","C"])
+  products = ["A","B","C"]
   recordSet = []
   numRecords = random.randint(1,10)
   for record in range(numRecords):

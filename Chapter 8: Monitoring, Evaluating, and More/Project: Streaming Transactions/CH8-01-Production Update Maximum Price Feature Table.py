@@ -62,6 +62,7 @@ if not spark.catalog.tableExists(f'{ft_name}'):
 else:
   fe.write_table(
     df=max_price_df,
+    mode='merge',
     name=f'{ft_name}'
   )
 
@@ -72,14 +73,14 @@ else:
 
 # COMMAND ----------
 
-# %sql
-# CREATE OR REPLACE FUNCTION product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
-# RETURNS float
-# LANGUAGE PYTHON
-# COMMENT 'Calculate the difference ratio for a product at time of transaction (maximum price - transaction amount)/maximum price.'
-# AS $$
-# def calc_ratio_difference(n1: float, n2: float) -> float:
-#   return round(((n1 - n2)/n1),2)
-
-# return calc_ratio_difference(max_price, transaction_amount)
-# $$
+# MAGIC %sql
+# MAGIC CREATE FUNCTION IF NOT EXISTS product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
+# MAGIC RETURNS float
+# MAGIC LANGUAGE PYTHON
+# MAGIC COMMENT 'Calculate the difference ratio for a product at time of transaction (maximum price - transaction amount)/maximum price.'
+# MAGIC AS $$
+# MAGIC def calc_ratio_difference(n1: float, n2: float) -> float:
+# MAGIC   return round(((n1 - n2)/n1),2)
+# MAGIC
+# MAGIC return calc_ratio_difference(max_price, transaction_amount)
+# MAGIC $$

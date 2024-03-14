@@ -129,7 +129,7 @@ def batchInference(newRows):
 inputDf.writeStream \
   .foreachBatch(batchInference) \
   .option("checkpointLocation", f"{outputPath}/checkpoint") \
-  .trigger(processingTime="180 seconds") \
+  .trigger() \
   .queryName("batchInference") \
   .outputMode("append") \
   .toTable(inference_table)
@@ -159,7 +159,19 @@ stream = spark.readStream \
   .toTable(tableName=table_name)
 
 
-scoring_df = sql(f"SELECT * FROM {table_name} WHERE TransactionTimestamp > {model_creation_time}").drop("Label")
+
+
+# COMMAND ----------
+
+display(model_version_details.creation_timestamp)
+
+# COMMAND ----------
+
+from databricks.feature_engineering import FeatureEngineeringClient
+
+fe = FeatureEngineeringClient()
+
+scoring_df = sql(f"SELECT * FROM {table_name} WHERE TransactionTimestamp > timestamp({model_version_details.creation_timestamp})").drop("Label")
 
 print(f"Scoring model={model_name} version={model_version}")
 
@@ -170,3 +182,7 @@ scored = fe.score_batch(
 )
 
 display(scored)
+
+# COMMAND ----------
+
+
