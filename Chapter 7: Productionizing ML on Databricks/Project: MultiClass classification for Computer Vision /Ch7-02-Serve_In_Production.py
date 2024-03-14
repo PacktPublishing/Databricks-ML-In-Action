@@ -7,6 +7,10 @@
 
 # COMMAND ----------
 
+# MAGIC %run ./endpoint_sdk 
+
+# COMMAND ----------
+
 # MAGIC %md ## Get your wrapped model back
 
 # COMMAND ----------

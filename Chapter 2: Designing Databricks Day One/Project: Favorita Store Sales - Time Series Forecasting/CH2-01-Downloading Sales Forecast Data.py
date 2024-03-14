@@ -7,6 +7,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install opendatasets
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Run Setup
 
