@@ -1,0 +1,69 @@
+resources:
+  jobs:
+    Production_Model_Training:
+      name: Production Model Training
+      schedule:
+        quartz_cron_expression: 35 0/10 * * * ?
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: Update_batch_features
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-01-Production Update Maximum Price Feature Table"
+            source: WORKSPACE
+          job_cluster_key: mlia_job_cluster
+          libraries:
+            - pypi:
+                package: " mlflow-skinny[databricks]>=2.5.0"
+            - pypi:
+                package: " databricks-feature-engineering"
+            - pypi:
+                package: " dbldatagen"
+        - task_key: Retrain_model
+          depends_on:
+            - task_key: Update_batch_features
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-02-Production Wrapping and Logging the Model"
+            source: WORKSPACE
+          job_cluster_key: mlia_job_cluster
+        - task_key: Validate_model
+          depends_on:
+            - task_key: Retrain_model
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-03-Production Model Validation"
+            source: WORKSPACE
+          job_cluster_key: mlia_job_cluster
+      job_clusters:
+        - job_cluster_key: mlia_job_cluster
+          new_cluster:
+            cluster_name: ""
+            spark_version: 14.3.x-cpu-ml-scala2.12
+            spark_conf:
+              spark.master: local[*, 4]
+              spark.databricks.cluster.profile: singleNode
+            aws_attributes:
+              first_on_demand: 1
+              availability: SPOT_WITH_FALLBACK
+              zone_id: us-west-2a
+              spot_bid_price_percent: 100
+              ebs_volume_count: 0
+            node_type_id: i3.xlarge
+            custom_tags:
+              ResourceClass: SingleNode
+            enable_elastic_disk: true
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 0
+      tags:
+        keepuntil: 2024-07-01
+      parameters:
+        - name: raw_table_name
+          default: prod_transactions
+        - name: model_name
+          default: ml_in_prod.synthetic_transactions.packaged_transaction_model

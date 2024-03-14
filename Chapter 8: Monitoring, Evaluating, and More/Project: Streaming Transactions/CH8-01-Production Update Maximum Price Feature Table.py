@@ -20,9 +20,9 @@ table_name = dbutils.widgets.get('raw_table_name')
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
-  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name}")
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name}")
 else:  
-  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name} rt INNER JOIN (SELECT MAX(LookupTimestamp) as max_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp > (ts.max_timestamp - INTERVAL 1 MINUTE)")
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} rt INNER JOIN (SELECT MAX(LookupTimestamp) as max_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp > (ts.max_timestamp - INTERVAL 1 MINUTE)")
 
 # COMMAND ----------
 
@@ -84,3 +84,7 @@ else:
 # MAGIC
 # MAGIC return calc_ratio_difference(max_price, transaction_amount)
 # MAGIC $$
+
+# COMMAND ----------
+
+

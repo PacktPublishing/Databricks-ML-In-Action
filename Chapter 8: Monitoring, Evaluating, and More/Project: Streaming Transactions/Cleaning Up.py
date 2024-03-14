@@ -19,3 +19,11 @@ cleanup("transaction_count_ft")
 # COMMAND ----------
 
 cleanup("transaction_count_history")
+
+# COMMAND ----------
+
+cleanup("product_3minute_max_price_ft")
+
+# COMMAND ----------
+
+cleanup("packaged_transaction_model_predictions")

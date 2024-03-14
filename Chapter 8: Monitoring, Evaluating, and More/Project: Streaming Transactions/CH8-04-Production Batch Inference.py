@@ -28,6 +28,7 @@ model_name = dbutils.widgets.get(name="model_name")
 dbutils.widgets.text('raw_table_name','prod_transactions','Enter raw table name')
 table_name = dbutils.widgets.get('raw_table_name')
 
+ft_name = "product_3minute_max_price_ft"
 inference_table = f"{catalog}.{database_name}.packaged_transaction_model_predictions"
 outputPath = f"{volume_file_path}/{inference_table}/streaming_outputs/"
 
@@ -57,17 +58,21 @@ model_version_details = mlfclient.get_model_version(name=model_name, version=mod
 
 # COMMAND ----------
 
-from pyspark.sql.types import StringType, StructField, StructType, IntegerType, FloatType, TimestampType
+min_time = sql(f"SELECT MIN(LookupTimestamp) FROM {ft_name}").collect()[0][0]
+max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
 
-# The schema for the incoming records
-schema = StructType([
-    StructField("Source", StringType(), True),
-    StructField("TransactionTimestamp", StringType(), True),
-    StructField("CustomerID", IntegerType(), True),
-    StructField("Amount", FloatType(), True),
-    StructField("Product", StringType(), True),
-    StructField("Label", IntegerType(), True)
-])
+if not spark.catalog.tableExists(inference_table) or spark.table(tableName=inference_table).isEmpty():
+  scoring_df = sql(f"""
+                   SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} 
+                   WHERE TransactionTimestamp <= '{max_time}' AND TransactionTimestamp >= '{min_time}'
+                   """)
+else:
+  last_inf_time = sql(f"SELECT MAX(LookupTimestamp) FROM {inference_table}").collect()[0][0]  
+  scoring_df = sql(f"""
+                   SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} 
+                   WHERE TransactionTimestamp <= '{max_time}' AND TransactionTimestamp >= '{min_time}'
+                   AND TransactionTimestamp > '{last_inf_time}'
+                   """)
 
 # COMMAND ----------
 
@@ -76,113 +81,9 @@ from pyspark.sql.functions import *
 
 fe = FeatureEngineeringClient()
 
-inputDf = (spark.readStream
-  .format("delta")
-  .schema(schema)
-  .table(table_name)
-  .selectExpr("CustomerID","Product","Amount","cast(TransactionTimestamp as timestamp) TransactionTimestamp")
-  .display())
-
-def batchInference(batch_df, batch_id):
-    # Convert the dataset to a dataframe for merging
-    scoring_df = batch_df
-
-    scored = fe.score_batch(
-      model_uri=f"models:/{model_name}/{model_version}",
-      df=scoring_df
-    )
-
-#     # Write the results to a Delta Lake table
-#     scored.write.format("delta").mode("append").save(f"{outputPath}/scored_data")
-
-(inputDf.writeStream
-  .foreachBatch(batchInference)
-  .option("checkpointLocation", f"{outputPath}/checkpoint") 
-  .
-  .queryName("batchInference")
-  .outputMode("append")
-  .start())
-
-# COMMAND ----------
-
-from pyspark.sql.functions import *
-from pyspark.sql import *
-
-inputDf = spark.readStream \
-  .format("delta") \
-  .schema(schema) \
-  .table(table_name) \
-  .select("*") #, "cast(TransactionTimestamp as timestamp) TransactionTimestamp")
-
-def batchInference(newRows):
-    # Convert the dataset to a dataframe for merging
-    scoring_df = newRows.toDF()
-    
-    scored = fe.score_batch(
-      model_uri=f"models:/{model_name}/{model_version}",
-      df=scoring_df,
-      env_manager="conda"
-    )
-    return scored
-
-
-inputDf.writeStream \
-  .foreachBatch(batchInference) \
-  .option("checkpointLocation", f"{outputPath}/checkpoint") \
-  .trigger() \
-  .queryName("batchInference") \
-  .outputMode("append") \
-  .toTable(inference_table)
-
-# COMMAND ----------
-
-from databricks.feature_engineering import FeatureEngineeringClient
-
-fe = FeatureEngineeringClient()
-
-stream = spark.readStream \
-  .format("delta") \
-    .schema(schema) \
-    .table(inputTable) \
-    .select("CustomerID", "cast(TransactionTimestamp as timestamp) TransactionTimestamp") \
-  
-  
-  
-  
-  .select("*") \
-  .writeStream \
-  .format("delta") \
-  .outputMode("append") \
-  .option("checkpointLocation", checkpoint_location) \
-  .option("mergeSchema", "true") \
-  .trigger(processingTime="10 seconds") \
-  .toTable(tableName=table_name)
-
-
-
-
-# COMMAND ----------
-
-display(model_version_details.creation_timestamp)
-
-# COMMAND ----------
-
-from databricks.feature_engineering import FeatureEngineeringClient
-
-fe = FeatureEngineeringClient()
-
-scoring_df = sql(f"SELECT * FROM {table_name} WHERE TransactionTimestamp > timestamp({model_version_details.creation_timestamp})").drop("Label")
-
-print(f"Scoring model={model_name} version={model_version}")
 
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{model_version}",
-  df=scoring_df,
-  env_manager="conda"
+  df=scoring_df
 )
-
-display(scored)
-
-# COMMAND ----------
-
-
+scored.withColumn(colName="actual_label",col=lit(-1)).write.mode('append').format('delta').saveAsTable(inference_table)
