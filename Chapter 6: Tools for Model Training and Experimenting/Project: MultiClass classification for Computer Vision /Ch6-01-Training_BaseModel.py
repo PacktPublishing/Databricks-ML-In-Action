@@ -51,9 +51,7 @@ log_path = f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/intel_trai
 # COMMAND ----------
 
 class LitCVNet(pl.LightningModule):
-        # we can also define model in this Module or we can define in standard pytorch Module
-        # then wrap with Pytorch-Lightning Module , You can save & load model weights without 
-        # altering pytorch / Lightning module . You will learn in the later series .
+
         def __init__(self, num_classes = 6, learning_rate= 0.0001, family = "resnext", momentum = 0.1,  dropout_rate = 0):
             super().__init__()
             self.save_hyperparameters()
@@ -262,9 +260,9 @@ if not torch.cuda.is_available(): # is gpu
 
 # COMMAND ----------
 
-MAX_EPOCH_COUNT = 30
+MAX_EPOCH_COUNT = 50
 STEPS_PER_EPOCH = 5
-EARLY_STOP_MIN_DELTA = 0.05
+EARLY_STOP_MIN_DELTA = 0.01
 EARLY_STOP_PATIENCE = 10
 STRATEGY = "auto"
 
@@ -280,7 +278,6 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     os.environ['DATABRICKS_HOST'] = db_host
     os.environ['DATABRICKS_TOKEN'] = db_token
     torch.set_float32_matmul_precision("medium")
-    #logger = TensorBoardLogger(log_path, name="cv_uc_model", default_hp_metric= True, sub_dir = "cv_uc")
 
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         save_top_k=2,
@@ -305,7 +302,6 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
         refresh_rate=STEPS_PER_EPOCH,
         process_position=0
     )
-
     # Initialize a trainer
     trainer = pl.Trainer(
         accelerator="gpu",
@@ -329,33 +325,31 @@ def train_distributed(max_epochs: int = 1, strategy: str = "auto"):
     #trainer.fit(model, dm)
     trainer.fit(model, train_dataloaders=dm.train_dataloader(), val_dataloaders=dm.val_dataloader())
     print("Training done!")
-
-    print("Test done!")
     
     # Uncomment this if you are using DDP. 
     # AutoLog does not yet work well with the DDP. 
     # The best Practice with DDP would be to track your loss/acc with the Logger 
     # and then log your best_checkpoint back to the mlflow. 
     # In our case we use single node training so you will spot that the acc and loss were tracked. 
-    if strategy == "ddp":
-        if trainer.global_rank == 0:
-            # AutoLog does not work with DDP 
-            from mlflow.models.signature import infer_signature
-            with mlflow.start_run(run_name="running_cv_uc") as run:
+    # if strategy == "ddp":
+    #     if trainer.global_rank == 0:
+    #         # AutoLog does not work with DDP 
+    #         from mlflow.models.signature import infer_signature
+    #         with mlflow.start_run(run_name="running_cv_uc") as run:
                 
-                # Train the model ⚡🚅⚡
-                print("We are logging our model")
-                reqs = mlflow.pytorch.get_default_pip_requirements() + [
-                    "pytorch-lightning==" + pl.__version__,
-                    "deltalake==0.14.0","deltatorch==0.0.3"
-                ]
+    #             # Train the model ⚡🚅⚡
+    #             print("We are logging our model")
+    #             reqs = mlflow.pytorch.get_default_pip_requirements() + [
+    #                 "pytorch-lightning==" + pl.__version__,
+    #                 "deltalake==0.14.0","deltatorch==0.0.3"
+    #             ]
 
-                mlflow.pytorch.log_model(
-                    artifact_path="model_cv_uc",
-                    pytorch_model=model.model,
-                    pip_requirements=reqs,
-                )
-                mlflow.set_tag("ml2action", "cv_uc")
+    #             mlflow.pytorch.log_model(
+    #                 artifact_path="model_cv_uc",
+    #                 pytorch_model=model.model,
+    #                 pip_requirements=reqs,
+    #             )
+    #             mlflow.set_tag("ml2action", "cv_uc")
 
 
 # COMMAND ----------
@@ -380,4 +374,7 @@ train_distributed(MAX_EPOCH_COUNT, STRATEGY)
 
 # COMMAND ----------
 
+from pyspark.ml.torch.distributor import TorchDistributor
 
+distributed = TorchDistributor(num_processes=4, local_mode=True, use_gpu=True)
+distributed.run(train_distributed, 1, "ddp")

@@ -24,7 +24,3 @@ display(df_eval)
 # COMMAND ----------
 
 df_eval.write.mode("append").saveAsTable(f"{catalog}.{database_name}.evaluation_table")
-
-# COMMAND ----------
-
-

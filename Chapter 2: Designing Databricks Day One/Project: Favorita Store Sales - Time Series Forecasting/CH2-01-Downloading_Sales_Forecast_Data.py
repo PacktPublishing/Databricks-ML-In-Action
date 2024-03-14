@@ -7,12 +7,15 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install opendatasets
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Run Setup
 
 # COMMAND ----------
 
-# MAGIC
 # MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
