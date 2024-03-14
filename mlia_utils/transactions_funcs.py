@@ -45,12 +45,16 @@ def returnTransactionDf(context):
 from pyspark.dbutils import DBUtils
 import os
 # Generate a set of data, convert it to a Dataframe, write it out as one json file to the temp path. Then move that file to the destination_path
-def writeJsonFile(context,destination_path,temp_path):
+def writeJsonFile(context,record_path,label_path,temp_path):
   dbutils = DBUtils(context)
   recordDF = returnTransactionDf(context=context)
-  recordDF.coalesce(1).write.mode("overwrite").format("json").save(temp_path)
-  
-  # Grab the file from the temp location, write it to the location we want and then delete the temp directory
+  recordDF.select("Amount","CustomerID","Product","TransactionTimestamp").coalesce(1).write.mode("overwrite").format("json").save(temp_path)
   tempJson = os.path.join(temp_path, dbutils.fs.ls(temp_path)[3][1])
-  dbutils.fs.cp(tempJson, destination_path)
+  dbutils.fs.cp(tempJson, record_path)
+  dbutils.fs.rm(temp_path, True)
+
+  # Grab the file from the temp location, write it to the location we want and then delete the temp directory
+  recordDF.select("CustomerID","TransactionTimestamp","Label").coalesce(1).write.mode("overwrite").format("json").save(temp_path)
+  tempJson = os.path.join(temp_path, dbutils.fs.ls(temp_path)[3][1])
+  dbutils.fs.cp(tempJson, label_path)
   dbutils.fs.rm(temp_path, True)

@@ -11,6 +11,7 @@ def cleanup(table_name):
 # COMMAND ----------
 
 cleanup("prod_transactions")
+cleanup("transaction_labels")
 
 # COMMAND ----------
 
