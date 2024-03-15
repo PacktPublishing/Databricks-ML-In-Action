@@ -26,6 +26,8 @@ dbutils.library.restartPython()
 
 dbutils.widgets.text('inference_table','packaged_transaction_model_predictions','Enter raw training table name')
 table_name = dbutils.widgets.get('inference_table')
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
+  dbutils.notebook.exit("No inference table exists yet")
 
 # COMMAND ----------
 
@@ -74,7 +76,7 @@ else:
   max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
   raw_transactions_df = sql(f"""
     SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
-    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}'
+    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}' AND actual_label > -1
     """)
 
 # COMMAND ----------
