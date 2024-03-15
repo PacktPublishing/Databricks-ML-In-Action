@@ -1,4 +1,11 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
+# MAGIC
+# MAGIC ## Creating Monitors for drift and inference performance
+
+# COMMAND ----------
+
 # MAGIC %pip install databricks_lakehouse_monitoring
 
 # COMMAND ----------
