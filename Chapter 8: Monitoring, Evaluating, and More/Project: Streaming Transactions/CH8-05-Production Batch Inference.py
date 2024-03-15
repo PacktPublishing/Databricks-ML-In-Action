@@ -65,10 +65,12 @@ if not spark.catalog.tableExists(inference_table) or spark.table(tableName=infer
                    SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} 
                    WHERE TransactionTimestamp <= '{max_time}' AND TransactionTimestamp >= '{min_time}'
                    """)
-  sql(f"""CREATE TABLE IF NOT EXISTS {inference_table} (CustomerID INT NOT NULL, TransactionTimestamp TIMESTAMP NOT NULL, Label INT) 
-  TBLPROPERTIES (delta.enableChangeDataFeed = true, delta.autoOptimize.optimizeWrite = true, delta.autoOptimize.autoCompact = true)""")
+  sql(f"""
+      CREATE TABLE IF NOT EXISTS {inference_table} 
+      (Amount FLOAT, CustomerID INT, Product STRING, TransactionTimestamp TIMESTAMP, transactionCount INT, isTimeout BOOLEAN, MaxProductAmount FLOAT, MaxDifferenceRatio FLOAT, prediction DOUBLE, model_version STRING, actual_label INT) USING delta TBLPROPERTIES (delta.enableChangeDataFeed = true)
+  """)
 else:
-  last_inf_time = sql(f"SELECT MAX(LookupTimestamp) FROM {inference_table}").collect()[0][0]  
+  last_inf_time = sql(f"SELECT MAX(TransactionTimestamp) FROM {inference_table}").collect()[0][0]  
   scoring_df = sql(f"""
                    SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} 
                    WHERE TransactionTimestamp <= '{max_time}' AND TransactionTimestamp >= '{min_time}'
@@ -87,4 +89,4 @@ scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{model_version}",
   df=scoring_df
 )
-scored.withColumn(colName="actual_label",col=lit(-1)).write.mode('append').format('delta').saveAsTable(inference_table)
+scored.withColumn("model_version",lit(model_version)).withColumn(colName="actual_label",col=lit(-1)).write.mode('append').format('delta').saveAsTable(inference_table)

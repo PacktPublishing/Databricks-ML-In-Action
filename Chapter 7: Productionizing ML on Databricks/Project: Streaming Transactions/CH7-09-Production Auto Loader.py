@@ -26,8 +26,8 @@ checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
 # COMMAND ----------
 
 # DBTITLE 1,Use to reset for fresh table, schema, checkpoints
-if not spark.catalog.tableExists(table_name):
-  sql(f"""CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
+  sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID INT, Amount FLOAT, TransactionTimestamp TIMESTAMP, Product STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
 
 # COMMAND ----------
 

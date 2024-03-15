@@ -76,7 +76,7 @@ else:
   max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
   raw_transactions_df = sql(f"""
     SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
-    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}'
+    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}' AND actual_label > -1
     """)
 
 # COMMAND ----------
