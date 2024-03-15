@@ -60,7 +60,7 @@ stream = spark.readStream \
 
 # COMMAND ----------
 
-#for each batch / incremental update from the raw cdc table, we'll run a MERGE on the silver table
+#for each batch / incremental update from the labels cdc table, we'll run a MERGE on the inference table
 def merge_stream(df, i):
   df.createOrReplaceTempView("labels_cdc_microbatch")
   #We run the merge (upsert or delete)
@@ -68,7 +68,8 @@ def merge_stream(df, i):
                                 USING
                                 (SELECT CustomerID, TransactionTimestamp, Label as actual_label FROM labels_cdc_microbatch) as source
                                 ON source.CustomerID = target.CustomerID AND source.TransactionTimestamp = target.TransactionTimestamp
-                                WHEN MATCHED THEN UPDATE SET *""")
+                                WHEN MATCHED THEN UPDATE SET *
+                                """)
   
 if spark.catalog.tableExists(inference_table):
   (stream.writeStream

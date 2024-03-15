@@ -84,9 +84,10 @@ from pyspark.sql.functions import *
 
 fe = FeatureEngineeringClient()
 
-
 scored = fe.score_batch(
   model_uri=f"models:/{model_name}/{model_version}",
   df=scoring_df
 )
-scored.withColumn("model_version",lit(model_version)).withColumn(colName="actual_label",col=lit(-1)).write.mode('append').format('delta').saveAsTable(inference_table)
+scored.withColumn("model_version",lit(model_version))\
+  .withColumn(colName="actual_label",col=lit(-1))\
+  .write.mode('append').format('delta').saveAsTable(inference_table)
