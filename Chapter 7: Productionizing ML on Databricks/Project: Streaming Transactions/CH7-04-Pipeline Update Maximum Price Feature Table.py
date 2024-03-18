@@ -61,6 +61,7 @@ if not spark.catalog.tableExists(f'{ft_name}'):
 else:
   fe.write_table(
     df=max_price_df,
+    mode='merge',
     name=f'{ft_name}'
   )
 

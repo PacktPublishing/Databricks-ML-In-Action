@@ -89,5 +89,5 @@ scored = fe.score_batch(
   df=scoring_df
 )
 scored.withColumn("model_version",lit(model_version))\
-  .withColumn(colName="actual_label",col=lit(-1))\
+  .withColumn(colName="actual_label",col=lit(None))\
   .write.mode('append').format('delta').saveAsTable(inference_table)

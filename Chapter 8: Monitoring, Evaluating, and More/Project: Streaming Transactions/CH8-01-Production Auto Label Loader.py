@@ -60,16 +60,20 @@ stream = spark.readStream \
 
 # COMMAND ----------
 
-#for each batch / incremental update from the labels cdc table, we'll run a MERGE on the inference table
+#for each batch / incremental update from readStream, 
+# we'll run a MERGE on the inference table
 def merge_stream(df, i):
   df.createOrReplaceTempView("labels_cdc_microbatch")
   #We run the merge (upsert or delete)
-  df._jdf.sparkSession().sql(f"""MERGE INTO {inference_table} target
-                                USING
-                                (SELECT CustomerID, TransactionTimestamp, Label as actual_label FROM labels_cdc_microbatch) as source
-                                ON source.CustomerID = target.CustomerID AND source.TransactionTimestamp = target.TransactionTimestamp
-                                WHEN MATCHED THEN UPDATE SET *
-                                """)
+  df._jdf.sparkSession()\
+    .sql(f"""MERGE INTO {inference_table} target
+        USING
+        (SELECT CustomerID, TransactionTimestamp, Label as actual_label 
+        FROM labels_cdc_microbatch) as source
+        ON source.CustomerID = target.CustomerID 
+        AND source.TransactionTimestamp = target.TransactionTimestamp
+        WHEN MATCHED THEN UPDATE SET target.actual_label == source.actual_label
+        """)
   
 if spark.catalog.tableExists(inference_table):
   (stream.writeStream
