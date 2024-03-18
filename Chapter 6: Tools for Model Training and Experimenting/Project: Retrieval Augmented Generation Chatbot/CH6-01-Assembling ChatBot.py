@@ -46,10 +46,12 @@ for endpoint in endpoints:
 
 import os 
 # url used to send the request to your model from the serverless endpoint
-host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
+#host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 #db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
-db_token= dbutils.secrets.get("mlaction", "rag_sp_token")
+db_token = dbutils.secrets.get("mlaction", "rag_sp_token")
+db_host = dbutils.secrets.get("mlaction", "rag_sp_host")
 os.environ['DATABRICKS_TOKEN'] = db_token
+os.environ['DATABRICKS_HOST'] = db_host
 
 # COMMAND ----------
 
@@ -59,13 +61,12 @@ from langchain.embeddings import DatabricksEmbeddings
 
 # NOTE: your question embedding model must match the one used in the chunk in the previous model 
 embedding_model = DatabricksEmbeddings(endpoint="databricks-bge-large-en")
-vsc_endpoint_name = "ml_action_vs"
+vsc_endpoint_name = "one-env-shared-endpoint-1" #"ml_action_vs"
 index_name = f"{catalog}.{database_name}.docs_vsc_idx_cont"
 
 def get_retriever(persist_dir: str = None):
-    os.environ["DATABRICKS_HOST"] = host
     #Get the vector search index
-    vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
+    vsc = VectorSearchClient(workspace_url=os.environ['DATABRICKS_HOST'], personal_access_token=os.environ["DATABRICKS_TOKEN"])
     print("\n")
     vs_index = vsc.get_index(
         endpoint_name=vsc_endpoint_name,
@@ -124,10 +125,6 @@ print(answer,"\n")
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 import mlflow
 from mlia_utils.mlflow_funcs import *
 # create experiment if does not exist 
@@ -162,7 +159,3 @@ with mlflow.start_run(run_name="mlaction_chatbot_rag") as run:
     mlflow.models.utils.add_libraries_to_model(
         f"models:/{model_name}/{get_latest_model_version(model_name)}"
     )
-
-# COMMAND ----------
-
-
