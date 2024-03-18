@@ -57,7 +57,12 @@ if existing_endpoint == None:
 else:
     print(f"Updating the endpoint {serving_endpoint_url} to version {latest_model_version}, this will take a few minutes to package and deploy the endpoint...")
     w.serving_endpoints.update_config_and_wait(served_models=endpoint_config.served_models, name=serving_endpoint_name)
+
+
+# COMMAND ----------
+
     
+# stop this command - if you endpoint is not created it will run before the timeout.
 displayHTML(f'Your Model Endpoint Serving is now available. Open the <a href="/ml/endpoints/{serving_endpoint_name}">Model Serving Endpoint page</a> for more details.')
 
 # COMMAND ----------

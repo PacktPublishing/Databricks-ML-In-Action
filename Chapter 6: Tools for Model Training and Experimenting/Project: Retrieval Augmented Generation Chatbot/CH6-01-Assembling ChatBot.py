@@ -55,10 +55,6 @@ os.environ['DATABRICKS_HOST'] = db_host
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 from databricks.vector_search.client import VectorSearchClient
 from langchain.vectorstores import DatabricksVectorSearch
 from langchain.embeddings import DatabricksEmbeddings
@@ -129,10 +125,6 @@ print(answer,"\n")
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 import mlflow
 from mlia_utils.mlflow_funcs import *
 # create experiment if does not exist 
@@ -167,7 +159,3 @@ with mlflow.start_run(run_name="mlaction_chatbot_rag") as run:
     mlflow.models.utils.add_libraries_to_model(
         f"models:/{model_name}/{get_latest_model_version(model_name)}"
     )
-
-# COMMAND ----------
-
-
