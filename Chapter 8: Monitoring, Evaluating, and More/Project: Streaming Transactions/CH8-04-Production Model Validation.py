@@ -50,6 +50,9 @@ model_version_details = mlfclient.get_model_version(name=model_name, version=mod
 # COMMAND ----------
 
 assert 'validation_status' in model_version_details.tags.keys(), f"the model, model={model_name}, specfied does not have validation_status tag"
+if model_version_details.tags['validation_status'] == 'passed_tests':
+  dbutils.notebook.exit("No validation needed!")
+
 assert model_version_details.tags['validation_status'] == 'needs_tested', f"the latest version, version={model_version}, of model, model={model_name} is not tagged as validation_status=needs_tested"
 
 # COMMAND ----------
