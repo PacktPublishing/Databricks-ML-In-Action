@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ##Transaction data - Creating a Maximum Price Feature Table
 
@@ -15,13 +15,14 @@
 
 # COMMAND ----------
 
-table_name = "raw_transactions"
+dbutils.widgets.text('raw_table_name','prod_transactions','Enter raw table name')
+table_name = dbutils.widgets.get('raw_table_name')
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
-  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name}")
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name}")
 else:  
-  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Label,Product,TransactionTimestamp FROM {table_name} rt INNER JOIN (SELECT MAX(LookupTimestamp) as max_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp > (ts.max_timestamp - INTERVAL 1 MINUTE)")
+  raw_transactions_df = sql(f"SELECT Amount,CustomerID,Product,TransactionTimestamp FROM {table_name} rt INNER JOIN (SELECT MAX(LookupTimestamp) as max_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp > (ts.max_timestamp - INTERVAL 1 MINUTE)")
 
 # COMMAND ----------
 
@@ -67,17 +68,13 @@ else:
 
 # COMMAND ----------
 
-display(max_price_df)
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ### Create a Python UDF to calculate the difference ratio of each transaction
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE FUNCTION product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
+# MAGIC CREATE FUNCTION IF NOT EXISTS product_difference_ratio_on_demand_feature(max_price FLOAT, transaction_amount FLOAT)
 # MAGIC RETURNS float
 # MAGIC LANGUAGE PYTHON
 # MAGIC COMMENT 'Calculate the difference ratio for a product at time of transaction (maximum price - transaction amount)/maximum price.'
@@ -87,11 +84,6 @@ display(max_price_df)
 # MAGIC
 # MAGIC return calc_ratio_difference(max_price, transaction_amount)
 # MAGIC $$
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
 
 # COMMAND ----------
 

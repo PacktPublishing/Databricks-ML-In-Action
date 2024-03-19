@@ -1,0 +1,50 @@
+resources:
+  jobs:
+    Production_Batch_Inference_and_Model_Retraining:
+      name: Production Batch Inference and Model Retraining
+      schedule:
+        quartz_cron_expression: 31 4/15 * * * ?
+        timezone_id: UTC
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: update_labels
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-01-Production Auto Label Loader"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: retrain_model
+          depends_on:
+            - task_key: update_labels
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-03-Production Wrapping and Logging the Model"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: update_batch_features
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-02-Production Update Maximum Price Feature Table"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: inference
+          depends_on:
+            - task_key: update_batch_features
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-05-Production Batch Inference"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: validate_model
+          depends_on:
+            - task_key: retrain_model
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
+              Transactions/CH8-04-Production Model Validation"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c

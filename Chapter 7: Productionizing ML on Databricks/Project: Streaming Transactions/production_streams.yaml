@@ -27,6 +27,8 @@ resources:
           existing_cluster_id: 1211-220000-yxqdea6c
           max_retries: -1
           min_retry_interval_millis: 0
+      tags:
+        keepuntil: 2024-07-01
       parameters:
         - name: feature_history_table_name
           default: transaction_count_history
