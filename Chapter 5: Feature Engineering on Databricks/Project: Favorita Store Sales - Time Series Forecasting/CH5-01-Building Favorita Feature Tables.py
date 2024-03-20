@@ -66,7 +66,7 @@ fe = FeatureEngineeringClient()
 # MAGIC   );
 # MAGIC ALTER TABLE stores_ft ALTER COLUMN store_nbr SET NOT NULL;
 # MAGIC ALTER TABLE stores_ft ADD PRIMARY KEY(store_nbr);
-# MAGIC COMMENT ON TABLE stores_ft IS 'Favortia Store features include geography, store cluster, and store_type.';
+# MAGIC COMMENT ON TABLE stores_ft IS 'Favorita Store features include geography, store cluster, and store_type.';
 # MAGIC
 
 # COMMAND ----------
