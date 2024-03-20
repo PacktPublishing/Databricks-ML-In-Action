@@ -77,8 +77,8 @@ val maxWaitMinutes = 1
 // MAGIC from databricks.feature_engineering import FeatureEngineeringClient
 // MAGIC fe = FeatureEngineeringClient()
 // MAGIC
-// MAGIC fe.set_feature_table_tag(name=f"{table_name}", key="FE_role", value="online_serving")
-// MAGIC fe.set_feature_table_tag(name=f"{history_table_name}", key="FE_role", value="training_data")
+// MAGIC fe.set_feature_table_tag(name=f"{table_name}", key="Project", value="MLIA")
+// MAGIC fe.set_feature_table_tag(name=f"{history_table_name}", key="Project", value="MLIA")
 
 // COMMAND ----------
 

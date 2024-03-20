@@ -103,8 +103,7 @@ sql(
 """
 CREATE OR REPLACE TABLE local_holidays_silver AS (
 SELECT
-  `date`,
-  store_nbr,
+  `date`, store_nbr,
   CASE
     WHEN num_holidays >= 2 THEN "Multiple"
     ELSE local_holiday_type
@@ -112,8 +111,7 @@ SELECT
 FROM
   (
     SELECT
-      h.`date`,
-      s.store_nbr,
+      h.`date`, s.store_nbr,
       MIN(h.holiday_type) as local_holiday_type,
       count(1) as num_holidays
     FROM
@@ -250,7 +248,7 @@ fe.create_table(
     name = f"store_holidays_ft",
     primary_keys=["date", "store_nbr"],
     df=df,
-    description="Holidays in Ecuador by date and store number. Table includes holiday types for national, regional, and local. Nulls indicate non-holiday days.",
+    description="Holidays in Ecuador by date and store number. Table includes holiday types for national, regional, and local. Days where a store has more than one holiday is indicated by holiday type being 'Multiple'. Nulls indicate non-holiday days.",
 )
 
 # COMMAND ----------

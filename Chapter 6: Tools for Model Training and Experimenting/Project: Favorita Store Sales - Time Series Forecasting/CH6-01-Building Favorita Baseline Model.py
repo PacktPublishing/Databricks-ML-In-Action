@@ -52,6 +52,12 @@ display(store_data.take(10))
 
 # COMMAND ----------
 
+store_data = spark.table("oil_10d_lag_ft")
+
+display(store_data.take(10))
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ##Create FeatureLookups, a training set, and a baseline model
 
