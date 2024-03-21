@@ -16,9 +16,17 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Import & Initialize the DFE Client
 import mlflow
+from pyspark.sql.functions import struct, col
 mlflow.set_registry_uri("databricks-uc")
-
 model_name = "store_sales_forecasting"
-mlflow.register_model("runs:/cdbf797cb40e40b8aab30b4fecdffc0b/model", f"{catalog}.{database_name}.{model_name}")
+
+logged_model = f"models:/{model_name}@Champion"
+
+# Load model as a Spark UDF.
+loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=logged_model)
+
+df = sql("SELECT * FROM test_set")
+
+# Predict on a Spark DataFrame.
+df.withColumn('predictions', loaded_model(struct(*map(col, df.columns))))
