@@ -43,10 +43,7 @@ def respond(message, history):
     return response_data
 
 
-theme = gr.themes.Soft(
-    text_size=sizes.text_sm,radius_size=sizes.radius_sm, spacing_size=sizes.spacing_sm,
-)
-
+theme = gr.themes.Soft(text_size=sizes.text_sm,radius_size=sizes.radius_sm, spacing_size=sizes.spacing_sm,)
 
 demo = gr.ChatInterface(
     respond,

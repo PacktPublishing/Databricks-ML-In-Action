@@ -206,7 +206,3 @@ fig.update_xaxes(tickformat=".2f")
 
 client = MlflowClient()
 client.set_registered_model_alias(name=model_name, alias="Production", version=model_version_to_evaluate)
-
-# COMMAND ----------
-
-
