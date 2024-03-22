@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 6: Searching for Signal
+# MAGIC Chapter 6: Tools for Model Training and Experimenting
 # MAGIC
 # MAGIC ## Synthetic data - Creating a training set
 
@@ -79,4 +79,5 @@ training_df = training_set.load_df()
 
 # COMMAND ----------
 
+training_df.write.mode('overwrite').saveAsTable('baseline_training_data')
 display(training_df)
