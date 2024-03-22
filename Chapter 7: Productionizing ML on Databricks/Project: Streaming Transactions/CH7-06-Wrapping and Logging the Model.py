@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ## Wrapping and Logging the Model
 # MAGIC
@@ -21,6 +21,11 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 # MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
+
+# COMMAND ----------
+
+dbutils.widgets.text('inference_table','packaged_transaction_model_predictions','Enter raw training table name')
+inf_table_name = dbutils.widgets.get('inference_table')
 
 # COMMAND ----------
 
@@ -60,16 +65,21 @@ training_feature_lookups = [
 
 # COMMAND ----------
 
-table_name = "prod_transactions"
 ft_name = "product_3minute_max_price_ft"
+  min_time = sql(f"SELECT MIN(LookupTimestamp) FROM {ft_name}").collect()[0][0]
+  max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
-  print("problem")
-else:  
-  raw_transactions_df = sql(
-    f"""
-    SELECT rt.* FROM {table_name} rt 
-    INNER JOIN (SELECT MIN(LookupTimestamp) as min_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp >= (ts.min_timestamp)
+  raise Exception(f"Problem, the feature table {ft_name} is missing or empty!")
+if not spark.catalog.tableExists(inf_table_name) or spark.table(tableName=inf_table_name).isEmpty():
+  raw_transactions_df = sql(f"""
+    SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
+    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}' AND actual_label IS NOT NULL
+    """)
+else:
+  raw_transactions_df = sql(f"""
+    SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
+    WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}' AND actual_label IS NOT NULL
     """)
 
 # COMMAND ----------
@@ -80,55 +90,6 @@ training_set = fe.create_training_set(
     label="Label",
     exclude_columns="_rescued_data"
 )
-
-# COMMAND ----------
-
-display(training_set.load_df())
-
-# COMMAND ----------
-
-# MAGIC
-# MAGIC %md 
-# MAGIC ### Creating an inference training set
-
-# COMMAND ----------
-
-inference_feature_lookups = [
-  FeatureLookup(
-    table_name="transaction_count_ft",
-    lookup_key=["CustomerID"],
-    feature_names=["transactionCount", "isTimeout"]
-  ),
-  FeatureLookup(
-    table_name="product_3minute_max_price_ft",
-    rename_outputs={
-        "LookupTimestamp": "TransactionTimestamp"
-      },
-    lookup_key=['Product'],
-    timestamp_lookup_key='TransactionTimestamp'
-  ),
-  FeatureFunction(
-    udf_name="product_difference_ratio_on_demand_feature",
-    input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-    output_name="MaxDifferenceRatio"
-  )
-]
-
-# COMMAND ----------
-
-inf_transactions_df = sql("SELECT * FROM prod_transactions ORDER BY TransactionTimestamp DESC LIMIT 1")
-
-inferencing_set = fe.create_training_set(
-    df=inf_transactions_df,
-    feature_lookups=inference_feature_lookups,
-    label="Label",
-    exclude_columns="_rescued_data"
-)
-
-# COMMAND ----------
-
-## We are testing the functionality. We use the display command to force plan execution. Spark uses lazy execution. 
-display(inferencing_set.load_df())
 
 # COMMAND ----------
 
@@ -252,8 +213,7 @@ mlflow.autolog(
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
   mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.prod_transactions",
-                    'Training-feature-lookups': training_feature_lookups, 
-                    'Inference-feature-lookups': inference_feature_lookups})
+                    'Training-feature-lookups': training_feature_lookups})
   
   training_data = training_set.load_df().toPandas()
   X = training_data.drop(["Label"], axis=1)
@@ -279,7 +239,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
   ##------- log pyfunc custom model -------##
   
-  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package", infer_input_example=X)
+  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=training_set, artifact_path="model_package", infer_input_example=X)
 
 
 
@@ -303,12 +263,3 @@ if model_details.description == "":
 model_version = get_latest_model_version(full_model_name)
 mlfclient.set_model_version_tag(name=full_model_name, key="validation_status", value="needs_tested", version=str(model_version))
 mlfclient.set_model_version_tag(name=full_model_name, key="project", value=project_name, version=str(model_version))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ###Test ability to predict
-
-# COMMAND ----------
-
-myLGBM.predict(spark, X)
