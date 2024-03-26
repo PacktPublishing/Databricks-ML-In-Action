@@ -81,3 +81,7 @@ training_df = training_set.load_df()
 
 training_df.write.mode('overwrite').saveAsTable('training_data_snapshot')
 display(training_df)
+
+# COMMAND ----------
+
+
