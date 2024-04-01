@@ -54,10 +54,6 @@ loaded_model
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC ### Score your model on accuracy 
 # MAGIC
@@ -83,11 +79,6 @@ def pred_class(img):
     # convert image to numpy format in cpu and snatching max prediction score class index
     index = out.data.cpu().numpy().argmax()    
     return index
-
-# COMMAND ----------
-
-import matplotlib.pyplot as plt
-from torch.autograd import Variable
 
 classes = {k:v for k , v in enumerate(sorted(outcomes))}
 loaded_model.eval()
@@ -173,7 +164,7 @@ def feature_extractor(img):
 model_b = sc.broadcast(loaded_model.model)
 
 @pandas_udf("struct< label: int, labelName: string>")
-def apply_vit(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
+def apply_cv(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
     
     model = model_b.value.to(torch.device("cuda"))
     model.eval()
@@ -208,9 +199,13 @@ def apply_vit(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
 # COMMAND ----------
 
 # with the Brodcasted model we won a few minutes, but it's because we do not have a big dataset, in a case of a big set this could significantly speed up things. 
-# also take into account that some models may use Batch Inference natively - check API of your Framework. 
+# also take into account that some models may use Batch Inference natively - check API of your Framework.
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 32)
-predictions_df = spark.read.format("delta").load(f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_vit("content"))
+predictions_df = spark.read\
+  .format("delta")\
+  .load(f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta")\
+  .withColumn("prediction", apply_cv("content"))
+
 display(predictions_df)
 
 # COMMAND ----------

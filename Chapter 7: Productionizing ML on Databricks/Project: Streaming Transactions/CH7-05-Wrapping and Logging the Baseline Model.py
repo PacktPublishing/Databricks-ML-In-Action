@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Wrapping and Logging the Model
+# MAGIC ## Wrapping and Logging the Baseline Model
 # MAGIC
 
 # COMMAND ----------
@@ -60,7 +60,7 @@ training_feature_lookups = [
 
 # COMMAND ----------
 
-table_name = "raw_transactions"
+table_name = "ml_in_action.synthetic_transactions.raw_transactions"
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
@@ -84,51 +84,6 @@ training_set = fe.create_training_set(
 # COMMAND ----------
 
 display(training_set.load_df())
-
-# COMMAND ----------
-
-# MAGIC
-# MAGIC %md 
-# MAGIC ### Creating an inference training set
-
-# COMMAND ----------
-
-inference_feature_lookups = [
-  FeatureLookup(
-    table_name="transaction_count_ft",
-    lookup_key=["CustomerID"],
-    feature_names=["transactionCount", "isTimeout"]
-  ),
-  FeatureLookup(
-    table_name="product_3minute_max_price_ft",
-    rename_outputs={
-        "LookupTimestamp": "TransactionTimestamp"
-      },
-    lookup_key=['Product'],
-    timestamp_lookup_key='TransactionTimestamp'
-  ),
-  FeatureFunction(
-    udf_name="product_difference_ratio_on_demand_feature",
-    input_bindings={"max_price":"MaxProductAmount", "transaction_amount":"Amount"},
-    output_name="MaxDifferenceRatio"
-  )
-]
-
-# COMMAND ----------
-
-inf_transactions_df = sql("SELECT * FROM raw_transactions ORDER BY  TransactionTimestamp DESC LIMIT 1")
-
-inferencing_set = fe.create_training_set(
-    df=inf_transactions_df,
-    feature_lookups=inference_feature_lookups,
-    label="Label",
-    exclude_columns="_rescued_data"
-)
-
-# COMMAND ----------
-
-## We are testing the functionality. We use the display command to force plan execution. Spark uses lazy execution. 
-display(inferencing_set.load_df())
 
 # COMMAND ----------
 
@@ -251,9 +206,8 @@ mlflow.autolog(
 )
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
-  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.raw_transactions",
-                    'Training-feature-lookups': training_feature_lookups, 
-                    'Inference-feature-lookups': inference_feature_lookups})
+  mlflow.log_params({'Input-table-location': "ml_in_action.synthetic_transactions.raw_transactions",
+                    'Training-feature-lookups': training_feature_lookups})
   
   training_data = training_set.load_df().toPandas()
   X = training_data.drop(["Label"], axis=1)
@@ -279,7 +233,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
   ##------- log pyfunc custom model -------##
   
-  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=inferencing_set, artifact_path="model_package", infer_input_example=X)
+  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=training_set, artifact_path="model_package", infer_input_example=X)
 
 
 
@@ -312,3 +266,7 @@ mlfclient.set_model_version_tag(name=full_model_name, key="project", value=proje
 # COMMAND ----------
 
 myLGBM.predict(spark, X)
+
+# COMMAND ----------
+
+

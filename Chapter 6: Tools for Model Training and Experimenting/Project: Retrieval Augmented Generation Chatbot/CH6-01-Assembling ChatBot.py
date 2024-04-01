@@ -11,8 +11,7 @@
 # MAGIC %md 
 # MAGIC
 # MAGIC ###  This Notebook requires a secret to work:
-# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
-# MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
+# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).
 # MAGIC
 # MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
 # MAGIC `pip install databricks-cli` <br/>
@@ -37,9 +36,7 @@
 # COMMAND ----------
 
 from mlflow.deployments import get_deploy_client
-
 deploy_client = get_deploy_client("databricks")
-
 endpoints = deploy_client.list_endpoints()
 for endpoint in endpoints:
     print(endpoint['name'])
@@ -47,15 +44,13 @@ for endpoint in endpoints:
 # COMMAND ----------
 
 import os 
-
-vsc_endpoint_name = "ml_action_vs"
-index_name = f"{catalog}.{database_name}.docs_vsc_idx_cont"
-
 # url used to send the request to your model from the serverless endpoint
-host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
+#host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 #db_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get() 
-db_token= dbutils.secrets.get("mlaction", "rag_sp_token")
+db_token = dbutils.secrets.get("mlaction", "rag_sp_token")
+db_host = dbutils.secrets.get("mlaction", "rag_sp_host")
 os.environ['DATABRICKS_TOKEN'] = db_token
+os.environ['DATABRICKS_HOST'] = db_host
 
 # COMMAND ----------
 
@@ -63,14 +58,14 @@ from databricks.vector_search.client import VectorSearchClient
 from langchain.vectorstores import DatabricksVectorSearch
 from langchain.embeddings import DatabricksEmbeddings
 
-# Test embedding Langchain model
-#NOTE: your question embedding model must match the one used in the chunk in the previous model 
+# NOTE: your question embedding model must match the one used in the chunk in the previous model 
 embedding_model = DatabricksEmbeddings(endpoint="databricks-bge-large-en")
+vsc_endpoint_name = "one-env-shared-endpoint-1" #"ml_action_vs"
+index_name = f"{catalog}.{database_name}.docs_vsc_idx_cont"
 
 def get_retriever(persist_dir: str = None):
-    os.environ["DATABRICKS_HOST"] = host
     #Get the vector search index
-    vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
+    vsc = VectorSearchClient(workspace_url=os.environ['DATABRICKS_HOST'], personal_access_token=os.environ["DATABRICKS_TOKEN"])
     print("\n")
     vs_index = vsc.get_index(
         endpoint_name=vsc_endpoint_name,
@@ -87,21 +82,19 @@ print(f"Relevant documents: {similar_documents[0]}")
 
 # COMMAND ----------
 
-# Test Databricks Foundation LLM model
-from langchain.chat_models import ChatDatabricks
-chat_model = ChatDatabricks(endpoint="databricks-mixtral-8x7b-instruct", max_tokens = 200)
-print(f"Tesе chat model: \n {chat_model.predict('What is GPT?')}")
-
-# COMMAND ----------
-
 import langchain
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatDatabricks
 
+# Using Foundational Model from Databricks
+# You could also use Llama70B or GPT4
+chat_model = ChatDatabricks(endpoint="databricks-mixtral-8x7b-instruct", 
+                            max_tokens = 200
+                            )
+
 TEMPLATE = """
-You are an assistant for the AI Swat Team. You are answering questions related to the GenerativeAI and LLM's and how they impact humans life, labour, economic and financial impact. If the question is not related to one of these topics, kindly decline to answer. If you don't know the answer, just say that you don't know, don't try to make up an answer. Keep the answer as concise as possible.
-Use the following pieces of context to answer the question at the end:
+You are an assistant for the AI Swat Team. You are answering questions related to the GenerativeAI and LLM's and how they impact humans life, labour, economic and financial impact. If the question is not related to one of these topics, kindly decline to answer. If you don't know the answer, just say that you don't know, don't try to make up an answer. Keep the answer as concise as possible. Use the following pieces of context to answer the question at the end:
 {context}
 Question: {question}
 Answer:
@@ -162,7 +155,3 @@ with mlflow.start_run(run_name="mlaction_chatbot_rag") as run:
     mlflow.models.utils.add_libraries_to_model(
         f"models:/{model_name}/{get_latest_model_version(model_name)}"
     )
-
-# COMMAND ----------
-
-

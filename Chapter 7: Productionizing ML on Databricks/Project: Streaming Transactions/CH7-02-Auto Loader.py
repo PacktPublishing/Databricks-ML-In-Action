@@ -8,11 +8,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Create Checkpoint and Schema reset widget
-dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'False'], label="Reset Checkpoint and Schema")
-
-# COMMAND ----------
-
 # MAGIC %md ##Run Setup
 
 # COMMAND ----------
@@ -22,7 +17,8 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='False', choices=['True', 'F
 # COMMAND ----------
 
 # DBTITLE 1,Variables
-table_name = "raw_transactions"
+dbutils.widgets.text('raw_table_name','prod_transactions','Enter table name for the raw delta')
+table_name = dbutils.widgets.get('raw_table_name')
 raw_data_location = f"{volume_file_path}/{table_name}/data/" 
 schema_location = f"{volume_file_path}/{table_name}/schema"
 checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
@@ -30,13 +26,8 @@ checkpoint_location = f"{volume_file_path}/{table_name}/checkpoint"
 # COMMAND ----------
 
 # DBTITLE 1,Use to reset for fresh table, schema, checkpoints
-if bool(dbutils.widgets.get('Reset')):
-  dbutils.fs.rm(schema_location, True)
-  dbutils.fs.rm(checkpoint_location, True)
-  sql(f"DROP TABLE IF EXISTS {table_name}")
-
-if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty() or bool(dbutils.widgets.get('Reset')):
-  sql(f"CREATE TABLE {table_name} TBLPROPERTIES (delta.enableChangeDataFeed = true)")
+if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
+  sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID INT, Amount FLOAT, TransactionTimestamp TIMESTAMP, Product STRING) TBLPROPERTIES (delta.enableChangeDataFeed = true)""")
 
 # COMMAND ----------
 
@@ -45,6 +36,13 @@ spark.conf.set("spark.databricks.delta.optimizeWrite.enabled", True)
 spark.conf.set("spark.databricks.delta.autoCompact.enabled", True)
 spark.conf.set("spark.databricks.cloudFiles.schemaInference.sampleSize.numFiles",1)
 spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", True)
+
+# COMMAND ----------
+
+import time
+
+#giving the generator time to start 15 seconds
+time.sleep(15)
 
 # COMMAND ----------
 

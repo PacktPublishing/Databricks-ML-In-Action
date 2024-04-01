@@ -65,10 +65,9 @@ class CVModelWrapper(mlflow.pyfunc.PythonModel):
             }
         with torch.set_grad_enabled(False):
      
-          # add here check if this is a DataFrame 
-          # if this is an image remove iterrows 
+          # assuming this is a DataFrame 
           pil_images = torch.stack([self.feature_extractor(row[0]) for _, row in images.iterrows()])
-          pil_images = pil_images.to(torch.device("cpu"))
+          pil_images = pil_images.to(torch.device("gpu"))
           outputs = self.model(pil_images)
           preds = torch.max(outputs, 1)[1]
           probs = torch.nn.functional.softmax(outputs, dim=-1)[:, 1]

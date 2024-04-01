@@ -8,22 +8,46 @@
 
 # COMMAND ----------
 
-init_experiment_for_batch("chatbot-rag-llm-advanced", "simple")
+import mlflow
+from mlia_utils.mlflow_funcs import * 
+from pyspark.sql.functions import col, udf, length, pandas_udf, explode
+
+os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("mlaction", "rag_sp_token")
+model_name = f"{catalog}.{database_name}.mlaction_chatbot_model"
+
+model_version_to_evaluate = get_latest_model_version(model_name)
+mlflow.set_registry_uri("databricks-uc")
+rag_model = mlflow.langchain.load_model(f"models:/{model_name}/{model_version_to_evaluate}")
 
 # COMMAND ----------
 
-table_name_eval = f"{catalog}.{database_name}.evaluation_table"
+question = "What is GPT ?"
+dialog = {"query": question}
+rag_model.invoke({"query":"What is GPT? "})["result"]
 
 # COMMAND ----------
 
-from mlflow.deployments import get_deploy_client
-deploy_client = get_deploy_client("databricks")
-endpoint_name = "databricks-llama-2-70b-chat"
-#Let's query our external model endpoint
-answer_test = deploy_client.predict(endpoint=endpoint_name, inputs={"messages": [{"role": "user", "content": "What is GPT?"}]})
-answer_test['choices'][0]['message']['content']display(spark.table('evaluation_dataset'))
+@pandas_udf("string")
+def predict_answer(questions):
+    def answer_question(question):
+        dialog = {"query": question}
+        return rag_model.invoke(dialog)['result']
+    return questions.apply(answer_question)
 
+# COMMAND ----------
 
+df_qa = (spark.read.table('evaluation_table')
+                  .selectExpr('question_asked as inputs', 'answer_given as targets')
+                  .where("targets is not null")
+                  #.sample(fraction=0.005, seed=40) # if your dataset is very big you could sample it 
+                  ) 
+
+df_qa_with_preds = df_qa.withColumn('preds', predict_answer(col('inputs'))).cache()
+display(df_qa_with_preds)
+
+# COMMAND ----------
+
+df_qa_with_preds.write.mode("overwrite").saveAsTable(f"{catalog}.{database_name}.evaluation_table_preds")
 
 # COMMAND ----------
 
@@ -67,59 +91,12 @@ answer_test['choices'][0]['message']['content']display(spark.table('evaluation_d
 
 # COMMAND ----------
 
-display(spark.table('evaluation_table'))
-
-# COMMAND ----------
-
-
-
-# COMMAND ----------
-
-import mlflow
-from mlia_utils.mlflow_funcs import * 
-from pyspark.sql.functions import col, udf, length, pandas_udf, explode
-
-os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get("mlaction", "rag_sp_token")
-model_name = f"{catalog}.{database_name}.mlaction_chatbot_model"
-
-model_version_to_evaluate = get_latest_model_version(model_name)
-mlflow.set_registry_uri("databricks-uc")
-rag_model = mlflow.langchain.load_model(f"models:/{model_name}/{model_version_to_evaluate}")
-
-@pandas_udf("string")
-def predict_answer(questions):
-    def answer_question(question):
-        dialog = {"query": question}
-        return rag_model.invoke(dialog)['result']
-    return questions.apply(answer_question)
-
-# COMMAND ----------
-
-question = "What is GPT ?"
-dialog = {"query": question}
-rag_model.invoke({"query":"What is GPT? "})["result"]
-
-# COMMAND ----------
-
-# turn of AQE ? 
-
-# COMMAND ----------
-
-df_qa = (spark.read.table('evaluation_table')
-                  .selectExpr('question_asked as inputs', 'answer_given as targets')
-                  .where("targets is not null")
-                  #.sample(fraction=0.005, seed=40) # if your dataset is very big you could sample it 
-                  ) 
-
-df_qa_with_preds = df_qa.withColumn('preds', predict_answer(col('inputs'))).cache()
-
-# COMMAND ----------
-
-display(df_qa_with_preds)
-
-# COMMAND ----------
-
-df_qa_with_preds.write.saveAsTable(f"{catalog}.{database_name}.evaluation_table_preds")
+from mlflow.deployments import get_deploy_client
+deploy_client = get_deploy_client("databricks")
+endpoint_name = "databricks-llama-2-70b-chat"
+#Let's query our external model endpoint
+answer_test = deploy_client.predict(endpoint=endpoint_name, inputs={"messages": [{"role": "user", "content": "What is GPT?"}]})
+answer_test['choices'][0]['message']['content'] 
 
 # COMMAND ----------
 
@@ -203,8 +180,12 @@ px.histogram(df_genai_metrics, x="token_count", labels={"token_count": "Token Co
 # COMMAND ----------
 
 # Counting the occurrences of each answer correctness score
-px.bar(df_genai_metrics['answer_correctness/v1/score'].value_counts(), title='Answer Correctness Score Distribution')
+px.bar(df_genai_metrics['professionalism/v1/score'].value_counts(), title='Answer Professionalism Score Distribution')
 
+# COMMAND ----------
+
+# Counting the occurrences of each answer professionalism score
+px.bar(df_genai_metrics['answer_correctness/v1/score'].value_counts(), title='Answer Correctness Score Distribution')
 
 # COMMAND ----------
 
@@ -225,7 +206,3 @@ fig.update_xaxes(tickformat=".2f")
 
 client = MlflowClient()
 client.set_registered_model_alias(name=model_name, alias="Production", version=model_version_to_evaluate)
-
-# COMMAND ----------
-
-

@@ -38,7 +38,7 @@
 
 from databricks.vector_search.client import VectorSearchClient
 
-vsc_endpoint_name = "ml_action_vs"
+vsc_endpoint_name = "one-env-shared-endpoint-1"#"ml_action_vs"
 vsc = VectorSearchClient()
 
 # SIDE NOTE - experience strange behaviour with the Index re-provisioning 
@@ -115,4 +115,8 @@ results = vsc.get_index(vsc_endpoint_name, vs_index_fullname).similarity_search(
   num_results=3)
 docs = results.get('result', {}).get('data_array', [])
 pprint(docs)
+
+
+# COMMAND ----------
+
 

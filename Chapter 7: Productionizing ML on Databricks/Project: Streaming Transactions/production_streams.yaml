@@ -7,26 +7,28 @@ resources:
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
               Chapter 7: Productionizing ML on Databricks/Project: Streaming
-              Transactions/CH7-10-Production Feature Engineering With Spark
-              Structured Streaming"
+              Transactions/CH7-03-Feature Engineering Streams"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
         - task_key: Generate_Data
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
               Chapter 7: Productionizing ML on Databricks/Project: Streaming
-              Transactions/CH7-08-Production Generating Records"
+              Transactions/CH7-01-Generating Records"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
         - task_key: JSON_to_Delta
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
               Chapter 7: Productionizing ML on Databricks/Project: Streaming
-              Transactions/CH7-09-Production Auto Loader"
+              Transactions/CH7-02-Auto Loader"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
           max_retries: -1
           min_retry_interval_millis: 0
+      tags:
+        keepuntil: 2024-07-01
+        project: MLIA
       parameters:
         - name: feature_history_table_name
           default: transaction_count_history

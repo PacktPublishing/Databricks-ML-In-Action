@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 7: Productionizing ML on Databricks
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
 # MAGIC ## Model Validation
 # MAGIC Use MLflow model validation API to test the model when registering a model
@@ -21,12 +21,13 @@ model_name = dbutils.widgets.get(name="model_name")
 # COMMAND ----------
 
 from mlia_utils.mlflow_funcs import get_latest_model_version
-from mlflow.client import MlflowClient
+from mlflow.tracking import MlflowClient
+
 import mlflow
 
 # Set UC As Default Registry #
 mlflow.set_registry_uri("databricks-uc")
-mlfclient = mlflow.tracking.MlflowClient()
+mlfclient = MlflowClient()
 
 validation_results = {}
 
@@ -49,6 +50,9 @@ model_version_details = mlfclient.get_model_version(name=model_name, version=mod
 # COMMAND ----------
 
 assert 'validation_status' in model_version_details.tags.keys(), f"the model, model={model_name}, specfied does not have validation_status tag"
+if model_version_details.tags['validation_status'] == 'passed_tests':
+  dbutils.notebook.exit("No validation needed!")
+
 assert model_version_details.tags['validation_status'] == 'needs_tested', f"the latest version, version={model_version}, of model, model={model_name} is not tagged as validation_status=needs_tested"
 
 # COMMAND ----------
