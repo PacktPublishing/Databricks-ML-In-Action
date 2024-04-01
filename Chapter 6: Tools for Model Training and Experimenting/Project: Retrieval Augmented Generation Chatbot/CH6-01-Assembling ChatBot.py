@@ -11,8 +11,7 @@
 # MAGIC %md 
 # MAGIC
 # MAGIC ###  This Notebook requires a secret to work:
-# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).  <br/>
-# MAGIC **Note: if you are using a shared demo workspace and you see that the secret is setup, please don't run these steps and do not override its value**<br/>
+# MAGIC Your Model Serving Endpoint needs a secret to authenticate against your Vector Search Index (see [Documentation](https://docs.databricks.com/en/security/secrets/secrets.html)).
 # MAGIC
 # MAGIC - You'll need to [setup the Databricks CLI](https://docs.databricks.com/en/dev-tools/cli/install.html) on your laptop or using this cluster terminal: <br/>
 # MAGIC `pip install databricks-cli` <br/>
@@ -88,17 +87,14 @@ from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatDatabricks
 
-# Using Foundational Model from Databricks Thoughput 
-chat_model = ChatDatabricks(endpoint="databricks-mixtral-8x7b-instruct", # You could also use Llama70B or GPT4
+# Using Foundational Model from Databricks
+# You could also use Llama70B or GPT4
+chat_model = ChatDatabricks(endpoint="databricks-mixtral-8x7b-instruct", 
                             max_tokens = 200
                             )
 
 TEMPLATE = """
-You are an assistant for the AI Swat Team. You are answering questions related to the GenerativeAI and LLM's 
-and how they impact humans life, labour, economic and financial impact. If the question is not related to one 
-of these topics, kindly decline to answer. If you don't know the answer, just say that you don't know, don't try 
-to make up an answer. Keep the answer as concise as possible.
-Use the following pieces of context to answer the question at the end:
+You are an assistant for the AI Swat Team. You are answering questions related to the GenerativeAI and LLM's and how they impact humans life, labour, economic and financial impact. If the question is not related to one of these topics, kindly decline to answer. If you don't know the answer, just say that you don't know, don't try to make up an answer. Keep the answer as concise as possible. Use the following pieces of context to answer the question at the end:
 {context}
 Question: {question}
 Answer:

@@ -5,29 +5,13 @@ resources:
       schedule:
         quartz_cron_expression: 31 4/15 * * * ?
         timezone_id: UTC
-        pause_status: UNPAUSED
+        pause_status: PAUSED
       tasks:
-        - task_key: update_labels
-          notebook_task:
-            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
-              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
-              Transactions/CH8-01-Production Auto Label Loader"
-            source: WORKSPACE
-          existing_cluster_id: 1211-220000-yxqdea6c
-        - task_key: retrain_model
-          depends_on:
-            - task_key: update_labels
-          notebook_task:
-            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
-              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
-              Transactions/CH8-03-Production Wrapping and Logging the Model"
-            source: WORKSPACE
-          existing_cluster_id: 1211-220000-yxqdea6c
         - task_key: update_batch_features
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
-              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
-              Transactions/CH8-02-Production Update Maximum Price Feature Table"
+              Chapter 7: Productionizing ML on Databricks/Project: Streaming
+              Transactions/CH7-04-Update Maximum Price Feature Table"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
         - task_key: inference
@@ -35,8 +19,24 @@ resources:
             - task_key: update_batch_features
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
-              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
-              Transactions/CH8-05-Production Batch Inference"
+              Chapter 7: Productionizing ML on Databricks/Project: Streaming
+              Transactions/CH7-08-Batch Inference"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: update_labels
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 7: Productionizing ML on Databricks/Project: Streaming
+              Transactions/CH7-05-Auto Label Loader"
+            source: WORKSPACE
+          existing_cluster_id: 1211-220000-yxqdea6c
+        - task_key: retrain_model
+          depends_on:
+            - task_key: update_labels
+          notebook_task:
+            notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
+              Chapter 7: Productionizing ML on Databricks/Project: Streaming
+              Transactions/CH7-06-Wrapping and Logging the Model"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
         - task_key: validate_model
@@ -44,7 +44,10 @@ resources:
             - task_key: retrain_model
           notebook_task:
             notebook_path: "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/\
-              Chapter 8: Monitoring, Evaluating, and More/Project: Streaming
-              Transactions/CH8-04-Production Model Validation"
+              Chapter 7: Productionizing ML on Databricks/Project: Streaming
+              Transactions/CH7-07-Model Validation"
             source: WORKSPACE
           existing_cluster_id: 1211-220000-yxqdea6c
+      tags:
+        keepuntil: 2024-07-01
+        project: MLIA

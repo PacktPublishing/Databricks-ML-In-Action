@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 8: Monitoring, Evaluating, and More
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Wrapping and Logging the Model
+# MAGIC ## Wrapping and Logging the Production Model
 # MAGIC
 
 # COMMAND ----------
@@ -103,7 +103,6 @@ mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
 full_model_name = f'{catalog}.{database_name}.{model_name}'
-model_description = "MLflow custom python function wrapper around a LightGBM model with embedded pre-processing. The wrapper provides data preprocessing so that the model can be applied to input dataframe directly without training/serving skew. This model serves to classify transactions as 0/1 for learning purposes."
 
 model_artifact_path = volume_model_path +  model_name
 dbutils.fs.mkdirs(model_artifact_path)
@@ -250,13 +249,6 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
 from mlia_utils.mlflow_funcs import get_latest_model_version
 mlfclient = mlflow.tracking.MlflowClient()
-
-model_details = mlfclient.get_registered_model(model_name)
-if model_details.description == "":
-  mlfclient.update_registered_model(
-    name=full_model_name,
-    description=model_description
-    )
 
 model_version = get_latest_model_version(full_model_name)
 mlfclient.set_model_version_tag(name=full_model_name, key="validation_status", value="needs_tested", version=str(model_version))

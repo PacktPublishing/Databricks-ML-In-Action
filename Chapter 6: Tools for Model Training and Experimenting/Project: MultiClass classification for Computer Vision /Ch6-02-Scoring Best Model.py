@@ -199,9 +199,13 @@ def apply_cv(images_iter: Iterator[pd.Series]) -> Iterator[pd.DataFrame]:
 # COMMAND ----------
 
 # with the Brodcasted model we won a few minutes, but it's because we do not have a big dataset, in a case of a big set this could significantly speed up things. 
-# also take into account that some models may use Batch Inference natively - check API of your Framework. 
+# also take into account that some models may use Batch Inference natively - check API of your Framework.
 spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 32)
-predictions_df = spark.read.format("delta").load(f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta").withColumn("prediction", apply_cv("content"))
+predictions_df = spark.read\
+  .format("delta")\
+  .load(f"/Volumes/{catalog}/{database_name}/files/intel_image_clf/valid_imgs_main.delta")\
+  .withColumn("prediction", apply_cv("content"))
+
 display(predictions_df)
 
 # COMMAND ----------
