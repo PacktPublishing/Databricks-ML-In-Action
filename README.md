@@ -1,4 +1,4 @@
-# Databricks Lakehouse ML In Action
+# Databricks ML In Action
 ## Best practices and technical examples for the machine learning lifecycle 
 
 Welcome to the GIT repository for the code samples included in the book. The code included in this repository are subject to change without prior notice.
@@ -18,12 +18,12 @@ Each chapter folder contains code examples shared in the book using one of our d
 
 * [Chapter 1 - Getting Started](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_1_Getting_Started)
 * [Chapter 2 - Designing Databricks Day One](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_2_Setting_up)
-* [Chapter 3 - Building Out Our Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
-* [Chapter 4 - Exploring and Cleaning Toward a Silver Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
+* [Chapter 3 - Building the Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
+* [Chapter 4 - Getting to Know Your Data](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
 * [Chapter 5 - Feature Engineering on the Lakehouse](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_5_Feature_engineering)
-* [Chapter 6 - Searching for Signal](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_6_Searching_for_signal)
+* [Chapter 6 - Tools](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_6_Searching_for_signal)
 * [Chapter 7 - Productionizing Machine Learning](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_7_Production)
-* [Chapter 8 - Sharing Insights](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_8_Sharing_Insights) 
+* [Chapter 8 - Monitoring](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_8_Sharing_Insights) 
 
 ### What do you need to run the examples?
 
