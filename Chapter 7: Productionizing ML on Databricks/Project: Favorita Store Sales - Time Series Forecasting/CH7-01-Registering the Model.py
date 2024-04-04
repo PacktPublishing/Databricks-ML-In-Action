@@ -21,4 +21,5 @@ import mlflow
 mlflow.set_registry_uri("databricks-uc")
 
 model_name = "store_sales_forecasting"
-mlflow.register_model("runs:/cdbf797cb40e40b8aab30b4fecdffc0b/model", f"{catalog}.{database_name}.{model_name}")
+#replace with your model uri runs:/..../model
+mlflow.register_model("runs:/737b064284b640d38829f71accf3d022/model", f"{catalog}.{database_name}.{model_name}")

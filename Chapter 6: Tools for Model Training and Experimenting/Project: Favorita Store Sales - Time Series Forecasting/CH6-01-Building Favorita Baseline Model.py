@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 6: Searching for Signal
+# MAGIC Chapter 6: Tools for Model Training and Experimenting
 # MAGIC
 # MAGIC ## Favorita Forecasting -Favorita Baseline Model
 # MAGIC
