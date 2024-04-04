@@ -1,4 +1,4 @@
-# Chapter 1: Getting Started Book and Lakehouse Concepts
+# Chapter 1: Getting Started and Lakehouse Concepts
 
 **Here is what you will learn as part of this chapter:**
 
