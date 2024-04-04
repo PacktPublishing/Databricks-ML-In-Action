@@ -1,12 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 6: Tools for Model Training and Experimenting
+# MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
-# MAGIC ## Favorita Sales - SQL Chat Bot
-# MAGIC
-# MAGIC [Kaggle competition link](https://www.kaggle.com/competitions/store-sales-time-series-forecasting)
-# MAGIC
-# MAGIC Create a SQL bot that takes questions about your tables as input and then generates and executes the SQL to answer the question. Utilize OpenAI and langchain.
+# MAGIC ## Favorita Sales - SQLbot
 # MAGIC
 
 # COMMAND ----------
@@ -16,7 +12,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install openai sqlalchemy-databricks
+# MAGIC %pip install openai sqlalchemy-databricks langchain_experimental
 
 # COMMAND ----------
 
@@ -28,7 +24,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../global-setup $project_name=favorita_forecasting
+# MAGIC %run ../../global-setup $project_name=favorita_forecasting
 
 # COMMAND ----------
 
@@ -41,8 +37,8 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-from langchain import OpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 import os
 
 os.environ['OPENAI_API_KEY'] = dbutils.secrets.get(scope="dlia", key="OPENAI_API_KEY")
@@ -113,8 +109,9 @@ def table_records(table):
 
 metadata = {}
 table_list = []
+iter_tables = table_schemas.select("table_name").distinct().collect()
 
-for row in table_schemas.select("table_name").distinct().collect():
+for row in iter_tables:
   tbl = row['table_name']
   table_list.append(tbl)
   meta = table_def(tbl) + '\n\n' + table_records(tbl)
@@ -130,22 +127,22 @@ for row in table_schemas.select("table_name").distinct().collect():
 # COMMAND ----------
 
 from sqlalchemy.engine import create_engine
-from langchain import SQLDatabase, SQLDatabaseChain
+from langchain.sql_database import SQLDatabase
+from langchain_experimental.sql import SQLDatabaseChain
 
 table = table_list
 
 databricks_token = dbutils.notebook.entry_point.getDbutils().notebook().getContext().apiToken().get()
 workspace_url = spark.conf.get("spark.databricks.workspaceUrl")
 # Obtain this from a SQL endpoint under "Connection Details", HTTP Path
-endpoint_http_path = "/sql/1.0/warehouses/475b94ddc7cd5211"
+endpoint_http_path = "/sql/1.0/warehouses/5ab5dda58c1ea16b"
 
 engine = create_engine(
-  f"databricks+connector://token:{databricks_token}@{workspace_url}:443/{schema}",
+  f"databricks+connector://token:{databricks_token}@{workspace_url}:443/{database_name}",
   connect_args={"http_path": endpoint_http_path, "catalog": catalog}
 )
 
-db = SQLDatabase(engine, schema=None, include_tables=table) 
-# schema=None to work around https://github.com/hwchase17/langchain/issues/2951 ?
+db = SQLDatabase(engine, schema=None, include_tables=table)
 db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
 chat_chain = SQLDatabaseChain.from_llm(chat, db, verbose=True)
 
@@ -160,3 +157,7 @@ db_chain.run(question)
 # COMMAND ----------
 
 chat_chain.run(question)
+
+# COMMAND ----------
+
+
