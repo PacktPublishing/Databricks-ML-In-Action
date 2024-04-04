@@ -16,7 +16,6 @@ Here are the technical requirements needed to complete the hands-on examples in 
 
 **In the chapter**
 - [Project: Favorita Store Sales dataset](https://www.kaggle.com/competitions/store-sales-time-series-forecasting/overview)
-- [Project Anastasia](https://dancehamster.azurewebsites.net/)
 
 **Further Reading**
 - [5 Steps to a Successful Data Lakehouse by Bill Inmon, father of the data warehouse](https://www.databricks.com/resources/ebook/building-the-data-lakehouse)
