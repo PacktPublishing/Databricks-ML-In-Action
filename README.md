@@ -16,7 +16,7 @@ This book is for machine learning engineers, data scientists, and technical mana
 
 Each chapter folder contains code examples shared in the book using one of our data sources, and the links shared in the README file:
 
-* [Chapter 1 - Getting Started](Chapter 1: Getting Started/Readme.md)
+* [Chapter 1 - Getting Started](Chapter 1: Getting Started/Readme.md "Chapter 1")
 * [Chapter 2 - Designing Databricks Day One](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_2_Setting_up)
 * [Chapter 3 - Building the Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
 * [Chapter 4 - Getting to Know Your Data](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
