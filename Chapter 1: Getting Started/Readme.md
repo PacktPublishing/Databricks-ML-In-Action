@@ -1,9 +1,9 @@
-# Chapter 1: Getting Started with this Book and Lakehouse Concepts
+# Chapter 1: Getting Started Book and Lakehouse Concepts
 
 **Here is what you will learn as part of this chapter:**
 
-1. How to get the most out of this book
-2. The advantage of an open lakehouse
+1. Components of Databricks
+2. Advantages of Databricks
 3. Applying our learning  
 
 ## Technical requirements 
@@ -16,7 +16,7 @@ Here are the technical requirements needed to complete the hands-on examples in 
 
 **In the chapter**
 - [Project: Favorita Store Sales dataset](https://www.kaggle.com/competitions/store-sales-time-series-forecasting/overview)
-- [Project Anastasia](https://dancehamster.azurewebsites.net/))
+- [Project Anastasia](https://dancehamster.azurewebsites.net/)
 
 **Further Reading**
 - [5 Steps to a Successful Data Lakehouse by Bill Inmon, father of the data warehouse](https://www.databricks.com/resources/ebook/building-the-data-lakehouse)
