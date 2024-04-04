@@ -10,13 +10,13 @@ This book is an essential guide to leveraging the Databricks Lakehouse for a dev
 
 ## Who this book is for
 
-This book is for machine learning engineers, data scientists and analysts that want to learn hands-on about implementing and leveraging the Databricks Lakehouse Platform to create data products.
+This book is for machine learning engineers, data scientists, and technical managers who want to learn and have hands-on experience in implementing and leveraging the Databricks Data Intelligence Platform and its lakehouse architecture to create data products.
 
 ## Code Samples and Chapter Links
 
 Each chapter folder contains code examples shared in the book using one of our data sources, and the links shared in the README file:
 
-* [Chapter 1 - Getting Started](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_1_Getting_Started)
+* [Chapter 1 - Getting Started](Chapter 1: Getting Started/Readme.md)
 * [Chapter 2 - Designing Databricks Day One](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_2_Setting_up)
 * [Chapter 3 - Building the Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
 * [Chapter 4 - Getting to Know Your Data](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
