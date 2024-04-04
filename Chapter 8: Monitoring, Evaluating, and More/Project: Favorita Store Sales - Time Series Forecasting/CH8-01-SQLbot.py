@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 8: Monitoring, Evaluating, and More
 # MAGIC
-# MAGIC ## Favorita Sales - SQL Chat Bot
+# MAGIC ## Favorita Sales - SQLbot
 # MAGIC
 
 # COMMAND ----------
@@ -142,8 +142,7 @@ engine = create_engine(
   connect_args={"http_path": endpoint_http_path, "catalog": catalog}
 )
 
-db = SQLDatabase(engine, schema=None, include_tables=table) 
-# schema=None to work around https://github.com/hwchase17/langchain/issues/2951 ?
+db = SQLDatabase(engine, schema=None, include_tables=table)
 db_chain = SQLDatabaseChain.from_llm(llm, db, verbose=True)
 chat_chain = SQLDatabaseChain.from_llm(chat, db, verbose=True)
 

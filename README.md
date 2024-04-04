@@ -36,13 +36,13 @@ The authors will do its best to keep the code and examples provided as up-to-dat
 
 ## About the authors
 
-[Stephanie Rivera](https://www.linkedin.com/in/stephanieamrivera/) has been working in big data and machine learning for 12 years. She collaborates with teams and companies as they design their Lakehouse as a Sr. Solutions Architect for Databricks. 
+[Stephanie Rivera](https://www.linkedin.com/in/stephanieamrivera/) has worked in big data and machine learning since 2011. She collaborates with teams and companies as they design their data intelligence platform as a Sr. Solutions Architect for Databricks.
 
-Previously Stephanie was the VP, Data Intelligence for a global company, taking in 20+ terabytes of data daily. She led the data science, data engineering, and business intelligence teams. 
+Previously Stephanie was the VP, Data Intelligence for a global company, ingesting in 20+ terabytes of data daily. She led the data science, data engineering, and business intelligence teams.
 
-Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using data science algorithms. Stephanie authored numerous sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science. 
+Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using data science algorithms. Stephanie authored numerous sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science.
 
-<i>I want to thank my loving partner, Rami Alba, Databricks coworkers, and friends who have supported me. </i>
+<i>I want to thank my loving partner, Rami Alba Lucio, Databricks coworkers, family, and friends for their unwaviering support.</i>
 
 [Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/) began her career in data 8 years ago. She loves leveraging her skills as a data scientist to orchestrate transformative journeys for companies across diverse industries as a Solutions Architect for Databricks. Her experiences have brought her from large corporations to small startups and everything in between. Mandy is a graduate of Carnegie Mellon University and the University of Washington.  
 
