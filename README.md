@@ -1,5 +1,5 @@
 # Databricks ML In Action
-## Best practices and technical examples for the machine learning lifecycle 
+### Learn how Databricks supports the entire ML lifecycle with technical examples from beginning to end
 
 Welcome to the GIT repository for the code samples included in the book. The code included in this repository are subject to change without prior notice.
 
@@ -10,29 +10,29 @@ This book is an essential guide to leveraging the Databricks Lakehouse for a dev
 
 ## Who this book is for
 
-This book is for machine learning engineers, data scientists and analysts that want to learn hands-on about implementing and leveraging the Databricks Lakehouse Platform to create data products.
+This book is for machine learning engineers, data scientists, and technical managers who want to learn and have hands-on experience in implementing and leveraging the Databricks Data Intelligence Platform and its lakehouse architecture to create data products.
 
 ## Code Samples and Chapter Links
 
 Each chapter folder contains code examples shared in the book using one of our data sources, and the links shared in the README file:
 
-* [Chapter 1 - Getting Started](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_1_Getting_Started)
-* [Chapter 2 - Designing Databricks Day One](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_2_Setting_up)
-* [Chapter 3 - Building the Bronze Layer](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_3_Building_the_bronze_layer)
-* [Chapter 4 - Getting to Know Your Data](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_4_Cleaning_and_exploring)
-* [Chapter 5 - Feature Engineering on the Lakehouse](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_5_Feature_engineering)
-* [Chapter 6 - Tools](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_6_Searching_for_signal)
-* [Chapter 7 - Productionizing Machine Learning](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_7_Production)
-* [Chapter 8 - Monitoring](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/tree/main/Chapter_8_Sharing_Insights) 
+* [Chapter 1 - Getting Started](Chapter%201%3A%20Getting%20Started)
+* [Chapter 2 - Designing Databricks Day One](Chapter%202%3A%20Designing%20Databricks%20Day%20One)
+* [Chapter 3 - Building the Bronze Layer](Chapter%203%3A%20Building%20Our%20Bronze%20Layer)
+* [Chapter 4 - Getting to Know Your Data](Chapter%204%3A%20Getting%20to%20Know%20Your%20Data)
+* [Chapter 5 - Feature Engineering on the Lakehouse](Chapter%205%3A%20Feature%20Engineering%20on%20Databricks)
+* [Chapter 6 - Tools for Model Training and Experimenting](Chapter%206%3A%20Tools%20for%20Model%20Training%20and%20Experimenting)
+* [Chapter 7 - Productionizing Machine Learning](Chapter%207%3A%20Productionizing%20ML%20on%20Databricks)
+* [Chapter 8 - Monitoring, Evaluating, and More](Chapter%208%3A%20Monitoring%2C%20Evaluating%2C%20and%20More) 
 
 ### What do you need to run the examples?
 
-You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks community Edition](https://docs.databricks.com/en/getting-started/community-edition.html) that you can use to run the provided notebooks and code.
+You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks community Edition](https://docs.databricks.com/en/getting-started/community-edition.html) that you can use to run the provided notebooks and code. However, we do use Unity Catalog which is available only on paid versions so some features will not work.
 
 
 ### Disclaimer
 
-The authors will do its best to keep the code and examples provided as up-to-date as possible, but we understand that you may encounter outdated snippets or other issues. Please post your enquiries in the [issues page](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/issues)) should you require further assistance.
+The authors will do its best to keep the code and examples provided as up-to-date as possible, but we understand that you may encounter outdated snippets or other issues. Please post your enquiries in the [issues page](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/issues) should you require further assistance.
 
 ## About the authors
 
@@ -62,4 +62,4 @@ On a daily basis, Anastasia consults Databricks users on best practices implemen
 
 ### Thanks for purchasing the book!
 
-Hope you will enjoy it as much as we enjoyed writing it for you.
+Hope you enjoy it!
