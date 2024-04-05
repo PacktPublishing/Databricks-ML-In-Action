@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 6: Tools for Model Training and Experimenting
 # MAGIC
-# MAGIC ## Synthetic data - Creating a training set
+# MAGIC ## Streaming data - Creating a training set
 
 # COMMAND ----------
 
@@ -67,7 +67,7 @@ training_feature_lookups = [
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
-raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2024-03-22T17:40:59.246+00:00')")
+raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2024-04-04T21:25:13.079+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,
@@ -84,4 +84,5 @@ display(training_df)
 
 # COMMAND ----------
 
-
+# MAGIC %md
+# MAGIC Did you get an error trying to run the last cell? Did you update the timestamp??

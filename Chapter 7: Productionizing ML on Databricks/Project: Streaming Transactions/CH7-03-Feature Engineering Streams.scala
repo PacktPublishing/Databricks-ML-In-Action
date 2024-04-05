@@ -2,7 +2,7 @@
 // MAGIC %md
 // MAGIC Chapter 7: Productionizing ML on Databricks
 // MAGIC
-// MAGIC ##Transaction data - Feature engineering on a streaming table
+// MAGIC ##Streaming Transaction data - Feature engineering on a streaming table
 // MAGIC
 // MAGIC Calculate the number of transations per customer in the last 2 minutes.
 
@@ -30,23 +30,23 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 
 // DBTITLE 1,Reset and setup
 // MAGIC %python
-// MAGIC dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
-// MAGIC table_name = dbutils.widgets.get("feature_table_name")
+// MAGIC # dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
+// MAGIC # table_name = dbutils.widgets.get("feature_table_name")
 // MAGIC dbutils.widgets.text("feature_history_table_name","transaction_count_history","Enter table name for the historical feature count values")
 // MAGIC history_table_name = dbutils.widgets.get("feature_history_table_name")
 // MAGIC
 // MAGIC dbutils.widgets.dropdown('Reset','False', ['True','False'])
 // MAGIC if bool(dbutils.widgets.get('Reset')):
-// MAGIC   dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
+// MAGIC   # dbutils.fs.rm(f"{volume_file_path}/{table_name}/table_feature_outputs/", True)
 // MAGIC   dbutils.fs.rm(f"{volume_file_path}/{history_table_name}/table_feature_outputs/", True)
-// MAGIC   sql(f"DROP TABLE IF EXISTS {table_name}")
+// MAGIC   # sql(f"DROP TABLE IF EXISTS {table_name}")
 // MAGIC   sql(f"DROP TABLE IF EXISTS {history_table_name}")
 // MAGIC
-// MAGIC if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
-// MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
-// MAGIC   sql(f"""ALTER TABLE {table_name} ALTER COLUMN CustomerID SET NOT NULL""")
-// MAGIC   sql(f"""ALTER TABLE {table_name} ADD PRIMARY KEY(CustomerID)""")
-// MAGIC   sql(f"ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
+// MAGIC # if not spark.catalog.tableExists(table_name) or spark.table(tableName=table_name).isEmpty():
+// MAGIC #   sql(f"""CREATE TABLE IF NOT EXISTS {table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
+// MAGIC #   sql(f"""ALTER TABLE {table_name} ALTER COLUMN CustomerID SET NOT NULL""")
+// MAGIC #   sql(f"""ALTER TABLE {table_name} ADD PRIMARY KEY(CustomerID)""")
+// MAGIC #   sql(f"ALTER TABLE {table_name} SET TBLPROPERTIES (delta.enableChangeDataFeed=true)")
 // MAGIC
 // MAGIC if not spark.catalog.tableExists(history_table_name) or spark.table(tableName=history_table_name).isEmpty():
 // MAGIC   sql(f"""CREATE TABLE IF NOT EXISTS {history_table_name} (CustomerID Int, transactionCount Int, eventTimestamp Timestamp, isTimeout Boolean)""")
@@ -60,13 +60,13 @@ spark.conf.set("spark.databricks.delta.autoCompact.enabled", "true")
 // DBTITLE 1,Set up paths, and variables
 dbutils.widgets.text("raw_table_name","prod_transactions","Enter table name for the raw delta")
 val input_table_name = dbutils.widgets.get("raw_table_name")
-dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
-val table_name = dbutils.widgets.get("feature_table_name")
+// dbutils.widgets.text("feature_table_name","transaction_count_ft","Enter table name for the feature counts using CDC")
+// val table_name = dbutils.widgets.get("feature_table_name")
 dbutils.widgets.text("feature_history_table_name","transaction_count_history","Enter table name for the historical feature count values")
 val history_table_name = dbutils.widgets.get("feature_history_table_name")
 
 val volumePath = "/Volumes/ml_in_prod/synthetic_transactions/files/" //SR TODO fix prod hardcoded
-val outputPath = f"$volumePath/$table_name/table_feature_outputs/"
+// val outputPath = f"$volumePath/$table_name/table_feature_outputs/"
 val outputPath2 = f"$volumePath/$history_table_name/table_feature_outputs/"
 val inputTable = f"ml_in_prod.synthetic_transactions.$input_table_name"
 
@@ -75,15 +75,6 @@ val inputTable = f"ml_in_prod.synthetic_transactions.$input_table_name"
 val windowMinutes = 2
 // wait at most max_wait_minutes before writing a record
 val maxWaitMinutes = 1
-
-// COMMAND ----------
-
-// MAGIC %python
-// MAGIC from databricks.feature_engineering import FeatureEngineeringClient
-// MAGIC fe = FeatureEngineeringClient()
-// MAGIC
-// MAGIC fe.set_feature_table_tag(name=f"{table_name}", key="FE_role", value="online_serving")
-// MAGIC fe.set_feature_table_tag(name=f"{history_table_name}", key="FE_role", value="training_data")
 
 // COMMAND ----------
 
@@ -233,29 +224,29 @@ val flatMapGroupsWithStateResultDf =
     .flatMapGroupsWithState(OutputMode.Append, 
         GroupStateTimeout.EventTimeTimeout)(updateState)
 
-def updateCounts(newCountsDs: Dataset[TransactionCount], 
-                  epoch_id: Long): Unit = {
-  // Convert the dataset to a dataframe for merging
-  val newCountsDf = newCountsDs.toDF
+// def updateCounts(newCountsDs: Dataset[TransactionCount], 
+//                   epoch_id: Long): Unit = {
+//   // Convert the dataset to a dataframe for merging
+//   val newCountsDf = newCountsDs.toDF
   
-  // Get the target Delta table that is being merged
-  val aggregationTable = DeltaTable.forName(table_name)
+//   // Get the target Delta table that is being merged
+//   val aggregationTable = DeltaTable.forName(table_name)
 
-  // Merge the new records into the target Delta table.
-  aggregationTable.alias("t")
-    .merge(newCountsDf.alias("m"), "m.CustomerID = t.CustomerID")
-    .whenMatched().updateAll()
-    .whenNotMatched().insertAll()
-    .execute()
-}
+//   // Merge the new records into the target Delta table.
+//   aggregationTable.alias("t")
+//     .merge(newCountsDf.alias("m"), "m.CustomerID = t.CustomerID")
+//     .whenMatched().updateAll()
+//     .whenNotMatched().insertAll()
+//     .execute()
+// }
 
-// Save the flatMapGroupsWithState result to a Delta table.  
-flatMapGroupsWithStateResultDf.writeStream
-  .foreachBatch(updateCounts _)
-  .option("checkpointLocation", f"$outputPath/checkpoint")
-  .trigger(Trigger.ProcessingTime("10 seconds"))
-  .queryName("flatMapGroups")
-  .start()
+// // Save the flatMapGroupsWithState result to a Delta table.  
+// flatMapGroupsWithStateResultDf.writeStream
+//   .foreachBatch(updateCounts _)
+//   .option("checkpointLocation", f"$outputPath/checkpoint")
+//   .trigger(Trigger.ProcessingTime("10 seconds"))
+//   .queryName("flatMapGroups")
+//   .start()
 
 // COMMAND ----------
 

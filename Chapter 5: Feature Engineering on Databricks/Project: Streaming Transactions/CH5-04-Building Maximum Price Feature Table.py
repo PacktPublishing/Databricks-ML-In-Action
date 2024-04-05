@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 5: Feature Engineering
 # MAGIC
-# MAGIC ##Transaction data - Creating a Maximum Price Feature Table
+# MAGIC ##Streaming data - Creating a Maximum Price Feature Table
 
 # COMMAND ----------
 
@@ -78,7 +78,3 @@ fe.create_table(
 # DBTITLE 1,Testing out the function.
 # MAGIC %sql
 # MAGIC select product_difference_ratio_on_demand_feature(15.01, 100.67) as difference_ratio
-
-# COMMAND ----------
-
-

@@ -84,7 +84,3 @@ else:
 # MAGIC
 # MAGIC return calc_ratio_difference(max_price, transaction_amount)
 # MAGIC $$
-
-# COMMAND ----------
-
-

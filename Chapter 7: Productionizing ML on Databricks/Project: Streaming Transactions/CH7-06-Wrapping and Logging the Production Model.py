@@ -71,12 +71,12 @@ training_feature_lookups = [
 ft_name = "product_3minute_max_price_ft"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
-  raise Exception("problem")
+  raise Exception(f"Problem: {ft_name} is missing")
 else:
   min_time = sql(f"SELECT MIN(LookupTimestamp) FROM {ft_name}").collect()[0][0]
   max_time = sql(f"SELECT MAX(LookupTimestamp) FROM {ft_name}").collect()[0][0]
   raw_transactions_df = sql(f"""
-    SELECT Amount,CustomerID,actual_label as Label,Product,TransactionTimestamp FROM {table_name}
+    SELECT Amount,CustomerID, actual_label as Label,Product,TransactionTimestamp FROM {table_name}
     WHERE TransactionTimestamp >= '{min_time}' AND TransactionTimestamp <= '{max_time}' AND actual_label IS NOT NULL
     """)
 
@@ -88,6 +88,10 @@ training_set = fe.create_training_set(
     label="Label",
     exclude_columns="_rescued_data"
 )
+
+# COMMAND ----------
+
+display(training_set.load_df()) 
 
 # COMMAND ----------
 
@@ -106,10 +110,6 @@ full_model_name = f'{catalog}.{database_name}.{model_name}'
 
 model_artifact_path = volume_model_path +  model_name
 dbutils.fs.mkdirs(model_artifact_path)
-
-# COMMAND ----------
-
-!pip freeze > /Volumes/ml_in_prod/synthetic_transactions/models/packaged_transaction_model/requirements.txt
 
 # COMMAND ----------
 
@@ -209,7 +209,7 @@ mlflow.autolog(
 )
 
 with mlflow.start_run(experiment_id = experiment_id ) as run:
-  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.prod_transactions",
+  mlflow.log_params({'Input-table-location': f"{catalog}.{database_name}.{table_name}",
                     'Training-feature-lookups': training_feature_lookups})
   
   training_data = training_set.load_df().toPandas()
@@ -223,6 +223,9 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   
   import lightgbm as lgb
   myLGBM = TransactionModelWrapper(_clf = lgb.LGBMClassifier(), X=X, y=y, numeric_columns = numeric_columns,cat_columns = cat_columns)
+
+  env = mlflow.pyfunc.get_default_conda_env()
+  env['dependencies'][-1]['pip'] += ["scikit-learn==1.4.0rc1"]
 
   eval_data = myLGBM.X_test_processed
   eval_data["Label"] = myLGBM.y_test
@@ -238,7 +241,10 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
   
   fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=training_set, artifact_path="model_package", infer_input_example=X)
 
-
+  import mlflow.models.utils
+  from mlia_utils.mlflow_funcs import get_latest_model_version
+  model_version = get_latest_model_version(full_model_name)
+  mlflow.models.utils.add_libraries_to_model(f"models:/{full_model_name}/{model_version}")
 
 # COMMAND ----------
 
