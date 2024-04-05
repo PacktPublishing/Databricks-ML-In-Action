@@ -151,7 +151,7 @@ import time
 
 Products = list(Product_vars.keys())
 t=0
-total = 250
+total = 100
 while(t<total):
   writeJsonFile(destination_path,Products=Products)
   if not (t % 10):

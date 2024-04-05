@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 5: Feature Engineering in Unity Catalog
 # MAGIC
-# MAGIC ## Transaction data - Streaming as Delta into a table using Auto Loader
+# MAGIC ## Streaming data - Streaming as Delta into a table using Auto Loader
 # MAGIC
 # MAGIC We have created a feature for our model based on the Product column so we no longer create the nulls.
 
