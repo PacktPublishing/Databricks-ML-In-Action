@@ -78,6 +78,15 @@ val maxWaitMinutes = 1
 
 // COMMAND ----------
 
+// MAGIC %python
+// MAGIC from databricks.feature_engineering import FeatureEngineeringClient
+// MAGIC fe = FeatureEngineeringClient()
+// MAGIC
+// MAGIC fe.set_feature_table_tag(name=f"{table_name}", key="Project", value="MLIA")
+// MAGIC fe.set_feature_table_tag(name=f"{history_table_name}", key="Project", value="MLIA")
+
+// COMMAND ----------
+
 // DBTITLE 1,Aggregating transactions for each customerID
 // The structure of the input data - a user and a transaction
 case class InputRow(CustomerID: Integer, 

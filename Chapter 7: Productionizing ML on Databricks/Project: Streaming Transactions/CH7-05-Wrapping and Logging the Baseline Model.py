@@ -62,6 +62,7 @@ training_feature_lookups = [
 
 table_name = "ml_in_action.synthetic_transactions.raw_transactions"
 ft_name = "product_3minute_max_price_ft"
+ft_name2 = "transaction_count_history"
 
 if not spark.catalog.tableExists(ft_name) or spark.table(tableName=ft_name).isEmpty():
   print("problem")
@@ -70,6 +71,7 @@ else:
     f"""
     SELECT rt.* FROM {table_name} rt 
     INNER JOIN (SELECT MIN(LookupTimestamp) as min_timestamp FROM {ft_name}) ts ON rt.TransactionTimestamp >= (ts.min_timestamp)
+    INNER JOIN (SELECT MIN(eventTimestamp) as min_etimestamp FROM {ft_name2}) ts2 ON rt.TransactionTimestamp >= (ts2.min_etimestamp)
     """)
 
 # COMMAND ----------
@@ -103,10 +105,6 @@ model_description = "MLflow custom python function wrapper around a LightGBM mod
 
 model_artifact_path = volume_model_path +  model_name
 dbutils.fs.mkdirs(model_artifact_path)
-
-# COMMAND ----------
-
-!pip freeze > /Volumes/ml_in_prod/synthetic_transactions/models/packaged_transaction_model/requirements.txt
 
 # COMMAND ----------
 
@@ -223,7 +221,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
   eval_data = myLGBM.X_test_processed
   eval_data["Label"] = myLGBM.y_test
-  model_info = mlflow.sklearn.log_model(myLGBM.model, "lgbm_model", signature=myLGBM.model_signature,extra_pip_requirements=f"{model_artifact_path}/requirements.txt")
+  model_info = mlflow.sklearn.log_model(myLGBM.model, "lgbm_model", signature=myLGBM.model_signature)
   result = mlflow.evaluate(
        model_info.model_uri,
        eval_data,
@@ -266,7 +264,3 @@ mlfclient.set_model_version_tag(name=full_model_name, key="project", value=proje
 # COMMAND ----------
 
 myLGBM.predict(spark, X)
-
-# COMMAND ----------
-
-
