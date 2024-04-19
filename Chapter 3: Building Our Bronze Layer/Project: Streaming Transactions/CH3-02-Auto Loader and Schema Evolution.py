@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC Chapter 3: Building our Bronze Layer
 # MAGIC
-# MAGIC ## Synthetic Data - Streaming as Delta into a table using Auto Loader + schema evolution
+# MAGIC ## Streaming Data - Streaming as Delta into a table using Auto Loader + schema evolution
 # MAGIC
 # MAGIC When streaming directly into a Delta table the stream does not handle the schema change without intervention. You will have to restart the streaming query for it to notice the schema change. Otherwise it simply stops writing. Upon restart it will detect the change and need restarted again for a total of two restarts. 
 
@@ -68,12 +68,3 @@ stream = spark.readStream \
 # DBTITLE 1,Viewing data in table while stream is running
 # MAGIC %sql
 # MAGIC SELECT * FROM synthetic_transactions ORDER BY TransactionTimestamp DESC LIMIT 10
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT * FROM synthetic_transactions ORDER BY TransactionTimestamp DESC 
-
-# COMMAND ----------
-
-

@@ -16,7 +16,7 @@
     "libraries": [
         {
             "notebook": {
-                "path": "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/Chapter 3: Building Out Our Bronze Layer/Project: Streaming Transactions/delta_live_tables/CH3-03-Formatting_to_Delta_with_DLT"
+                "path": "/Repos/stephanie.rivera@databricks.com/Databricks-ML-in-Action/Chapter 3: Building Our Bronze Layer/Project: Streaming Transactions/delta_live_tables/CH3-03-Formatting_to_Delta_with_DLT"
             }
         }
     ],

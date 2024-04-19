@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 2: Designing Databricks Day One
 # MAGIC
-# MAGIC ## Synthetic data - Synthetic Data Source Record Generator
+# MAGIC ## Streaming data - Synthetic Data Source Record Generator
 # MAGIC We simulate streaming data by generating labeled JSON data. We, at first, do not include the Product column. We write the JSON files to our volume.
 
 # COMMAND ----------

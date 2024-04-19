@@ -10,6 +10,7 @@ def build_autoloader_stream():
       .option("cloudFiles.inferColumnTypes","true") \
       .option("cloudFiles.schemaEvolutionMode", "addNewColumns") \
       .option("cloudFiles.schemaHints","CustomerID bigint, Amount double, TransactionTimestamp timestamp") \
+      .option("mergeSchema", "true")\
       .load(f"{raw_data_location}")
 
 # COMMAND ----------

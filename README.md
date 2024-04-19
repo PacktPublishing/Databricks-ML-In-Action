@@ -42,7 +42,7 @@ Previously Stephanie was the VP, Data Intelligence for a global company, ingesti
 
 Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using data science algorithms. Stephanie authored numerous sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science.
 
-<i>I want to thank my loving partner, Rami Alba Lucio, Databricks coworkers, family, and friends for their unwaviering support.</i>
+<i>I want to thank my loving partner, Rami Alba Lucio, Databricks coworkers, family, and friends for their unwavering support.</i>
 
 [Mandy Baker](https://www.linkedin.com/in/amanda-baker-2b089831/) began her career in data 8 years ago. She loves leveraging her skills as a data scientist to orchestrate transformative journeys for companies across diverse industries as a Solutions Architect for Databricks. Her experiences have brought her from large corporations to small startups and everything in between. Mandy is a graduate of Carnegie Mellon University and the University of Washington.  
 

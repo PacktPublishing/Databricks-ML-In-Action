@@ -1,8 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building out our Bronze Layer
+# MAGIC Chapter 3: Building our Bronze Layer
 # MAGIC
-# MAGIC ## Synthetic data - Synthetic Data Source Record Generator
+# MAGIC ## Streaming data - Synthetic Data Source Record Generator
 # MAGIC We simulate streaming data by generating labeled JSON data. Then we write it to a folder in our volume.
 
 # COMMAND ----------
@@ -24,7 +24,7 @@ dbutils.widgets.dropdown(name='Reset', defaultValue='True', choices=['True', 'Fa
 
 # COMMAND ----------
 
-# DBTITLE 1,Notebooke Variables
+# DBTITLE 1,Notebook Variables
 nRows = 10
 nPositiveRows = round(nRows/3)
 destination_path = "{}/synthetic_transactions/schema_change_data".format(volume_file_path)
@@ -151,7 +151,7 @@ import time
 
 Products = ["None"]
 t=1
-total = 100
+total = 50
 while(t<total):
   writeJsonFile(destination_path,Products=Products)
   t = t+1

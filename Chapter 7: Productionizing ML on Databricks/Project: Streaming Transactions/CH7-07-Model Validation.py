@@ -76,13 +76,13 @@ else:
 
 # COMMAND ----------
 
-if model_details.tags == {}:
+if model_version_details.tags == {}:
   print("No model tags found. It is team deployment policy that all models in production have at least the project name tag.")
   validation_results['project_tag'] = 0
-elif not 'project' in model_details.tags.keys():
+elif not 'project' in model_version_details.tags.keys():
   print("No project tag found. It is team deployment policy that all models in production have the project name tag.")
   validation_results['project_tag'] = 0
-elif not model_details.tags['project'] in possible_projects:
+elif not model_version_details.tags['project'] in possible_projects:
   print(f"Your project name was not recognized. Perhaps it was misspelled. Project name, project='{model_details.tags['project']}, is not in {possible_projects}")
   validation_results['project_tag'] = 0
 else:
@@ -96,3 +96,7 @@ if sum(validation_results.values()) == len(validation_results.values()):
 else:
   mlfclient.set_model_version_tag(name=model_name, key="validation_status", value="failed_tests", version=model_version)
   print(f"Fail! Check the results to determine which test(s) the model failed. {validation_results}")
+
+# COMMAND ----------
+
+
