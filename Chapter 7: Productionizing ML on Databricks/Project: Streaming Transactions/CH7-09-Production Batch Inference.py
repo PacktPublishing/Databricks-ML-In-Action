@@ -1,12 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 8: Monitoring, Evaluating, and More
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
 # MAGIC ## Batch Inference
-
-# COMMAND ----------
-
-# MAGIC %md ### Run Setup
 
 # COMMAND ----------
 
@@ -15,6 +11,10 @@
 # COMMAND ----------
 
 dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %md ### Run Setup
 
 # COMMAND ----------
 
@@ -91,3 +91,7 @@ scored = fe.score_batch(
 scored.withColumn("model_version",lit(model_version))\
   .withColumn(colName="actual_label",col=lit(None))\
   .write.mode('append').format('delta').saveAsTable(inference_table)
+
+# COMMAND ----------
+
+

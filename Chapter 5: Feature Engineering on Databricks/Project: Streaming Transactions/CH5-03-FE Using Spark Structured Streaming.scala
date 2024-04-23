@@ -2,7 +2,7 @@
 // MAGIC %md
 // MAGIC Chapter 5: Feature Engineering
 // MAGIC
-// MAGIC ##Transaction data - Feature engineering on a streaming table
+// MAGIC ##Streaming data - Feature engineering on a streaming table
 // MAGIC
 // MAGIC Calculate the number of transations per customer in the last 2 minutes.
 

@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 8: Monitoring, Evaluating, and More
+# MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
 # MAGIC ## Labeled data - Streaming as Delta into a table using Auto Loader
 
