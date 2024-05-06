@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC Chapter 3: Building our Bronze Layer
+# MAGIC Chapter 3: Building the Bronze Layer
 # MAGIC
 # MAGIC ## Streaming Data - Streaming as Delta into a table using Auto Loader + schema evolution
 # MAGIC
