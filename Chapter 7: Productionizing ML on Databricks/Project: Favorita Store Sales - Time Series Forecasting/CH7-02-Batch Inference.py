@@ -30,3 +30,7 @@ df = sql("SELECT * FROM test_set")
 
 # Predict on a Spark DataFrame.
 df.withColumn('predictions', loaded_model(struct(*map(col, df.columns))))
+
+# COMMAND ----------
+
+

@@ -12,7 +12,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install openai sqlalchemy-databricks langchain_experimental
+# MAGIC %pip install openai sqlalchemy-databricks langchain_openai
 
 # COMMAND ----------
 

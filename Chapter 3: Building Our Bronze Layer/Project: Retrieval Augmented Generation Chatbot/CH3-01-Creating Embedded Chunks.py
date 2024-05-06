@@ -182,7 +182,3 @@ display(df_chunk_emd)
 # COMMAND ----------
 
 df_chunk_emd.write.mode("append").saveAsTable(f"{catalog}.{database_name}.pdf_documentation_text")
-
-# COMMAND ----------
-
-
