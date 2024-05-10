@@ -67,7 +67,7 @@ training_feature_lookups = [
 # COMMAND ----------
 
 # DBTITLE 1,Create the training set
-raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2024-04-04T21:25:13.079+00:00')")
+raw_transactions_df = sql("SELECT * FROM raw_transactions WHERE timestamp(TransactionTimestamp) > timestamp('2024-05-06T18:29:59.350+00:00')")
 
 training_set = fe.create_training_set(
     df=raw_transactions_df,

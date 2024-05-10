@@ -20,7 +20,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=prod
+# MAGIC %run ../../global-setup $project_name=synthetic_transactions $env=dev
 
 # COMMAND ----------
 
@@ -60,7 +60,7 @@ training_feature_lookups = [
 
 # COMMAND ----------
 
-table_name = "ml_in_action.synthetic_transactions.raw_transactions"
+table_name = "raw_transactions"
 ft_name = "product_3minute_max_price_ft"
 ft_name2 = "transaction_count_history"
 
@@ -100,11 +100,8 @@ import mlflow
 mlflow.set_registry_uri("databricks-uc")
 
 model_name = "packaged_transaction_model"
-full_model_name = f'{catalog}.{database_name}.{model_name}'
+full_model_name = f'ml_in_prod.{database_name}.{model_name}'
 model_description = "MLflow custom python function wrapper around a LightGBM model with embedded pre-processing. The wrapper provides data preprocessing so that the model can be applied to input dataframe directly without training/serving skew. This model serves to classify transactions as 0/1 for learning purposes."
-
-model_artifact_path = volume_model_path +  model_name
-dbutils.fs.mkdirs(model_artifact_path)
 
 # COMMAND ----------
 
@@ -187,13 +184,13 @@ class TransactionModelWrapper(mlflow.pyfunc.PythonModel):
 
 # COMMAND ----------
 
-experiment_name = model_artifact_path
-experiment = mlflow.get_experiment_by_name(experiment_name)
-if not experiment:
-    experiment_id = mlflow.create_experiment(experiment_name)
-    experiment = mlflow.get_experiment(experiment_id)
-else:
-    experiment_id = experiment.experiment_id
+from mlia_utils import mlflow_funcs
+
+experiment_path = f"/Users/{current_user}/{database_name}_{model_name}"
+mlflow_funcs.mlflow_set_experiment(experiment_path) 
+dbutils.fs.mkdirs(experiment_path)
+
+# COMMAND ----------
 
 mlflow.autolog(
     log_input_examples=True,
@@ -203,7 +200,7 @@ mlflow.autolog(
     exclusive=False
 )
 
-with mlflow.start_run(experiment_id = experiment_id ) as run:
+with mlflow.start_run() as run:
   mlflow.log_params({'Input-table-location': "ml_in_action.synthetic_transactions.raw_transactions",
                     'Training-feature-lookups': training_feature_lookups})
   
@@ -231,7 +228,7 @@ with mlflow.start_run(experiment_id = experiment_id ) as run:
 
   ##------- log pyfunc custom model -------##
   
-  fe.log_model(registered_model_name=model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=training_set, artifact_path="model_package", infer_input_example=X)
+  fe.log_model(registered_model_name=full_model_name, model=myLGBM, flavor=mlflow.pyfunc, training_set=training_set, artifact_path="model_package", infer_input_example=X)
 
 
 
@@ -264,3 +261,7 @@ mlfclient.set_model_version_tag(name=full_model_name, key="project", value=proje
 # COMMAND ----------
 
 myLGBM.predict(spark, X)
+
+# COMMAND ----------
+
+

@@ -40,10 +40,14 @@ while(1==1):
 
 # COMMAND ----------
 
-# df = spark.read.format("json").load(record_path)
+# df = spark.read.format("text").load(record_path)
 # display(df)
 
 # COMMAND ----------
 
-# df = spark.read.format("json").load(label_path)
+# df = spark.read.format("text").load(label_path)
 # display(df)
+
+# COMMAND ----------
+
+

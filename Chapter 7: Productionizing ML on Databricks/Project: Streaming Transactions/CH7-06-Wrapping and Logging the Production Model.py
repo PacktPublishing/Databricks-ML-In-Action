@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC Chapter 7: Productionizing ML on Databricks
 # MAGIC
-# MAGIC ## Wrapping and Logging the Production Model
+# MAGIC ## Wrapping and Logging the Production Model - The feedback loop
 # MAGIC
 
 # COMMAND ----------
