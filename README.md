@@ -2,7 +2,7 @@
 
 <a href="https://www.packtpub.com/product/databricks-ml-in-action/9781800564893"><img src="https://content.packt.com/_/image/original/B16865/cover_image_large.jpg" alt="no-image" height="256px" align="right"></a>
 
-This is the code repository for [Databricks ML in Action](https://github.com/PacktPublishing/Databricks-ML-In-Action), published by Packt.
+This is the code repository for [Databricks ML in Action](https://www.packtpub.com/product/databricks-ml-in-action/9781800564893), published by Packt.
 
 **Learn how Databricks supports the entire ML lifecycle end to end from data ingestion to the model deployment**
 
