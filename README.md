@@ -39,12 +39,12 @@ dbutils.fs.ls(raw_data_path + "/store-sales-time-series-forecasting/")
 **Following is what you need for this book:**
 This book is for machine learning engineers, data scientists, and technical managers seeking hands-on expertise in implementing and leveraging the Databricks Data Intelligence Platform and its Lakehouse architecture to create data products.
 
-With the following software and hardware list you can run all code files present in the book (Chapter 2-10).
+With the following software and hardware list you can run all code files present in the book (Chapter 2-8).
 ### Software and Hardware List
 | Chapter | Software required | OS required |
 | -------- | ------------------------------------ | ----------------------------------- |
-| 2-10 | Databricks | Windows, macOS, or Linux |
-| 2-10 | Python and its associated libraries |  Windows, macOS, or Linux |
+| 2-8 | Databricks | Windows, macOS, or Linux |
+| 2-8 | Python and its associated libraries |  Windows, macOS, or Linux |
 
 
 ### Related products
