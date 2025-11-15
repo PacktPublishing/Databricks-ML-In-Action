@@ -4,7 +4,7 @@
 
 This is the code repository for [Databricks ML in Action](https://www.packtpub.com/product/databricks-ml-in-action/9781800564893), published by Packt.
 
-**Learn how Databricks supports the entire ML lifecycle end to end from data ingestion to the model deployment**
+**Learn how Databricks supports the entire ML lifecycle end-to-end from data ingestion to the model deployment**
 
 ## What is this book about?
 Discover what makes the Databricks Data Intelligence Platform the go-to choice for top-tier machine learning solutions. Databricks ML in Action presents cloud-agnostic, end-to-end examples with hands-on illustrations of executing data science, machine learning, and generative AI projects on the Databricks Platform.
@@ -24,7 +24,7 @@ If you feel this book is for you, get your [copy](https://www.amazon.com/Databri
 alt="https://www.packtpub.com/" border="5" /></a>
 
 ## Instructions and Navigations
-All of the code is organized into folders. For example, Chapter02.
+All of the code is organized into folders. For example, Chapter 02.
 
 The code will look like the following:
 ```
@@ -39,7 +39,7 @@ dbutils.fs.ls(raw_data_path + "/store-sales-time-series-forecasting/")
 **Following is what you need for this book:**
 This book is for machine learning engineers, data scientists, and technical managers seeking hands-on expertise in implementing and leveraging the Databricks Data Intelligence Platform and its Lakehouse architecture to create data products.
 
-With the following software and hardware list you can run all code files present in the book (Chapter 2-8).
+With the following software and hardware list, you can run all code files present in the book (Chapters 2-8).
 ### Software and Hardware List
 | Chapter | Software required | OS required |
 | -------- | ------------------------------------ | ----------------------------------- |
@@ -66,18 +66,13 @@ Each chapter folder contains code examples shared in the book using one of our d
 
 ### What do you need to run the examples?
 
-You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks community Edition](https://docs.databricks.com/en/getting-started/community-edition.html) that you can use to run the provided notebooks and code. However, we do use Unity Catalog which is available only on paid versions so some features will not work.
-
-
-### Disclaimer
-
-The authors will do its best to keep the code and examples provided as up-to-date as possible, but we understand that you may encounter outdated snippets or other issues. Please post your enquiries in the [issues page](https://github.com/PacktPublishing/Databricks-Lakehouse-ML-In-Action/issues) should you require further assistance.
+You will need a Databricks environment and permissions to run a cluster in order to follow along. There is a [Databricks Databricks Free Edition](https://docs.databricks.com/aws/en/getting-started/free-edition) that you can use to run the provided notebooks and code. However, some features may not work. The scope of the free edition changes. [Check for current limitations](https://docs.databricks.com/aws/en/getting-started/free-edition-limitations).
 
 ## About the authors
 
-[Stephanie Rivera](https://www.linkedin.com/in/stephanieamrivera/) has worked in big data and machine learning since 2011. She collaborates with teams and companies as they design their data intelligence platform as a Sr. Solutions Architect for Databricks.
+[Stephanie Alba (Rivera)](https://www.linkedin.com/in/stephanieamrivera/) has worked in big data and machine learning since 2011. She collaborates with teams and companies as they design their data intelligence platform as a Sr. Solutions Architect for Databricks.
 
-Previously Stephanie was the VP, Data Intelligence for a global company, ingesting in 20+ terabytes of data daily. She led the data science, data engineering, and business intelligence teams.
+Previously, Stephanie was the VP, Data Intelligence for a global company, ingesting 20+ terabytes of data daily. She led the data science, data engineering, and business intelligence teams.
 
 Her data career has also included contributing to and leading a team in creating software that teaches people to explore fictional planets using data science algorithms. Stephanie authored numerous sections of Booz Allen Hamilton’s publication, The Field Guide to Data Science.
 
